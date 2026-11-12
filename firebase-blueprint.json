@@ -1,0 +1,274 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Craftsman profile and company details",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth user ID"
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address"
+        },
+        "name": {
+          "type": "string",
+          "description": "Craftsman or company business name"
+        },
+        "ico": {
+          "type": "string",
+          "description": "Company registration number"
+        },
+        "dic": {
+          "type": "string",
+          "description": "Tax ID"
+        },
+        "address": {
+          "type": "string",
+          "description": "Full address"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Contact phone"
+        },
+        "accountNumber": {
+          "type": "string",
+          "description": "Bank account number for payments"
+        },
+        "bankCode": {
+          "type": "string",
+          "description": "Bank code"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last update"
+        }
+      },
+      "required": ["userId", "name"]
+    },
+    "ClientRecord": {
+      "title": "ClientRecord",
+      "description": "Saved customer contact information",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique client ID"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth user ID of craftsman"
+        },
+        "name": {
+          "type": "string",
+          "description": "Customer name or company"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Customer phone"
+        },
+        "email": {
+          "type": "string",
+          "description": "Customer email"
+        },
+        "address": {
+          "type": "string",
+          "description": "Customer address"
+        },
+        "ico": {
+          "type": "string",
+          "description": "Customer ICO if business"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last updated timestamp"
+        }
+      },
+      "required": ["id", "ownerId", "name"]
+    },
+    "ContractRecord": {
+      "title": "ContractRecord",
+      "description": "Work contract, quotation, handover or invoice data",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Contract unique ID"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Craftsman owner user ID"
+        },
+        "contractNumber": {
+          "type": "string",
+          "description": "Human readable contract / quote number"
+        },
+        "title": {
+          "type": "string",
+          "description": "Work title or brief description"
+        },
+        "docKind": {
+          "type": "string",
+          "description": "Type: contract, quote, or invoice"
+        },
+        "status": {
+          "type": "string",
+          "description": "Current state: draft, sent, signed, in_progress, completed, paid"
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "Total price in CZK"
+        },
+        "dataJson": {
+          "type": "string",
+          "description": "Full contract JSON payload"
+        },
+        "clientSignature": {
+          "type": "string",
+          "description": "Base64 signature of client if signed"
+        },
+        "clientSignedAt": {
+          "type": "string",
+          "description": "ISO timestamp when client signed"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last modification"
+        }
+      },
+      "required": ["id", "ownerId", "contractNumber", "title", "dataJson"]
+    },
+    "SiteLogEntry": {
+      "title": "SiteLogEntry",
+      "description": "Daily site log entry for building diary (stavební deník)",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Log entry unique ID"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Craftsman owner ID"
+        },
+        "contractId": {
+          "type": "string",
+          "description": "Parent contract ID"
+        },
+        "date": {
+          "type": "string",
+          "description": "Log date (YYYY-MM-DD)"
+        },
+        "weather": {
+          "type": "string",
+          "description": "Weather and temperature conditions"
+        },
+        "workersCount": {
+          "type": "number",
+          "description": "Number of workers on site"
+        },
+        "hoursWorked": {
+          "type": "number",
+          "description": "Hours worked that day"
+        },
+        "workDescription": {
+          "type": "string",
+          "description": "Detailed description of tasks carried out"
+        },
+        "issues": {
+          "type": "string",
+          "description": "Issues, site hurdles or delays noticed"
+        },
+        "materialsDelivered": {
+          "type": "string",
+          "description": "Delivered materials and equipment"
+        },
+        "photosCount": {
+          "type": "number",
+          "description": "Number of attached photo records"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        }
+      },
+      "required": ["id", "ownerId", "contractId", "date", "workDescription"]
+    },
+    "PublicSignShare": {
+      "title": "PublicSignShare",
+      "description": "Public signing link representation for remote client signing",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Share token / contract ID"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Craftsman owner ID"
+        },
+        "contractNumber": {
+          "type": "string",
+          "description": "Contract number"
+        },
+        "title": {
+          "type": "string",
+          "description": "Job title"
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "Total agreed price"
+        },
+        "contractData": {
+          "type": "string",
+          "description": "Compressed/JSON payload for the client view"
+        },
+        "clientSignature": {
+          "type": "string",
+          "description": "Base64 canvas signature submitted by client"
+        },
+        "clientSignedAt": {
+          "type": "string",
+          "description": "Timestamp when client signed"
+        },
+        "signerName": {
+          "type": "string",
+          "description": "Client name entered when signing"
+        },
+        "status": {
+          "type": "string",
+          "description": "pending or signed"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of signature"
+        }
+      },
+      "required": ["id", "ownerId", "contractNumber", "title", "contractData", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Private profile of the authenticated craftsman"
+    },
+    "/users/{userId}/clients/{clientId}": {
+      "schema": "ClientRecord",
+      "description": "Clients belonging to this craftsman"
+    },
+    "/users/{userId}/contracts/{contractId}": {
+      "schema": "ContractRecord",
+      "description": "Contracts belonging to this craftsman"
+    },
+    "/users/{userId}/contracts/{contractId}/site_logs/{logId}": {
+      "schema": "SiteLogEntry",
+      "description": "Daily site logs for this specific contract"
+    },
+    "/public_shares/{shareId}": {
+      "schema": "PublicSignShare",
+      "description": "Publicly accessible share for remote client signatures"
+    }
+  }
+}

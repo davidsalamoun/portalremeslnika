@@ -1,0 +1,145 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Connection test document
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // Craftsman User Profile
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false; // Users cannot list profiles
+      allow create: if isValidId(userId) && isOwner(userId)
+                    && incoming().userId == userId
+                    && incoming().name is string
+                    && incoming().name.size() > 0
+                    && incoming().name.size() <= 200;
+      allow update: if isValidId(userId) && isOwner(userId)
+                    && incoming().userId == existing().userId
+                    && incoming().name is string
+                    && incoming().name.size() > 0
+                    && incoming().name.size() <= 200;
+      allow delete: if isValidId(userId) && isOwner(userId);
+
+      // Clients subcollection
+      match /clients/{clientId} {
+        allow get, delete: if isValidId(userId) && isOwner(userId) && isValidId(clientId);
+        allow list: if isValidId(userId) && isOwner(userId);
+        allow create: if isValidId(userId) && isOwner(userId) && isValidId(clientId)
+                      && incoming().ownerId == userId
+                      && incoming().name is string
+                      && incoming().name.size() > 0
+                      && incoming().name.size() <= 200;
+        allow update: if isValidId(userId) && isOwner(userId) && isValidId(clientId)
+                      && incoming().ownerId == existing().ownerId
+                      && incoming().name is string
+                      && incoming().name.size() > 0
+                      && incoming().name.size() <= 200;
+      }
+
+      // Contracts subcollection
+      match /contracts/{contractId} {
+        allow get, delete: if isValidId(userId) && isOwner(userId) && isValidId(contractId);
+        allow list: if isValidId(userId) && isOwner(userId);
+        allow create: if isValidId(userId) && isOwner(userId) && isValidId(contractId)
+                      && incoming().ownerId == userId
+                      && incoming().contractNumber is string
+                      && incoming().contractNumber.size() <= 100
+                      && incoming().dataJson is string
+                      && incoming().dataJson.size() <= 900000;
+        allow update: if isValidId(userId) && isOwner(userId) && isValidId(contractId)
+                      && incoming().ownerId == existing().ownerId
+                      && incoming().contractNumber is string
+                      && incoming().contractNumber.size() <= 100
+                      && incoming().dataJson is string
+                      && incoming().dataJson.size() <= 900000;
+
+        // Daily site logs (Stavební deník)
+        match /site_logs/{logId} {
+          allow get, delete: if isValidId(userId) && isOwner(userId) && isValidId(contractId) && isValidId(logId);
+          allow list: if isValidId(userId) && isOwner(userId) && isValidId(contractId);
+          allow create: if isValidId(userId) && isOwner(userId) && isValidId(contractId) && isValidId(logId)
+                        && incoming().ownerId == userId
+                        && incoming().contractId == contractId
+                        && incoming().workDescription is string
+                        && incoming().workDescription.size() > 0
+                        && incoming().workDescription.size() <= 10000;
+          allow update: if isValidId(userId) && isOwner(userId) && isValidId(contractId) && isValidId(logId)
+                        && incoming().ownerId == existing().ownerId
+                        && incoming().contractId == existing().contractId
+                        && incoming().workDescription is string
+                        && incoming().workDescription.size() > 0
+                        && incoming().workDescription.size() <= 10000;
+        }
+      }
+    }
+
+    // Public Shares for remote client signing
+    match /public_shares/{shareId} {
+      // Direct get by token or ID is public so customer can load contract on mobile
+      allow get: if isValidId(shareId);
+      // Deny blanket listing of public shares
+      allow list: if false;
+
+      // Craftsman creates share (both authenticated craftsman and guest craftsman)
+      allow create: if isValidId(shareId)
+                    && incoming().status == 'pending'
+                    && incoming().contractData is string
+                    && incoming().contractData.size() <= 900000
+                    && (
+                      (isSignedIn() && incoming().ownerId == request.auth.uid)
+                      ||
+                      (!isSignedIn() && incoming().ownerId is string && incoming().ownerId.size() <= 128)
+                    );
+
+      // Update allowed by owner OR by customer submitting signature
+      allow update: if isValidId(shareId) && (
+        // Owner full update if signed in
+        (isSignedIn() && existing().ownerId == request.auth.uid)
+        ||
+        // Guest craftsman updating details while pending
+        (!isSignedIn() && existing().status == 'pending' && incoming().ownerId == existing().ownerId)
+        ||
+        // Client signing remotely
+        (
+          existing().status == 'pending'
+          && incoming().status == 'signed'
+          && incoming().clientSignature is string
+          && incoming().clientSignature.size() <= 900000
+          && incoming().diff(existing()).affectedKeys().hasOnly(['clientSignature', 'clientSignedAt', 'signerName', 'status', 'updatedAt'])
+        )
+      );
+
+      // Only owner can delete share
+      allow delete: if isSignedIn() && isValidId(shareId) && existing().ownerId == request.auth.uid;
+    }
+  }
+}
