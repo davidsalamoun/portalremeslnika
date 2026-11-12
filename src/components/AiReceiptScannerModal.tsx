@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { ContractExpense, ExpenseCategory } from '../types/contract';
 import { formatCurrency } from '../utils/numberToWordsCs';
+import { compressImageFile } from '../utils/imageCompression';
 
 interface AiReceiptScannerModalProps {
   isOpen: boolean;
@@ -57,13 +58,15 @@ export const AiReceiptScannerModal: React.FC<AiReceiptScannerModalProps> = ({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result as string;
-      setImagePreview(base64);
-      processReceiptWithAi(base64);
-    };
-    reader.readAsDataURL(file);
+    // Zmenšení fotky před odesláním (limit velikosti požadavku na serveru, úspora místa v prohlížeči)
+    compressImageFile(file, 1600, 1600, 0.8)
+      .then((base64) => {
+        setImagePreview(base64);
+        processReceiptWithAi(base64);
+      })
+      .catch(() => {
+        if (onToast) onToast('error', 'Fotku se nepodařilo načíst. Zkuste to prosím znovu.');
+      });
   };
 
   const processReceiptWithAi = async (base64: string) => {

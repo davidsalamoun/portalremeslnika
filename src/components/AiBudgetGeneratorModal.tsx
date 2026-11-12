@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { BudgetItem } from '../types/contract';
 import { formatCurrency } from '../utils/numberToWordsCs';
+import { compressImageFile } from '../utils/imageCompression';
 
 interface AiBudgetGeneratorModalProps {
   isOpen: boolean;
@@ -118,11 +119,12 @@ export const AiBudgetGeneratorModal: React.FC<AiBudgetGeneratorModalProps> = ({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    // Zmenšení fotky před odesláním (limit velikosti požadavku na serveru)
+    compressImageFile(file, 1600, 1600, 0.8)
+      .then((base64) => setImagePreview(base64))
+      .catch(() => {
+        if (onToast) onToast('error', 'Fotku se nepodařilo načíst. Zkuste to prosím znovu.');
+      });
   };
 
   // Volání AI na serveru

@@ -12,7 +12,7 @@ dál se vyvíjí mimo něj.
 3. **Právní texty šablon neměnit bez výslovného pokynu.** Týká se znění smluv, dodatků, protokolů, záručních
    listů, faktur a dokladů v `src/components/ContractPreview.tsx`, `AmendmentView.tsx`, `HandoverProtocolView.tsx`,
    `WarrantyCertificateView.tsx`, `InvoiceView.tsx`, `CashReceiptView.tsx`, `PriceQuoteView.tsx`,
-   `TechnicalProtocolsModal.tsx`, `src/utils/exportDocx.ts`, `src/data/craftTemplates.ts` a AI promptů v `server.ts`.
+   `TechnicalProtocolsModal.tsx`, `src/utils/exportDocx.ts`, `src/data/craftTemplates.ts` a AI promptů v `api/index.ts`.
    Náhled (HTML/PDF) a export do Wordu obsahují tentýž text dvakrát – při schválené změně upravit obě místa.
 4. **Žádná tajemství v prohlížeči ani v repozitáři.** `GEMINI_API_KEY` a `STRIPE_SECRET_KEY` jen na serveru.
    Proměnné s prefixem `VITE_` jsou veřejné. `.env*` se necommituje (kromě `.env.example`).
@@ -25,22 +25,32 @@ npm install
 npm run dev                      # Express + Vite middleware na http://localhost:3000 (PORT lze změnit)
 npm run build                    # produkční build frontendu do dist/
 npm run lint                     # tsc --noEmit (jediná kontrola, testy v projektu nejsou)
-NODE_ENV=production npm start    # Express servíruje dist/ + /api
+NODE_ENV=production npm start    # lokální produkční běh: Express servíruje dist/ + /api
 ```
 
 Proměnné prostředí: zkopírovat `.env.example` jako `.env` a doplnit `GEMINI_API_KEY`, případně
-`STRIPE_SECRET_KEY`, `VITE_STRIPE_PAYMENT_LINK_MONTHLY`, `VITE_STRIPE_PAYMENT_LINK_YEARLY`, `PORT`.
+`STRIPE_SECRET_KEY`, `VITE_STRIPE_PAYMENT_LINK_MONTHLY`, `VITE_STRIPE_PAYMENT_LINK_YEARLY`, `GEMINI_MODELS`, `PORT`.
 `server.ts` načítá `.env` přes `dotenv`.
+
+## Nasazení (Vercel)
+
+Konfigurace je ve `vercel.json`: frontend se staví příkazem `npm run build` do `dist/`, všechny cesty `/api/*`
+obsluhuje jediná funkce `api/index.ts` (Express aplikace jako výchozí export). `server.ts` se na Vercelu nepoužívá.
+Proměnné (`GEMINI_API_KEY`, případně `STRIPE_SECRET_KEY`) se nastavují v projektu na Vercelu, ne v repozitáři.
+`api/index.ts` nesmí importovat nic z `src/` ani `vite` a musí zůstat jedním souborem bez relativních importů.
+Vercel přijme tělo požadavku nejvýše 4,5 MB – fotky pro AI se proto zmenšují v prohlížeči (`utils/imageCompression.ts`).
 
 ## Technologie
 
 React 19, TypeScript, Vite 8, Tailwind CSS 4 (`@tailwindcss/vite`), `motion`, `lucide-react`,
-Express 4 (`server.ts`), `@google/genai`, Firebase (Auth + Firestore), Stripe, `docx`, `jspdf` + `html2canvas`, `qrcode`.
+Express 4 (`api/index.ts`, `server.ts`), `@google/genai`, Firebase (Auth + Firestore), Stripe, `docx`, `jspdf` + `html2canvas`, `qrcode`.
 
 ## Struktura
 
 ```
-server.ts                     Express: /api/ai/*, /api/stripe/*, v dev Vite middleware, v produkci dist/
+api/index.ts                  Express aplikace: /api/ai/*, /api/stripe/* (na Vercelu běží jako funkce)
+server.ts                     lokální spuštění: api/index.ts + Vite middleware (dev) nebo dist/ (produkce)
+vercel.json                   konfigurace nasazení na Vercel
 index.html, vite.config.ts    vstup a konfigurace Vite (alias @ = kořen repozitáře)
 firebase-applet-config.json   veřejná konfigurace Firebase projektu z AI Studia
 firestore.rules               bezpečnostní pravidla Firestore (popis v security_spec.md)
@@ -77,10 +87,11 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
 
 ## AI (Gemini)
 
-Volá se pouze ze serveru (`server.ts`), klíč z `process.env.GEMINI_API_KEY`:
+Volá se pouze ze serveru (`api/index.ts`), klíč z `process.env.GEMINI_API_KEY`:
 `POST /api/ai/budget-from-input` (rozpočet z textu/fotky), `POST /api/ai/extract-receipt` (vytěžení účtenky),
 `POST /api/ai/legal-check` a `POST /api/ai/craftsman-chat` (zatím bez napojení v UI).
-Při chybě AI endpointy vrací předpřipravená ukázková data se stavem 200 – při úpravách na to myslet.
+Při chybě AI vrací endpointy stav 502/503 a českou hlášku v poli `error` (funkce `sendAiError`), kterou UI zobrazí
+jako toast. Nikdy nevracet náhradní vymyšlená data, která by vypadala jako výsledek AI.
 
 ## Známé limity (stav po převzetí z AI Studia)
 
