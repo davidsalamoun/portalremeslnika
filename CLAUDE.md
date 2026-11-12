@@ -21,17 +21,16 @@ dál se vyvíjí mimo něj.
 ## Příkazy
 
 ```bash
-npm install --legacy-peer-deps   # --legacy-peer-deps je nutné, dokud je v package.json esbuild ^0.25 (Vite 8 chce ^0.27 || ^0.28)
+npm install
 npm run dev                      # Express + Vite middleware na http://localhost:3000 (PORT lze změnit)
 npm run build                    # produkční build frontendu do dist/
 npm run lint                     # tsc --noEmit (jediná kontrola, testy v projektu nejsou)
 NODE_ENV=production npm start    # Express servíruje dist/ + /api
 ```
 
-Proměnné prostředí (viz `.env.example`): `GEMINI_API_KEY`, `STRIPE_SECRET_KEY`, `APP_URL`,
-`VITE_STRIPE_PAYMENT_LINK_MONTHLY`, `VITE_STRIPE_PAYMENT_LINK_YEARLY`.
-Pozor: `server.ts` soubor `.env` sám nenačítá (balíček `dotenv` je nainstalovaný, ale neimportuje se) –
-proměnné je třeba předat v shellu nebo spustit `npx tsx --env-file=.env server.ts`.
+Proměnné prostředí: zkopírovat `.env.example` jako `.env` a doplnit `GEMINI_API_KEY`, případně
+`STRIPE_SECRET_KEY`, `VITE_STRIPE_PAYMENT_LINK_MONTHLY`, `VITE_STRIPE_PAYMENT_LINK_YEARLY`, `PORT`.
+`server.ts` načítá `.env` přes `dotenv`.
 
 ## Technologie
 
@@ -87,4 +86,4 @@ Při chybě AI endpointy vrací předpřipravená ukázková data se stavem 200 
 
 - Předplatné PRO se aktivuje jen v prohlížeči (simulovaná platba, parametr `?stripe_success=true`); neověřuje se na serveru.
 - `/api/*` nemá přihlášení ani omezení počtu požadavků.
-- Projekt nemá testy ani lockfile pro npm (`bun.lock` zůstal z AI Studia).
+- Projekt nemá testy.

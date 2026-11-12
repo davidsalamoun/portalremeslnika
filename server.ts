@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
@@ -21,14 +22,9 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 // Body parser for JSON with support for photo base64
 app.use(express.json({ limit: '25mb' }));
 
-// Initialize Google GenAI client with required User-Agent
+// Initialize Google GenAI client
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    },
-  },
 });
 
 // Helper to strip markdown code blocks from model JSON output
