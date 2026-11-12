@@ -3,7 +3,6 @@ import { Plus, Trash2, Calculator, Wrench, Package, Truck, Copy, TrendingUp, Per
 import { BudgetItem } from '../types/contract';
 import { formatCurrency } from '../utils/numberToWordsCs';
 import { PriceListModal } from './PriceListModal';
-import { AiBudgetGeneratorModal } from './AiBudgetGeneratorModal';
 
 interface BudgetItemsEditorProps {
   items: BudgetItem[];
@@ -37,16 +36,11 @@ export const BudgetItemsEditor: React.FC<BudgetItemsEditorProps> = ({
   onToast,
 }) => {
   const [isPriceListOpen, setIsPriceListOpen] = useState(false);
-  const [isAiBudgetOpen, setIsAiBudgetOpen] = useState(false);
   const [marginPercent, setMarginPercent] = useState<number>(0);
   const [marginScope, setMarginScope] = useState<'all' | 'material'>('all');
   const [isMarginOpen, setIsMarginOpen] = useState(false);
 
   const handleAddFromPriceList = (newItems: BudgetItem[]) => {
-    onChange([...items, ...newItems]);
-  };
-
-  const handleAddFromAi = (newItems: BudgetItem[]) => {
     onChange([...items, ...newItems]);
   };
 
@@ -357,15 +351,6 @@ export const BudgetItemsEditor: React.FC<BudgetItemsEditorProps> = ({
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setIsAiBudgetOpen(true)}
-                  className="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white shadow-xs inline-flex items-center gap-1.5 transition-all cursor-pointer"
-                  title="Spočítat položkový rozpočet ze zadání, hlasu nebo náčrtku"
-                >
-                  <Calculator className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Kalkulátor ze zadání</span>
-                </button>
-                <button
-                  type="button"
                   onClick={() => setIsPriceListOpen(true)}
                   className="px-3 py-1.5 text-xs font-black rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-xs inline-flex items-center gap-1.5 transition-all cursor-pointer"
                   title="Otevřít katalog položek a ceník řemeslníka"
@@ -543,16 +528,6 @@ export const BudgetItemsEditor: React.FC<BudgetItemsEditorProps> = ({
               isOpen={isPriceListOpen}
               onClose={() => setIsPriceListOpen(false)}
               onSelectItems={handleAddFromPriceList}
-              onToast={onToast}
-            />
-          )}
-
-          {/* Modal pro AI rozpočtáře */}
-          {isAiBudgetOpen && (
-            <AiBudgetGeneratorModal
-              isOpen={isAiBudgetOpen}
-              onClose={() => setIsAiBudgetOpen(false)}
-              onAddItems={handleAddFromAi}
               onToast={onToast}
             />
           )}
