@@ -16,7 +16,7 @@ import {
   Receipt,
   Crown,
 } from 'lucide-react';
-import { User } from 'firebase/auth';
+import { CloudUser as User } from '../utils/supabase';
 import { ContractorProfile } from '../types/contract';
 import { getSubscriptionInfo } from '../utils/subscription';
 

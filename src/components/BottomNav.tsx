@@ -20,7 +20,7 @@ import {
   Crown,
 } from 'lucide-react';
 import { TabType } from './Navbar';
-import { User } from 'firebase/auth';
+import { CloudUser as User } from '../utils/supabase';
 import { ContractorProfile } from '../types/contract';
 import { getSubscriptionInfo } from '../utils/subscription';
 

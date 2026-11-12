@@ -1,4 +1,12 @@
 import { ContractorProfile, Client, Contract } from '../types/contract';
+import { trackLocalChange } from './cloudSync';
+
+// Zápis do localStorage, o kterém se dozví synchronizace s účtem (tvar uložených dat se nemění)
+function setItemTracked(key: string, value: string): void {
+  const previous = localStorage.getItem(key);
+  localStorage.setItem(key, value);
+  trackLocalChange(key, previous, value);
+}
 
 const STORAGE_KEYS = {
   ZHOTOVITEL: 'zhotovitel',
@@ -39,7 +47,7 @@ export function getContractorProfile(): ContractorProfile | null {
 
 export function saveContractorProfile(profile: ContractorProfile): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.ZHOTOVITEL, JSON.stringify(profile));
+    setItemTracked(STORAGE_KEYS.ZHOTOVITEL, JSON.stringify(profile));
   } catch (e) {
     notifyStorageError('profil zhotovitele', e);
   }
@@ -59,7 +67,7 @@ export function getStoredClients(): Client[] {
 
 export function saveStoredClients(clients: Client[]): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.KLIENTI, JSON.stringify(clients));
+    setItemTracked(STORAGE_KEYS.KLIENTI, JSON.stringify(clients));
   } catch (e) {
     notifyStorageError('klienti', e);
   }
@@ -105,7 +113,7 @@ export function getStoredContracts(): Contract[] {
 
 export function saveStoredContracts(contracts: Contract[]): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.SMLOUVY, JSON.stringify(contracts));
+    setItemTracked(STORAGE_KEYS.SMLOUVY, JSON.stringify(contracts));
   } catch (e) {
     notifyStorageError('smlouvy', e);
   }
@@ -219,7 +227,7 @@ export function getStoredPriceList(): import('../types/contract').PriceListTempl
 
 export function saveStoredPriceList(items: import('../types/contract').PriceListTemplateItem[]): void {
   try {
-    localStorage.setItem('remeslnik_cenik', JSON.stringify(items));
+    setItemTracked('remeslnik_cenik', JSON.stringify(items));
   } catch (e) {
     console.error('Chyba při ukládání ceníku', e);
   }
@@ -239,7 +247,7 @@ export function getStoredCalendarEvents(): import('../types/contract').CalendarE
 
 export function saveStoredCalendarEvents(events: import('../types/contract').CalendarEvent[]): void {
   try {
-    localStorage.setItem('remeslnik_kalendar', JSON.stringify(events));
+    setItemTracked('remeslnik_kalendar', JSON.stringify(events));
   } catch (e) {
     console.error('Chyba při ukládání událostí kalendáře', e);
   }

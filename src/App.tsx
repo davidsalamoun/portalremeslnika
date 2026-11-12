@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { User } from 'firebase/auth';
 import { Navbar, TabType } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
 import { DashboardPage } from './components/DashboardPage';
@@ -60,12 +59,9 @@ import {
 } from './utils/storage';
 import { cleanPlaceName } from './utils/numberToWordsCs';
 import { applyBackup } from './utils/backup';
-import {
-  subscribeAuth,
-  testFirestoreConnection,
-  checkAndSyncRemoteSignatures,
-  syncContractorProfileToCloud,
-} from './utils/firebase';
+import { checkAndSyncRemoteSignatures } from './utils/firebase';
+import { useCloudUser } from './components/AuthGate';
+import { CLOUD_DATA_CHANGED_EVENT } from './utils/cloudSync';
 import { isProUser, PRO_CONFIG, activateProSubscription } from './utils/subscription';
 
 export default function App() {
@@ -147,7 +143,7 @@ export default function App() {
   };
 
   // Cloud Account & Remote Signing state
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const currentUser = useCloudUser();
   const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
   const [signParam, setSignParam] = useState<string | null>(() => {
     try {
@@ -166,35 +162,23 @@ export default function App() {
     return () => window.removeEventListener('app:storage_error', handleStorageError);
   }, []);
 
-  // Listen to Firebase auth changes & test Firestore on mount
+  // Data stažená z účtu (jiné zařízení, první přihlášení) se propíšou do zobrazení
   useEffect(() => {
-    testFirestoreConnection().catch(console.error);
-    const unsubscribe = subscribeAuth((user) => {
-      setCurrentUser(user);
-    });
-    return () => unsubscribe();
+    const reloadFromStorage = () => {
+      const loadedContractor = getContractorProfile();
+      if (loadedContractor && loadedContractor.defaultPlace) {
+        loadedContractor.defaultPlace = cleanPlaceName(loadedContractor.defaultPlace);
+      }
+      const loadedContracts = getStoredContracts();
+      setContractor(loadedContractor);
+      setClients(getStoredClients());
+      setContracts(loadedContracts);
+      setCalendarEvents(getStoredCalendarEvents());
+      setSavedContractIds(new Set(loadedContracts.map((c) => c.id)));
+    };
+    window.addEventListener(CLOUD_DATA_CHANGED_EVENT, reloadFromStorage);
+    return () => window.removeEventListener(CLOUD_DATA_CHANGED_EVENT, reloadFromStorage);
   }, []);
-
-  const handleCloudDataLoaded = (data: {
-    contractor?: ContractorProfile;
-    clients?: Client[];
-    contracts?: Contract[];
-  }) => {
-    if (data.contractor) {
-      saveContractorProfile(data.contractor);
-      setContractor(data.contractor);
-    }
-    if (data.clients) {
-      saveStoredClients(data.clients);
-      setClients(data.clients);
-    }
-    if (data.contracts) {
-      data.contracts.forEach((c) => addStoredContract(c));
-      const allContracts = getStoredContracts();
-      setContracts(allContracts);
-      setSavedContractIds(new Set(allContracts.map((c) => c.id)));
-    }
-  };
 
   // Initial load from localStorage
   useEffect(() => {
@@ -368,18 +352,12 @@ export default function App() {
   const handleSaveContractor = (profile: ContractorProfile) => {
     saveContractorProfile(profile);
     setContractor(profile);
-    if (currentUser) {
-      syncContractorProfileToCloud(profile, currentUser.uid).catch(console.error);
-    }
     addToast('success', 'Údaje zhotovitele byly úspěšně uloženy');
   };
 
   const handleUpdateContractorProfile = (updated: ContractorProfile) => {
     saveContractorProfile(updated);
     setContractor(updated);
-    if (currentUser) {
-      syncContractorProfileToCloud(updated, currentUser.uid).catch(console.error);
-    }
   };
 
   // Client dialog handlers
@@ -640,15 +618,13 @@ export default function App() {
         clientToEdit={clientToEdit}
       />
 
-      {/* Cloudový účet řemeslníka (Firebase sync) */}
+      {/* Účet řemeslníka a synchronizace */}
       <CloudAccountModal
         isOpen={isCloudModalOpen}
         onClose={() => setIsCloudModalOpen(false)}
         currentUser={currentUser}
-        contractor={contractor}
         clients={clients}
         contracts={contracts}
-        onCloudDataLoaded={handleCloudDataLoaded}
         onToast={addToast}
       />
 
