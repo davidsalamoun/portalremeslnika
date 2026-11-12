@@ -485,7 +485,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
         >
           <Camera className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-          <span>Vyfotit účtenku (OCR)</span>
+          <span>Vyfotit účtenku</span>
         </button>
         {onOpenEstimateCalculator && (
           <button

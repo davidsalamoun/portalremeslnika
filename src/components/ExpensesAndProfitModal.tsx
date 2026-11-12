@@ -19,7 +19,6 @@ import {
 import { Contract, ContractExpense, ExpenseCategory } from '../types/contract';
 import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
 import { compressImageFile } from '../utils/imageCompression';
-import { AiReceiptScannerModal } from './AiReceiptScannerModal';
 
 interface ExpensesAndProfitModalProps {
   isOpen: boolean;
@@ -63,7 +62,6 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
   onToast,
 }) => {
   const [expenses, setExpenses] = useState<ContractExpense[]>(contract.expenses || []);
-  const [isAiScannerOpen, setIsAiScannerOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [supplier, setSupplier] = useState('');
   const [amount, setAmount] = useState<number | ''>('');
@@ -159,15 +157,6 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
     if (onToast) {
       onToast('success', `Výdaj „${newExpense.title}“ ve výši ${formatCurrency(newExpense.amount)} byl uložen.`);
     }
-  };
-
-  const handleAddAiExpense = (newExp: ContractExpense) => {
-    const updatedExpenses = [newExp, ...expenses];
-    setExpenses(updatedExpenses);
-    onUpdateContract({
-      ...contract,
-      expenses: updatedExpenses,
-    });
   };
 
   const handleDeleteExpense = (id: string) => {
@@ -321,15 +310,6 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
                 <Plus className="w-4 h-4 text-emerald-600" />
                 <span>Přidat náklad / výdaj k této zakázce</span>
               </h3>
-              <button
-                type="button"
-                onClick={() => setIsAiScannerOpen(true)}
-                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-700 inline-flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto"
-                title="Vyfotit účtenku ze stavebnin a vytěžit částku i dodavatele"
-              >
-                <Camera className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Vytěžit účtenku (OCR sken)</span>
-              </button>
             </div>
 
             <form onSubmit={handleAddExpense} className="space-y-3.5">
@@ -641,16 +621,6 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
             />
           </div>
         </div>
-      )}
-
-      {/* Modal pro AI OCR vytěžování účtenek */}
-      {isAiScannerOpen && (
-        <AiReceiptScannerModal
-          isOpen={isAiScannerOpen}
-          onClose={() => setIsAiScannerOpen(false)}
-          onAddExpense={handleAddAiExpense}
-          onToast={onToast}
-        />
       )}
     </div>
   );
