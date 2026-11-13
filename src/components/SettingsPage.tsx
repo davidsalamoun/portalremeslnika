@@ -28,7 +28,7 @@ import {
   MapPin,
 } from 'lucide-react';
 import { ContractorProfile, AppBackupData, PriceListTemplateItem } from '../types/contract';
-import { fetchCompanyByIco } from '../utils/ares';
+import { fetchCompanyByIco, isAresVerified } from '../utils/ares';
 import {
   cleanPlaceName,
   formatPlaceWithPreposition,
@@ -73,6 +73,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   const [email, setEmail] = useState('');
   const [defaultPlace, setDefaultPlace] = useState('');
   const [signature, setSignature] = useState<string>('');
+  // Otisk údajů naposledy načtených z ARES (štítek „ověřeno“ platí, jen dokud se údaje shodují)
+  const [aresVerified, setAresVerified] = useState<ContractorProfile['aresVerified']>(undefined);
   const [isAresLoading, setIsAresLoading] = useState(false);
   const [aresMessage, setAresMessage] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -99,6 +101,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       setEmail(initialProfile.email || '');
       setDefaultPlace(cleanPlaceName(initialProfile.defaultPlace || ''));
       setSignature(initialProfile.signature || '');
+      setAresVerified(initialProfile.aresVerified);
     }
   }, [initialProfile]);
 
@@ -116,6 +119,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       if (data.name) setName(data.name);
       if (data.address) setAddress(data.address);
       if (data.dic) setDic(data.dic);
+      if (data.name && data.address) {
+        setIco(data.ico);
+        setAresVerified({
+          ico: data.ico,
+          name: data.name.trim(),
+          address: data.address.trim(),
+          verifiedAt: new Date().toISOString(),
+        });
+      }
       if (data.city && !defaultPlace) {
         const cityLocative =
           data.city === 'Praha'
@@ -204,6 +216,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       email: email.trim(),
       defaultPlace: cleanedPlace,
       signature: signature || undefined,
+      aresVerified: isAresVerified({ ico, name, address, aresVerified }) ? aresVerified : undefined,
       subscriptionPlan: initialProfile?.subscriptionPlan,
       subscriptionExpiresAt: initialProfile?.subscriptionExpiresAt,
       trialStartedAt: initialProfile?.trialStartedAt,
@@ -723,16 +736,29 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             )}
           </div>
 
-          {/* ARES certifikační štítek */}
-          <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 flex items-start gap-2.5 text-xs text-emerald-900 dark:text-emerald-200">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-            <div>
-              <span className="font-extrabold block">Ověřený subjekt v ARES</span>
-              <span className="text-[11px] text-emerald-700 dark:text-emerald-300">
-                Data odpovídají zápisu v Živnostenském a Obchodním rejstříku ČR.
-              </span>
+          {/* ARES certifikační štítek – jen pokud údaje opravdu odpovídají načtení z ARES */}
+          {isAresVerified({ ico, name, address, aresVerified }) ? (
+            <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 flex items-start gap-2.5 text-xs text-emerald-900 dark:text-emerald-200">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-extrabold block">Ověřený subjekt v ARES</span>
+                <span className="text-[11px] text-emerald-700 dark:text-emerald-300">
+                  Jméno, IČO a sídlo odpovídají údajům načteným z registru ARES
+                  {aresVerified?.verifiedAt ? ` dne ${new Date(aresVerified.verifiedAt).toLocaleDateString('cs-CZ')}` : ''}.
+                </span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+              <Building2 className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-extrabold block">Údaje nejsou ověřené v ARES</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Zadejte IČO a klikněte na „Načíst z ARES“. Po ruční úpravě jména, IČO nebo sídla ověření přestává platit.
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Bankovní účet QR ověření */}
           <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-1.5">

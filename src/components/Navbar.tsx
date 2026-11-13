@@ -19,6 +19,7 @@ import {
 import { CloudUser as User } from '../utils/supabase';
 import { ContractorProfile } from '../types/contract';
 import { getSubscriptionInfo } from '../utils/subscription';
+import { isAresVerified } from '../utils/ares';
 
 export type TabType =
   | 'dashboard'
@@ -191,9 +192,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
                     {contractor.name}
                   </span>
+                  {isAresVerified(contractor) && (
                   <span className="inline-flex items-center gap-0.5 text-[9px] font-bold font-mono px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
                     ARES ✓
                   </span>
+                  )}
                 </div>
                 {contractor.ico && (
                   <span className="text-[10px] font-mono text-slate-400">
