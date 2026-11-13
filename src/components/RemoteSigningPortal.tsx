@@ -256,9 +256,6 @@ export const RemoteSigningPortal: React.FC<RemoteSigningPortalProps> = ({
                 <span className="text-[10px] font-mono font-black uppercase tracking-wider text-amber-400">
                   Online ověřený podpis
                 </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800">
-                  ARES Ověřeno ✓
-                </span>
               </div>
               <h1 className="text-base font-black text-white font-mono tracking-tight mt-0.5">
                 {contract.docKind === 'quote' ? 'Cenová nabídka' : 'Smlouva o dílo'} #{contract.contractNumber}
