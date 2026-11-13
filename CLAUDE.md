@@ -47,7 +47,7 @@ Proměnné (případně `STRIPE_SECRET_KEY`) se nastavují v projektu na Vercelu
 ## Technologie
 
 React 19, TypeScript, Vite 8, Tailwind CSS 4 (`@tailwindcss/vite`), `motion`, `lucide-react`,
-Express 4 (`api/index.ts`, `server.ts`), Supabase (přihlášení + Postgres), Firebase Firestore (jen online podpis), Stripe, `docx`, `jspdf` + `html2canvas`, `qrcode`.
+Express 4 (`api/index.ts`, `server.ts`), Supabase (přihlášení + Postgres), Stripe, `docx`, `jspdf` + `html2canvas`, `qrcode`.
 
 ## Struktura
 
@@ -58,9 +58,6 @@ vercel.json                   konfigurace nasazení na Vercel
 index.html, vite.config.ts    vstup a konfigurace Vite (alias @ = kořen repozitáře)
 supabase/schema.sql           databázové schéma a zabezpečení (spouští se ručně v Supabase SQL Editoru)
 tests/                        testy (synchronizace)
-firebase-applet-config.json   veřejná konfigurace Firebase projektu z AI Studia
-firestore.rules               bezpečnostní pravidla Firestore (popis v security_spec.md)
-firebase-blueprint.json       popis datového modelu Firestore
 src/
   main.tsx, App.tsx           main.tsx obalí aplikaci přihlášením (AuthGate); App.tsx drží veškerý stav,
                               přepíná záložky (bez routeru) a otevírá modály
@@ -73,7 +70,7 @@ src/
     supabase.ts               klient Supabase, české hlášky chyb přihlášení
     syncEngine.ts             logika synchronizace localStorage ↔ databáze (bez závislosti na prohlížeči)
     cloudSync.ts              napojení synchronizace na Supabase a prohlížeč, odhlášení
-    firebase.ts               online podpis (public_shares); ostatní funkce v souboru se už nepoužívají
+    signShares.ts             online podpis zákazníkem: odkaz s tajným kódem, kontrola podpisu
     backup.ts                 export/import zálohy JSON
     subscription.ts           tarif PRO, zkušební doba, QR platba předplatného
     spayd.ts                  QR platba (SPAYD), převod čísla účtu na IBAN
@@ -83,7 +80,7 @@ src/
 ```
 
 Záložky (`TabType` v `components/Navbar.tsx`): `dashboard`, `kalendar`, `pipeline`, `faktury`,
-`nova-smlouva`, `klienti`, `historie`, `finance`, `nastaveni`. Parametr `?sign=<id>` v URL zobrazí místo
+`nova-smlouva`, `klienti`, `historie`, `finance`, `nastaveni`. Parametr `?sign=<token>` v URL zobrazí místo
 aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
 
 ## Přihlášení a data
@@ -99,8 +96,12 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
   `deleted_at`); smazání je značka `deleted_at`. Řádky chrání RLS – každý vidí jen své.
 - **První přihlášení v prohlížeči** nahraje do účtu data, která v něm vznikla dříve. **Odhlášení** data účtu
   z prohlížeče smaže (zůstávají v účtu). Při konfliktu vyhrává poslední zápis celého záznamu.
-- Změna schématu = úprava `supabase/schema.sql` (musí jít spustit opakovaně) a ruční spuštění v Supabase.
-- **Online podpis** zatím používá veřejnou Firestore kolekci `public_shares/{id smlouvy}`.
+- Změna schématu = úprava `supabase/schema.sql` (musí jít spustit opakovaně) a její nasazení v Supabase.
+- **Online podpis** (`utils/signShares.ts`, tabulka `sign_shares`): řemeslník založí odkaz `?sign=<token>` s náhodným
+  tajným kódem (uložen u smlouvy jako `signToken`). Zákazník se nepřihlašuje a k tabulce přístup nemá – smlouvu čte
+  a podepisuje jen přes databázové funkce `get_sign_share` / `submit_sign_share`. Do odkazu se ukládá jen výřez smlouvy
+  (`toSharedContract`), ne náklady, fotky ani deník. Podepsaný odkaz už nejde změnit ani podepsat znovu; nepodepsaný
+  vyprší po 90 dnech. Aplikace se na podpis ptá pravidelně (jen u smluv se `signToken` bez podpisu).
 
 ## AI
 
@@ -112,4 +113,3 @@ odstraněny včetně serverových endpointů a závislosti na Gemini. Nepřidáv
 - Předplatné PRO se aktivuje jen v prohlížeči (simulovaná platba, parametr `?stripe_success=true`); neověřuje se na serveru.
 - Testy pokrývají jen synchronizaci; přihlášení a UI se ověřují ručně.
 - Fotky jsou uložené jako base64 uvnitř smluv (velké řádky v databázi, limit localStorage ~5 MB).
-- Online podpis běží přes Firebase s uhodnutelným ID a bez přihlášení.

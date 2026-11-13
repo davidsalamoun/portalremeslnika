@@ -125,6 +125,7 @@ export interface Contract {
   contractorSignatureDate?: string;      // Datum podpisu zhotovitele
   clientSignature?: string;              // Digitální podpis objednatele (dataUrl)
   clientSignatureDate?: string;          // Datum podpisu objednatele
+  signToken?: string;                    // Tajný kód odkazu pro online podpis zákazníkem (?sign=…)
   photos?: ContractPhoto[];              // Fotodokumentace k zakázce / protokolu
   handoverData?: HandoverData;
   items?: BudgetItem[];                  // Položkový rozpočet zakázky

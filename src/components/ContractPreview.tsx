@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
   ArrowLeft,
   Bookmark,
@@ -67,8 +67,8 @@ import {
   getMailtoShareUrl,
   buildShareMessage,
 } from '../utils/shareUtils';
-import { getContractorProfile, saveContractorProfile } from '../utils/storage';
-import { subscribePublicSignShare, getPublicSignShare } from '../utils/firebase';
+import { getContractorProfile, saveContractorProfile, addStoredContract } from '../utils/storage';
+import { watchSignedShare, getSignedShare } from '../utils/signShares';
 import { triggerHaptic } from '../utils/haptics';
 import { CraftsmanStamp } from './CraftsmanStamp';
 import { isProUser } from '../utils/subscription';
@@ -166,25 +166,24 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
       });
     };
 
+    // Na online podpis se ptáme jen u smluv, ke kterým byl vytvořen odkaz a ještě nejsou podepsané
+    const waitsForRemoteSignature = !!currentContract.signToken && !currentContract.clientSignature;
+
     // 0. Okamžitá kontrola při otevření náhledu (pokud klient již dříve podepsal na dálku)
-    if (!currentContract.clientSignature) {
-      getPublicSignShare(currentContract.id)
+    if (waitsForRemoteSignature) {
+      getSignedShare(currentContract.id)
         .then((share) => {
-          if (share && share.status === 'signed' && share.clientSignature) {
-            const datePart = (share.clientSignedAt || new Date().toISOString()).split('T')[0];
-            handleApplySignature(share.clientSignature, datePart, share.signerName);
-          }
+          if (share) handleApplySignature(share.clientSignature, share.signedDate, share.signerName);
         })
         .catch(console.warn);
     }
 
-    // 1. Sledování v reálném čase přes Firestore onSnapshot
-    const unsubscribe = subscribePublicSignShare(currentContract.id, (share) => {
-      if (share && share.status === 'signed' && share.clientSignature) {
-        const datePart = (share.clientSignedAt || new Date().toISOString()).split('T')[0];
-        handleApplySignature(share.clientSignature, datePart, share.signerName);
-      }
-    });
+    // 1. Průběžná kontrola, zda klient podepsal
+    const unsubscribe = waitsForRemoteSignature
+      ? watchSignedShare(currentContract.id, (share) => {
+          handleApplySignature(share.clientSignature, share.signedDate, share.signerName);
+        })
+      : () => {};
 
     // 2. Sledování lokálního podpisu ze stejného prohlížeče
     const handleLocalSign = (e: any) => {
@@ -199,14 +198,30 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
       unsubscribe();
       window.removeEventListener('contract-signed-locally', handleLocalSign as EventListener);
     };
-  }, [currentContract.id, onSaveToHistory, onToast]);
+  }, [currentContract.id, currentContract.signToken, currentContract.clientSignature, onSaveToHistory, onToast]);
+
+  // Tajný kód odkazu k online podpisu se uloží ke smlouvě (u uložené smlouvy potichu, bez hlášky)
+  const handleSignTokenCreated = useCallback(
+    (token: string) => {
+      setCurrentContract((prev) => {
+        if (prev.signToken) return prev;
+        const updated: Contract = { ...prev, signToken: token };
+        if (isSaved) {
+          addStoredContract(updated);
+          window.dispatchEvent(new Event('storage'));
+        }
+        return updated;
+      });
+    },
+    [isSaved]
+  );
 
   const handleManualCheckSignature = async () => {
     setIsCheckingSignature(true);
     try {
-      const share = await getPublicSignShare(currentContract.id);
-      if (share && share.status === 'signed' && share.clientSignature) {
-        const datePart = (share.clientSignedAt || new Date().toISOString()).split('T')[0];
+      const share = await getSignedShare(currentContract.id);
+      if (share) {
+        const datePart = share.signedDate;
         const updated: Contract = {
           ...currentContract,
           clientSignature: share.clientSignature,
@@ -1407,6 +1422,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
         contract={currentContract}
         activeDocType={activeDocType}
         onToast={onToast}
+        onSignTokenCreated={handleSignTokenCreated}
       />
 
       {/* Modal pro Ziskovost & Náklady zakázky */}

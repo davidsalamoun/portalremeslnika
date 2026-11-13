@@ -178,24 +178,31 @@ export function createSyncEngine(kv: KeyValueStore, backend: SyncBackend) {
   const push = async (): Promise<void> => {
     const snapshot = loadState();
     const entries = Object.entries(snapshot.queue).sort((a, b) => a[1].n - b[1].n);
-    for (const [qKey, entry] of entries) {
-      const sep = qKey.indexOf('|');
-      const table = qKey.slice(0, sep) as SyncTable;
-      const id = qKey.slice(sep + 1);
-      const def = SYNC_TABLES.find((d) => d.table === table);
-      if (!def) continue;
 
-      const record = entry.op === 'upsert' ? readRecords(def).find((r) => r.id === id) : undefined;
-      if (record) {
-        await backend.upsert(table, [{ id, data: record.value, deleted_at: null }]);
-      } else {
-        await backend.upsert(table, [{ id, data: {}, deleted_at: new Date().toISOString() }]);
-      }
+    for (const def of SYNC_TABLES) {
+      const tableEntries = entries.filter(([qKey]) => qKey.startsWith(`${def.table}|`));
+      if (tableEntries.length === 0) continue;
+      // Smlouvy mohou být velké (fotky), posílají se po jedné; ostatní po dávkách
+      const batchSize = def.table === 'contracts' ? 1 : 100;
 
-      // Z fronty odebrat jen tehdy, pokud se záznam během odesílání znovu nezměnil
-      const fresh = loadState();
-      if (fresh.queue[qKey]?.n === entry.n) {
-        delete fresh.queue[qKey];
+      for (let from = 0; from < tableEntries.length; from += batchSize) {
+        const batch = tableEntries.slice(from, from + batchSize);
+        const localById = new Map(readRecords(def).map((r) => [r.id, r.value]));
+        const deletedAt = new Date().toISOString();
+        const rows = batch.map(([qKey, entry]) => {
+          const id = qKey.slice(def.table.length + 1);
+          const value = entry.op === 'upsert' ? localById.get(id) : undefined;
+          return value !== undefined
+            ? { id, data: value, deleted_at: null }
+            : { id, data: {}, deleted_at: deletedAt };
+        });
+        await backend.upsert(def.table, rows);
+
+        // Z fronty odebrat jen záznamy, které se během odesílání znovu nezměnily
+        const fresh = loadState();
+        for (const [qKey, entry] of batch) {
+          if (fresh.queue[qKey]?.n === entry.n) delete fresh.queue[qKey];
+        }
         saveState(fresh);
       }
     }

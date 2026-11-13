@@ -5,12 +5,14 @@ import { createSyncEngine, SyncBackend, RemoteRow, SyncTable, KeyValueStore } fr
 /** Napodobenina databáze: řádky podle uživatele a tabulky, čas změny jako rostoucí počítadlo. */
 class FakeDb {
   rows = new Map<string, RemoteRow>();
+  upsertCalls: { table: string; count: number }[] = [];
   clock = 0;
   failing = false;
   backendFor(userId: string): SyncBackend {
     return {
       upsert: async (table, rows) => {
         if (this.failing) throw new Error('offline');
+        this.upsertCalls.push({ table, count: rows.length });
         for (const r of rows) {
           this.clock += 1;
           this.rows.set(`${userId}/${table}/${r.id}`, {
@@ -192,4 +194,17 @@ test('bez přihlášení se nic neeviduje a opakované přihlášení téhož ú
   await d.sync();
   assert.equal(await d.login(db, 'user-A'), false);
   assert.equal(d.engine.pendingCount(), 0);
+});
+
+test('ceník se odešle jednou dávkou, smlouvy po jedné', async () => {
+  const db = new FakeDb();
+  const d = new Device();
+  d.save('remeslnik_cenik', Array.from({ length: 25 }, (_, i) => ({ id: `p${i}`, title: `Položka ${i}` })));
+  d.save('smlouvy', [{ id: 's1' }, { id: 's2' }]);
+  await d.login(db, 'user-A');
+  await d.sync();
+  assert.equal(d.engine.pendingCount(), 0);
+  assert.deepEqual(db.upsertCalls.filter((c) => c.table === 'price_list_items'), [{ table: 'price_list_items', count: 25 }]);
+  assert.equal(db.upsertCalls.filter((c) => c.table === 'contracts').length, 2);
+  assert.equal(db.live('user-A', 'price_list_items').length, 25);
 });
