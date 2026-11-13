@@ -169,3 +169,36 @@ revoke all on function public.get_sign_share(text) from public;
 revoke all on function public.submit_sign_share(text, text, text) from public;
 grant execute on function public.get_sign_share(text) to anon, authenticated;
 grant execute on function public.submit_sign_share(text, text, text) to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Úložiště obrázků (fotky, účtenky, podpisy)
+-- ---------------------------------------------------------------------------
+-- Soukromý bucket; každý uživatel má složku pojmenovanou svým ID a vidí jen ji.
+-- Ve smlouvách je místo obrázku jen odkaz "@img:<id>", soubor je na cestě <user_id>/<id>.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('photos', 'photos', false, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update
+  set public = excluded.public,
+      file_size_limit = excluded.file_size_limit,
+      allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "vlastni fotky - cteni" on storage.objects;
+create policy "vlastni fotky - cteni" on storage.objects
+  for select to authenticated
+  using (bucket_id = 'photos' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+drop policy if exists "vlastni fotky - nahrani" on storage.objects;
+create policy "vlastni fotky - nahrani" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'photos' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+drop policy if exists "vlastni fotky - prepis" on storage.objects;
+create policy "vlastni fotky - prepis" on storage.objects
+  for update to authenticated
+  using (bucket_id = 'photos' and (storage.foldername(name))[1] = (select auth.uid())::text)
+  with check (bucket_id = 'photos' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+drop policy if exists "vlastni fotky - smazani" on storage.objects;
+create policy "vlastni fotky - smazani" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'photos' and (storage.foldername(name))[1] = (select auth.uid())::text);
