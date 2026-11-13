@@ -62,7 +62,7 @@ import { applyBackup } from './utils/backup';
 import { checkAndSyncRemoteSignatures } from './utils/signShares';
 import { useCloudUser } from './components/AuthGate';
 import { CLOUD_DATA_CHANGED_EVENT } from './utils/cloudSync';
-import { isProUser, PRO_CONFIG, activateProSubscription } from './utils/subscription';
+import { isProUser, PRO_CONFIG, PAYMENTS_ENABLED } from './utils/subscription';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
@@ -126,9 +126,12 @@ export default function App() {
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
 
   const handleOpenPaywall = (reason?: string) => {
+    if (!PAYMENTS_ENABLED) return;
     setPaywallReason(reason);
     setIsPaywallOpen(true);
   };
+  // Dokud je placení vypnuté, tlačítka a bannery pro přechod na PRO se vůbec nezobrazují
+  const openPaywallProp = PAYMENTS_ENABLED ? () => handleOpenPaywall() : undefined;
 
   // Toast notifications
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -198,28 +201,6 @@ export default function App() {
 
     const ids = new Set(loadedContracts.map((c) => c.id));
     setSavedContractIds(ids);
-
-    // Check for Stripe Checkout return in URL params
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const isStripeSuccess = urlParams.get('stripe_success') === 'true';
-      const stripePlan = (urlParams.get('plan') as 'pro_monthly' | 'pro_yearly') || 'pro_yearly';
-
-      if (isStripeSuccess && loadedContractor) {
-        const updated = activateProSubscription(loadedContractor, stripePlan);
-        saveContractorProfile(updated);
-        setContractor(updated);
-        addToast(
-          'success',
-          `Platba přes Stripe proběhla úspěšně! Licence Mistr PRO (${
-            stripePlan === 'pro_yearly' ? 'Roční' : 'Měsíční'
-          }) je aktivní.`
-        );
-        window.history.replaceState({}, '', window.location.pathname);
-      }
-    } catch (e) {
-      console.warn('Chyba při čtení návratu ze Stripe:', e);
-    }
   }, []);
 
   // Compute overdue invoices count for navbar badge
@@ -605,7 +586,7 @@ export default function App() {
         currentUser={currentUser}
         onOpenCloudModal={() => setIsCloudModalOpen(true)}
         contractor={contractor}
-        onOpenPaywall={() => handleOpenPaywall()}
+        onOpenPaywall={openPaywallProp}
       />
 
       {/* Dialog pro přidání/úpravu klienta */}
@@ -646,7 +627,7 @@ export default function App() {
                 calendarEvents={calendarEvents}
                 contractor={contractor}
                 onSelectTab={handleTabChange}
-                onOpenPaywall={() => handleOpenPaywall()}
+                onOpenPaywall={openPaywallProp}
                 onOpenContract={(contract) => {
                   setPreviewContract(contract);
                   setPreviewInitialDoc('smlouva');
@@ -803,7 +784,7 @@ export default function App() {
                 contractor={contractor}
                 onOpenContract={handleShowPreview}
                 onToast={addToast}
-                onOpenPaywall={(reason) => handleOpenPaywall(reason)}
+                onOpenPaywall={PAYMENTS_ENABLED ? (reason) => handleOpenPaywall(reason) : undefined}
               />
             )}
 
@@ -815,8 +796,8 @@ export default function App() {
                 onPreloadSample={handleSeedSampleData}
                 onRestoreBackup={handleRestoreBackup}
                 onToast={addToast}
-                onOpenPaywall={() => handleOpenPaywall()}
-                onOpenInvoiceModal={() => setIsInvoiceModalOpen(true)}
+                onOpenPaywall={openPaywallProp}
+                onOpenInvoiceModal={PAYMENTS_ENABLED ? () => setIsInvoiceModalOpen(true) : undefined}
               />
             )}
           </>
@@ -834,7 +815,7 @@ export default function App() {
         isDarkMode={isDarkMode}
         onToggleDarkMode={toggleDarkMode}
         contractor={contractor}
-        onOpenPaywall={() => handleOpenPaywall()}
+        onOpenPaywall={openPaywallProp}
       />
 
       {/* Rychlé zprávy pro klienta */}
@@ -972,7 +953,8 @@ export default function App() {
         />
       )}
 
-      {/* 👑 Paywall & Mistr PRO Předplatné */}
+      {/* 👑 Paywall & Mistr PRO Předplatné (jen se zapnutým placením) */}
+      {PAYMENTS_ENABLED && (
       <PaywallModal
         isOpen={isPaywallOpen}
         onClose={() => setIsPaywallOpen(false)}
@@ -981,13 +963,16 @@ export default function App() {
         reason={paywallReason}
         onToast={addToast}
       />
+      )}
 
       {/* 🧾 Daňový doklad k licenci pro účetní */}
+      {PAYMENTS_ENABLED && (
       <SubscriptionInvoiceModal
         isOpen={isInvoiceModalOpen}
         onClose={() => setIsInvoiceModalOpen(false)}
         contractor={contractor}
       />
+      )}
 
       {/* Footer */}
       <footer className="no-print border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 mb-16 md:mb-0 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">

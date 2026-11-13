@@ -120,7 +120,10 @@ odstraněny včetně serverových endpointů a závislosti na Gemini. Nepřidáv
 
 ## Známé limity (stav po převzetí z AI Studia)
 
-- Předplatné PRO se aktivuje jen v prohlížeči (simulovaná platba, parametr `?stripe_success=true`); neověřuje se na serveru.
+- **Placení je vypnuté** (`PAYMENTS_ENABLED = false` v `utils/subscription.ts`): všechny funkce jsou odemčené, tlačítka
+  a bannery PRO, paywall i doklad k licenci se nezobrazují. Nezapínat, dokud platbu neověřuje server a v `PRO_CONFIG`
+  nejsou skutečné údaje provozovatele – současné IČO a číslo účtu jsou vymyšlené, stejně jako platební formulář
+  v `PaywallModal.tsx` (jen napodobuje Stripe). Aktivace PRO parametrem v adrese byla odstraněna.
 - Testy pokrývají synchronizaci a odkazy na obrázky; přihlášení a UI se ověřují ručně.
 - Obrázky smazané ze smluv zůstávají v IndexedDB i v bucketu `photos` (úklid nepoužívaných zatím není).
 - Po startu se všechny obrázky účtu načtou do paměti; u tisíců fotek bude potřeba načítání na vyžádání.

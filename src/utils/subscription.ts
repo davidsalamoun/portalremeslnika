@@ -24,9 +24,17 @@ export interface SubscriptionInfo {
 }
 
 /**
+ * Placení je zatím vypnuté: všechny funkce jsou odemčené pro každého a obrazovky plateb se nezobrazují.
+ * Zapnout až s ostrým zpoplatněním, kdy bude platbu ověřovat server (ne prohlížeč) a v PRO_CONFIG
+ * budou skutečné údaje provozovatele – ty současné jsou vymyšlené a nesmí se uživatelům ukázat.
+ */
+export const PAYMENTS_ENABLED: boolean = false;
+
+/**
  * Zjištění, zda má uživatel aktivní PRO verzi (placenou nebo trial)
  */
 export function isProUser(profile: ContractorProfile | null): boolean {
+  if (!PAYMENTS_ENABLED) return true;
   if (!profile) return false;
   const plan = profile.subscriptionPlan;
   if (!plan || plan === 'free') return false;

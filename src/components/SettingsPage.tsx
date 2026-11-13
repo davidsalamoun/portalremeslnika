@@ -262,7 +262,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
   return (
     <div className="max-w-[900px] mx-auto pb-16 space-y-8">
-      {/* Předplatné a licence Mistr PRO */}
+      {/* Předplatné a licence Mistr PRO (jen se zapnutým placením) */}
+      {onOpenPaywall && (
       <div className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-xs border border-slate-200/90 dark:border-slate-800 transition-colors">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -317,6 +318,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           </div>
         </div>
       </div>
+      )}
 
       {/* Hlavní profil zhotovitele a živnostenský workbench */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
