@@ -1,5 +1,16 @@
 import { supabase } from './supabase';
 import { createSyncEngine, RemoteRow, SyncBackend, SyncTable } from './syncEngine';
+import {
+  preloadBlobs,
+  getBlob,
+  getPendingUploadIds,
+  pendingUploadCount,
+  markBlobUploaded,
+  storeDownloadedBlob,
+  loadBlobFromDisk,
+  clearAllBlobs,
+} from './blobStore';
+import { migrateInlineImages, findMissingImageIds } from './storage';
 
 /**
  * Propojení synchronizace (syncEngine.ts) se Supabase a s prohlížečem:
@@ -54,6 +65,91 @@ const backend: SyncBackend = {
 
 const engine = createSyncEngine(window.localStorage, backend);
 
+// --- Obrázky: soubory v úložišti Supabase na cestě <user_id>/<id obrázku> ---
+
+const PHOTO_BUCKET = 'photos';
+
+function dataUrlToBlob(dataUrl: string): Blob {
+  const comma = dataUrl.indexOf(',');
+  const mime = dataUrl.slice(5, dataUrl.indexOf(';'));
+  const binary = atob(dataUrl.slice(comma + 1));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+/** Nahraje do účtu obrázky, které tam ještě nejsou. Vrací false, pokud se některý nahrát nepodařil. */
+async function uploadPendingImages(): Promise<boolean> {
+  const ids = getPendingUploadIds();
+  if (ids.length === 0) return true;
+  const userId = await currentUserId();
+  let allOk = true;
+  for (const id of ids) {
+    const dataUrl = getBlob(id);
+    if (dataUrl === undefined) continue;
+    const { error } = await supabase.storage
+      .from(PHOTO_BUCKET)
+      .upload(`${userId}/${id}`, dataUrlToBlob(dataUrl), { upsert: true, contentType: dataUrl.slice(5, dataUrl.indexOf(';')) });
+    if (error) {
+      console.warn(`Obrázek ${id} se nepodařilo nahrát:`, error.message);
+      allOk = false;
+      continue;
+    }
+    await markBlobUploaded(id);
+  }
+  return allOk;
+}
+
+/** Stáhne obrázky, na které data odkazují, ale v zařízení nejsou. Vrací true, pokud nějaký přibyl. */
+async function downloadMissingImages(): Promise<boolean> {
+  const ids = findMissingImageIds();
+  if (ids.length === 0) return false;
+  const userId = await currentUserId();
+  let added = false;
+  for (const id of ids) {
+    if (await loadBlobFromDisk(id)) {
+      added = true;
+      continue;
+    }
+    const { data, error } = await supabase.storage.from(PHOTO_BUCKET).download(`${userId}/${id}`);
+    if (error || !data) continue; // soubor ještě nemusí být nahraný z druhého zařízení; zkusí se příště
+    try {
+      await storeDownloadedBlob(id, await blobToDataUrl(data));
+      added = true;
+    } catch (err) {
+      console.warn(`Obrázek ${id} se nepodařilo uložit:`, err);
+    }
+  }
+  return added;
+}
+
+/**
+ * Příprava po startu aplikace: načte obrázky do paměti a převede data ze starší verze
+ * (obrázky přímo v localStorage) na odkazy. Volá se před prvním čtením dat.
+ */
+let prepared: Promise<void> | null = null;
+
+export function prepareLocalData(): Promise<void> {
+  if (!prepared) {
+    prepared = (async () => {
+      await preloadBlobs();
+      await migrateInlineImages();
+    })().catch((err) => {
+      console.warn('Příprava lokálních dat se nezdařila:', err);
+    });
+  }
+  return prepared;
+}
+
 export const CLOUD_DATA_CHANGED_EVENT = 'app:cloud_data_changed';
 
 export interface CloudSyncStatus {
@@ -64,11 +160,11 @@ export interface CloudSyncStatus {
   pending: number;
 }
 
-let status: CloudSyncStatus = { phase: 'idle', lastSyncAt: null, pending: engine.pendingCount() };
+let status: CloudSyncStatus = { phase: 'idle', lastSyncAt: null, pending: engine.pendingCount() + pendingUploadCount() };
 const listeners = new Set<(s: CloudSyncStatus) => void>();
 
 function setStatus(patch: Partial<CloudSyncStatus>) {
-  status = { ...status, ...patch, pending: engine.pendingCount() };
+  status = { ...status, ...patch, pending: engine.pendingCount() + pendingUploadCount() };
   listeners.forEach((l) => l(status));
 }
 
@@ -96,13 +192,25 @@ export function syncNow(): Promise<boolean> {
   }
   running = (async () => {
     try {
+      await prepareLocalData();
       if (!engine.getState().userId) return false;
       setStatus({ phase: 'syncing' });
+      let imagesOk = true;
       do {
         rerun = false;
+        // Nejdřív obrázky, pak záznamy, které na ně odkazují – druhé zařízení tak obrázek najde
+        imagesOk = await uploadPendingImages();
         await engine.push();
-        if (await engine.pull()) notifyDataChanged();
+        let changed = await engine.pull();
+        // Záznamy ze zařízení se starší verzí mohou mít obrázky ještě přímo v datech
+        if (changed && (await migrateInlineImages())) rerun = true;
+        if (await downloadMissingImages()) changed = true;
+        if (changed) notifyDataChanged();
       } while (rerun);
+      if (!imagesOk) {
+        setStatus({ phase: 'error' });
+        return false;
+      }
       setStatus({ phase: 'idle', lastSyncAt: new Date().toISOString() });
       return true;
     } catch (err) {
@@ -141,6 +249,10 @@ export function needsAccountConnect(userId: string): boolean {
  * Při chybě (např. bez připojení) vyhodí výjimku a lokální data nechá beze změny.
  */
 export async function connectAccount(userId: string): Promise<void> {
+  await prepareLocalData();
+  // V prohlížeči zůstala data jiného účtu: jeho obrázky se smažou stejně jako ostatní data
+  const previousUser = engine.getState().userId;
+  if (previousUser && previousUser !== userId) await clearAllBlobs();
   const changed = await engine.adopt(userId);
   if (changed) notifyDataChanged();
   setStatus({});
@@ -178,7 +290,7 @@ export function startAutoSync(): () => void {
 export async function signOutAndClear(): Promise<boolean> {
   window.clearTimeout(pushTimer);
   await syncNow();
-  const pending = engine.pendingCount();
+  const pending = engine.pendingCount() + pendingUploadCount();
   if (pending > 0) {
     const ok = window.confirm(
       `Některé změny (${pending}) se ještě nepodařilo uložit do účtu, nejspíš kvůli připojení k internetu. ` +
@@ -188,6 +300,7 @@ export async function signOutAndClear(): Promise<boolean> {
   }
   await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
   engine.clearLocal();
+  await clearAllBlobs();
   window.localStorage.removeItem('last_cloud_sync');
   window.location.reload();
   return true;

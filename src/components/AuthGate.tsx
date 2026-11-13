@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { RefreshCw, CloudOff } from 'lucide-react';
 import { supabase, toCloudUser, CloudUser } from '../utils/supabase';
-import { connectAccount, needsAccountConnect, startAutoSync } from '../utils/cloudSync';
+import { connectAccount, needsAccountConnect, startAutoSync, prepareLocalData } from '../utils/cloudSync';
 import { AuthScreen } from './AuthScreen';
 
 const CloudUserContext = createContext<CloudUser | null>(null);
@@ -47,6 +47,7 @@ export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const [phase, setPhase] = useState<Phase>('loading');
   const [user, setUser] = useState<CloudUser | null>(null);
   const [connectAttempt, setConnectAttempt] = useState(0);
+  const localReady = useRef(false);
 
   useEffect(() => {
     applySavedTheme();
@@ -57,8 +58,10 @@ export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) 
     if (isSigningPortal) return;
     let active = true;
 
-    supabase.auth.getSession().then(({ data }) => {
+    // Nejdřív připravit lokální data (obrázky do paměti, převod starších dat), teprve pak pustit aplikaci
+    Promise.all([supabase.auth.getSession(), prepareLocalData().catch((err) => console.warn(err))]).then(([{ data }]) => {
       if (!active) return;
+      localReady.current = true;
       const next = toCloudUser(data.session?.user);
       setUser(next);
       setPhase((prev) => (prev === 'recovery' ? prev : next ? 'connecting' : 'signed-out'));
@@ -79,7 +82,12 @@ export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) 
       }
       if (event === 'SIGNED_IN') {
         setUser((prev) => (prev?.uid === next.uid ? prev : next));
-        setPhase((prev) => (prev === 'signed-out' || prev === 'loading' ? 'connecting' : prev));
+        setPhase((prev) => {
+          if (prev === 'signed-out') return 'connecting';
+          // Při startu se čeká na přípravu lokálních dat (viz getSession výše)
+          if (prev === 'loading' && localReady.current) return 'connecting';
+          return prev;
+        });
       }
     });
 
@@ -92,11 +100,14 @@ export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) 
   // Propojení prohlížeče s účtem (jen poprvé, nebo po změně účtu)
   useEffect(() => {
     if (phase !== 'connecting' || !user) return;
-    if (!needsAccountConnect(user.uid)) {
-      setPhase('ready');
-      return;
-    }
     let active = true;
+    if (!needsAccountConnect(user.uid)) {
+      // Aplikace smí číst data až po načtení obrázků do paměti
+      prepareLocalData().then(() => active && setPhase('ready'));
+      return () => {
+        active = false;
+      };
+    }
     connectAccount(user.uid)
       .then(() => active && setPhase('ready'))
       .catch((err) => {

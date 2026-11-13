@@ -18,7 +18,8 @@ dál se vyvíjí mimo něj.
    Proměnné s prefixem `VITE_` jsou veřejné. `.env*` se necommituje (kromě `.env.example`).
 5. **Neměnit klíče a tvar dat v localStorage bez migrace** – stejný tvar se ukládá i do databáze (sloupec `data`)
    a čtou ho i starší verze aplikace na jiných zařízeních.
-6. **Zápisy dat jen přes `src/utils/storage.ts`** – jinak se změna nedostane do účtu uživatele.
+6. **Čtení i zápisy dat jen přes `src/utils/storage.ts`** – jinak se změna nedostane do účtu uživatele a místo
+   obrázků by se četly jen odkazy `@img:…`. Nikdy nečíst klíče dat přímo z localStorage.
 
 ## Příkazy
 
@@ -27,7 +28,7 @@ npm install
 npm run dev                      # Express + Vite middleware na http://localhost:3000 (PORT lze změnit)
 npm run build                    # produkční build frontendu do dist/
 npm run lint                     # tsc --noEmit
-npm test                         # testy synchronizace (tests/*.test.ts, node:test přes tsx)
+npm test                         # testy synchronizace a odkazů na obrázky (tests/*.test.ts, node:test přes tsx)
 NODE_ENV=production npm start    # lokální produkční běh: Express servíruje dist/ + /api
 ```
 
@@ -66,7 +67,9 @@ src/
   data/craftTemplates.ts      šablony zakázek podle řemesla
   components/                 stránky (*Page.tsx), dokumenty (*View.tsx), modály (*Modal.tsx)
   utils/
-    storage.ts                čtení/zápis localStorage (jediné místo zápisu dat)
+    storage.ts                čtení/zápis localStorage (jediné místo čtení a zápisu dat)
+    imageRefs.ts              nahrazení obrázků odkazy `@img:<id>` při ukládání a zpět při čtení
+    blobStore.ts              úložiště obrázků v prohlížeči (IndexedDB + paměť)
     supabase.ts               klient Supabase, české hlášky chyb přihlášení
     syncEngine.ts             logika synchronizace localStorage ↔ databáze (bez závislosti na prohlížeči)
     cloudSync.ts              napojení synchronizace na Supabase a prohlížeč, odhlášení
@@ -88,8 +91,15 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
 - **Přihlášení** e-mailem a heslem přes Supabase Auth. `components/AuthGate.tsx` pustí do aplikace jen přihlášeného
   uživatele (`AuthScreen.tsx`: přihlášení, registrace, obnova hesla). Výjimka: portál online podpisu `?sign=…`.
 - **Aplikace čte a zapisuje do localStorage** (funguje i bez připojení): klíče `zhotovitel`, `klienti`, `smlouvy`,
-  `remeslnik_cenik`, `remeslnik_kalendar`, `theme`. Faktury, náklady, dodatky, fotky, podpisy, deník, kniha jízd
-  i protokoly jsou vnořené v objektu `Contract` v klíči `smlouvy` (fotky jako base64).
+  `remeslnik_cenik`, `remeslnik_kalendar`, `theme`. Faktury, náklady, dodatky, deník, kniha jízd i protokoly jsou
+  vnořené v objektu `Contract` v klíči `smlouvy`.
+- **Obrázky** (fotky, účtenky, podpisy – data URL jpeg/png/webp od 2 kB) se neukládají do localStorage ani do
+  řádků databáze. `storage.ts` je při zápisu nahradí odkazem `@img:<id>` (id z obsahu obrázku) a uloží do IndexedDB
+  (`blobStore.ts`); při čtení je dosadí zpět, takže komponenty pracují s běžnými data URL. V účtu jsou soubory
+  v soukromém bucketu `photos` na cestě `<user_id>/<id>`. Synchronizace nahrává obrázky před záznamy a chybějící
+  stahuje; do té doby se zobrazí šedý zástupný obrázek (nese id, při uložení se odkaz neztratí). Data ze starší
+  verze (obrázky přímo v localStorage) převádí `migrateInlineImages` po startu. Bez IndexedDB zůstávají obrázky
+  v datech jako dřív.
 - **Synchronizace s účtem**: `storage.ts` po každém zápisu ohlásí změnu, `syncEngine.ts` ji zařadí do fronty
   (klíč `cloud_sync_state`), odešle do Supabase a stahuje změny z jiných zařízení. Tabulky `profiles`, `clients`,
   `contracts`, `calendar_events`, `price_list_items` mají stejný tvar (`user_id`, `id`, `data` jsonb, `updated_at`,
@@ -111,5 +121,6 @@ odstraněny včetně serverových endpointů a závislosti na Gemini. Nepřidáv
 ## Známé limity (stav po převzetí z AI Studia)
 
 - Předplatné PRO se aktivuje jen v prohlížeči (simulovaná platba, parametr `?stripe_success=true`); neověřuje se na serveru.
-- Testy pokrývají jen synchronizaci; přihlášení a UI se ověřují ručně.
-- Fotky jsou uložené jako base64 uvnitř smluv (velké řádky v databázi, limit localStorage ~5 MB).
+- Testy pokrývají synchronizaci a odkazy na obrázky; přihlášení a UI se ověřují ručně.
+- Obrázky smazané ze smluv zůstávají v IndexedDB i v bucketu `photos` (úklid nepoužívaných zatím není).
+- Po startu se všechny obrázky účtu načtou do paměti; u tisíců fotek bude potřeba načítání na vyžádání.

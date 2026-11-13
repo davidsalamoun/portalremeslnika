@@ -1,11 +1,62 @@
 import { ContractorProfile, Client, Contract } from '../types/contract';
 import { trackLocalChange } from './cloudSync';
+import { parseWithImages, stringifyWithRefs, collectInlineImages, collectImageRefs } from './imageRefs';
+import { getBlob, hasBlob, putBlob, putBlobDurable, isBlobStoreReady } from './blobStore';
 
-// Zápis do localStorage, o kterém se dozví synchronizace s účtem (tvar uložených dat se nemění)
+// Zápis do localStorage, o kterém se dozví synchronizace s účtem
 function setItemTracked(key: string, value: string): void {
   const previous = localStorage.getItem(key);
   localStorage.setItem(key, value);
   trackLocalChange(key, previous, value);
+}
+
+// Obrázky (fotky, účtenky, podpisy) se ukládají zvlášť; v localStorage je místo nich odkaz "@img:<id>".
+// Při čtení se obrázek dosadí zpět, takže aplikace dál pracuje s běžnými data URL.
+function parseStored(raw: string): any {
+  return parseWithImages(raw, getBlob);
+}
+
+function serializeForStorage(value: unknown): string {
+  return stringifyWithRefs(value, putBlob);
+}
+
+const IMAGE_BEARING_KEYS = ['zhotovitel', 'klienti', 'smlouvy', 'remeslnik_cenik', 'remeslnik_kalendar'];
+
+/**
+ * Převede data ze starší verze (obrázky přímo v localStorage) na odkazy. Obrázek se z localStorage
+ * odstraní až poté, co je bezpečně zapsaný na disku. Vrací true, pokud se něco převedlo.
+ */
+export async function migrateInlineImages(): Promise<boolean> {
+  if (!isBlobStoreReady()) return false;
+  let migrated = false;
+  for (const key of IMAGE_BEARING_KEYS) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const images = collectInlineImages(raw);
+      if (images.length === 0) continue;
+      for (const dataUrl of images) await putBlobDurable(dataUrl);
+      // Znovu načíst – data se během čekání mohla změnit
+      const current = localStorage.getItem(key);
+      if (!current) continue;
+      setItemTracked(key, serializeForStorage(JSON.parse(current)));
+      migrated = true;
+    } catch (e) {
+      console.warn(`Převod obrázků (${key}) se nezdařil, data zůstávají v původní podobě:`, e);
+    }
+  }
+  return migrated;
+}
+
+/** Id obrázků, na které data odkazují, ale v tomto zařízení zatím nejsou (je třeba je stáhnout z účtu). */
+export function findMissingImageIds(): string[] {
+  const missing = new Set<string>();
+  for (const key of IMAGE_BEARING_KEYS) {
+    const raw = localStorage.getItem(key);
+    if (!raw) continue;
+    for (const id of collectImageRefs(raw)) if (!hasBlob(id)) missing.add(id);
+  }
+  return [...missing];
 }
 
 const STORAGE_KEYS = {
@@ -38,7 +89,7 @@ export function getContractorProfile(): ContractorProfile | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.ZHOTOVITEL);
     if (!raw) return null;
-    return JSON.parse(raw);
+    return parseStored(raw);
   } catch (e) {
     console.error('Chyba při načítání zhotovitele z localStorage', e);
     return null;
@@ -47,7 +98,7 @@ export function getContractorProfile(): ContractorProfile | null {
 
 export function saveContractorProfile(profile: ContractorProfile): void {
   try {
-    setItemTracked(STORAGE_KEYS.ZHOTOVITEL, JSON.stringify(profile));
+    setItemTracked(STORAGE_KEYS.ZHOTOVITEL, serializeForStorage(profile));
   } catch (e) {
     notifyStorageError('profil zhotovitele', e);
   }
@@ -58,7 +109,7 @@ export function getStoredClients(): Client[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.KLIENTI);
     if (!raw) return [];
-    return JSON.parse(raw);
+    return parseStored(raw);
   } catch (e) {
     console.error('Chyba při načítání klientů z localStorage', e);
     return [];
@@ -67,7 +118,7 @@ export function getStoredClients(): Client[] {
 
 export function saveStoredClients(clients: Client[]): void {
   try {
-    setItemTracked(STORAGE_KEYS.KLIENTI, JSON.stringify(clients));
+    setItemTracked(STORAGE_KEYS.KLIENTI, serializeForStorage(clients));
   } catch (e) {
     notifyStorageError('klienti', e);
   }
@@ -104,7 +155,7 @@ export function getStoredContracts(): Contract[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.SMLOUVY);
     if (!raw) return [];
-    return JSON.parse(raw);
+    return parseStored(raw);
   } catch (e) {
     console.error('Chyba při načítání smluv z localStorage', e);
     return [];
@@ -113,7 +164,7 @@ export function getStoredContracts(): Contract[] {
 
 export function saveStoredContracts(contracts: Contract[]): void {
   try {
-    setItemTracked(STORAGE_KEYS.SMLOUVY, JSON.stringify(contracts));
+    setItemTracked(STORAGE_KEYS.SMLOUVY, serializeForStorage(contracts));
   } catch (e) {
     notifyStorageError('smlouvy', e);
   }
@@ -218,7 +269,7 @@ export function getStoredPriceList(): import('../types/contract').PriceListTempl
       saveStoredPriceList(defaults);
       return defaults;
     }
-    return JSON.parse(raw);
+    return parseStored(raw);
   } catch (e) {
     console.error('Chyba při načítání ceníku', e);
     return [];
@@ -227,7 +278,7 @@ export function getStoredPriceList(): import('../types/contract').PriceListTempl
 
 export function saveStoredPriceList(items: import('../types/contract').PriceListTemplateItem[]): void {
   try {
-    setItemTracked('remeslnik_cenik', JSON.stringify(items));
+    setItemTracked('remeslnik_cenik', serializeForStorage(items));
   } catch (e) {
     console.error('Chyba při ukládání ceníku', e);
   }
@@ -238,7 +289,7 @@ export function getStoredCalendarEvents(): import('../types/contract').CalendarE
   try {
     const raw = localStorage.getItem('remeslnik_kalendar');
     if (!raw) return [];
-    return JSON.parse(raw);
+    return parseStored(raw);
   } catch (e) {
     console.error('Chyba při načítání událostí kalendáře', e);
     return [];
@@ -247,7 +298,7 @@ export function getStoredCalendarEvents(): import('../types/contract').CalendarE
 
 export function saveStoredCalendarEvents(events: import('../types/contract').CalendarEvent[]): void {
   try {
-    setItemTracked('remeslnik_kalendar', JSON.stringify(events));
+    setItemTracked('remeslnik_kalendar', serializeForStorage(events));
   } catch (e) {
     console.error('Chyba při ukládání událostí kalendáře', e);
   }
