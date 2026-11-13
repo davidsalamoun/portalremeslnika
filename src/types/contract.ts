@@ -1,5 +1,13 @@
 export type ContractStatus = 'draft' | 'signed' | 'in_progress' | 'handover_done' | 'paid';
 
+/** Otisk údajů v okamžiku načtení z registru ARES. Štítek platí, jen dokud se údaje profilu shodují. */
+export interface AresVerification {
+  ico: string;
+  name: string;
+  address: string;
+  verifiedAt: string;    // ISO datum a čas načtení z ARES
+}
+
 export interface ContractorProfile {
   name: string;          // Jméno / obchodní jméno
   ico: string;           // IČO (přesně 8 číslic)
@@ -10,6 +18,7 @@ export interface ContractorProfile {
   email: string;         // E-mail
   defaultPlace: string;  // Místo uzavření smlouvy (např. v Praze, v Brně)
   signature?: string;    // Výchozí digitální podpis zhotovitele (base64 PNG)
+  aresVerified?: AresVerification; // Údaje naposledy načtené z registru ARES (pro štítek „ověřeno“)
   subscriptionPlan?: 'free' | 'pro_trial' | 'pro_monthly' | 'pro_yearly';
   subscriptionExpiresAt?: string; // ISO datum expirace licence
   trialStartedAt?: string;        // ISO datum aktivace zkušební doby

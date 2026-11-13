@@ -254,7 +254,7 @@ export const RemoteSigningPortal: React.FC<RemoteSigningPortalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-mono font-black uppercase tracking-wider text-amber-400">
-                  Online ověřený podpis
+                  Online podpis
                 </span>
               </div>
               <h1 className="text-base font-black text-white font-mono tracking-tight mt-0.5">

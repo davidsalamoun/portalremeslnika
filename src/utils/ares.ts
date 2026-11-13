@@ -62,3 +62,24 @@ export async function fetchCompanyByIco(ico: string): Promise<AresCompanyData> {
     throw new Error(err.message || 'Nepodařilo se načíst data z registru ARES.');
   }
 }
+
+/**
+ * True, pokud jméno, IČO a adresa přesně odpovídají tomu, co bylo naposledy načteno z registru ARES.
+ * Po ruční úpravě kteréhokoli z těchto údajů ověření přestává platit.
+ */
+export function isAresVerified(
+  profile:
+    | {
+        ico?: string;
+        name?: string;
+        address?: string;
+        aresVerified?: { ico: string; name: string; address: string };
+      }
+    | null
+    | undefined
+): boolean {
+  const v = profile?.aresVerified;
+  if (!profile || !v || !v.ico || !v.name) return false;
+  const same = (a?: string, b?: string) => (a || '').trim() === (b || '').trim();
+  return same(profile.ico, v.ico) && same(profile.name, v.name) && same(profile.address, v.address);
+}
