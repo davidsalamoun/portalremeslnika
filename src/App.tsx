@@ -59,7 +59,7 @@ import {
 } from './utils/storage';
 import { cleanPlaceName } from './utils/numberToWordsCs';
 import { applyBackup } from './utils/backup';
-import { checkAndSyncRemoteSignatures } from './utils/firebase';
+import { checkAndSyncRemoteSignatures } from './utils/signShares';
 import { useCloudUser } from './components/AuthGate';
 import { CLOUD_DATA_CHANGED_EVENT } from './utils/cloudSync';
 import { isProUser, PRO_CONFIG, activateProSubscription } from './utils/subscription';
@@ -274,7 +274,7 @@ export default function App() {
 
     const interval = setInterval(() => {
       syncRemoteSignatures();
-    }, 8000);
+    }, 15000);
 
     const handleFocus = () => {
       syncRemoteSignatures();
@@ -578,10 +578,8 @@ export default function App() {
       <RemoteSigningPortal
         shareId={signParam}
         onBackToApp={() => {
-          try {
-            window.history.replaceState({}, '', window.location.pathname);
-          } catch {}
-          setSignParam(null);
+          // Celé nové načtení bez parametru, aby aplikace prošla přihlášením (AuthGate)
+          window.location.assign(window.location.pathname);
         }}
       />
     );
@@ -845,6 +843,12 @@ export default function App() {
           isOpen={!!quickMessagesContract}
           onClose={() => setQuickMessagesContract(null)}
           contract={quickMessagesContract}
+          onUpdateContract={(updated: Contract) => {
+            addStoredContract(updated);
+            setContracts(getStoredContracts());
+            setQuickMessagesContract(updated);
+            if (previewContract?.id === updated.id) setPreviewContract(updated);
+          }}
           onToast={addToast}
         />
       )}

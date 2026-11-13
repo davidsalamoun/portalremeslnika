@@ -14,7 +14,7 @@ import {
   Clock,
   Layers,
 } from 'lucide-react';
-import { getPublicSignShare, submitRemoteClientSignature, PublicContractShare } from '../utils/firebase';
+import { getPublicSignShare, submitRemoteClientSignature } from '../utils/signShares';
 import { Contract } from '../types/contract';
 import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
 import { getStoredContracts, addStoredContract } from '../utils/storage';
@@ -28,7 +28,6 @@ export const RemoteSigningPortal: React.FC<RemoteSigningPortalProps> = ({
   shareId,
   onBackToApp,
 }) => {
-  const [shareData, setShareData] = useState<PublicContractShare | null>(null);
   const [contract, setContract] = useState<Contract | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,9 +48,9 @@ export const RemoteSigningPortal: React.FC<RemoteSigningPortalProps> = ({
       try {
         const share = await getPublicSignShare(shareId);
         if (!share) {
-          // Zkusit načíst z lokálního úložiště (pokud byl odkaz otevřen na stejném zařízení)
+          // Zkusit načíst z lokálního úložiště (pokud byl odkaz otevřen na zařízení řemeslníka)
           const localList = getStoredContracts();
-          const found = localList.find((c) => c.id === shareId);
+          const found = localList.find((c) => c.signToken === shareId);
           if (found) {
             setContract(found);
             setSignerName(found.client?.name || '');
@@ -64,18 +63,18 @@ export const RemoteSigningPortal: React.FC<RemoteSigningPortalProps> = ({
           throw new Error('Smlouva k podpisu nebyla nalezena nebo odkaz vypršel.');
         }
 
-        setShareData(share);
         if (share.status === 'signed') {
           setIsSuccess(true);
         }
-        if (share.contractData) {
-          const parsed = JSON.parse(share.contractData) as Contract;
-          setContract(parsed);
-          setSignerName(parsed.client?.name || share.signerName || '');
-        }
+        setContract(share.contract);
+        setSignerName(share.contract.client?.name || share.signerName || '');
       } catch (err: any) {
         console.error(err);
-        setError(err?.message || 'Nepodařilo se načíst smlouvu.');
+        setError(
+          typeof err?.message === 'string' && err.message.startsWith('Smlouva k podpisu')
+            ? err.message
+            : 'Nepodařilo se načíst smlouvu. Zkontrolujte připojení k internetu a zkuste to znovu.'
+        );
       } finally {
         setIsLoading(false);
       }
@@ -150,13 +149,25 @@ export const RemoteSigningPortal: React.FC<RemoteSigningPortalProps> = ({
     setIsSubmitting(true);
     try {
       const signatureDataUrl = canvas.toDataURL('image/png');
-      await submitRemoteClientSignature(shareId, signatureDataUrl, signerName);
+      const result = await submitRemoteClientSignature(shareId, signatureDataUrl, signerName);
+      if (result === 'already_signed') {
+        setIsSuccess(true);
+        return;
+      }
+      if (result !== 'signed') {
+        setFormError(
+          result === 'invalid'
+            ? 'Podpis se nepodařilo zpracovat. Zkuste se prosím podepsat znovu.'
+            : 'Smlouva k podpisu nebyla nalezena nebo odkaz vypršel. Požádejte prosím o nový odkaz.'
+        );
+        return;
+      }
 
       const signDate = new Date().toISOString().split('T')[0];
 
       // Aktualizovat i v lokálním úložišti zhotovitele (pokud je na stejném zařízení)
       const localList = getStoredContracts();
-      const existing = localList.find((c) => c.id === shareId);
+      const existing = localList.find((c) => c.signToken === shareId);
       if (existing) {
         const updated: Contract = {
           ...existing,
@@ -183,7 +194,7 @@ export const RemoteSigningPortal: React.FC<RemoteSigningPortalProps> = ({
       try {
         window.dispatchEvent(
           new CustomEvent('contract-signed-locally', {
-            detail: { id: shareId, signature: signatureDataUrl, date: signDate, signerName },
+            detail: { id: existing?.id || contract?.id || shareId, signature: signatureDataUrl, date: signDate, signerName },
           })
         );
         window.dispatchEvent(new Event('storage'));
@@ -194,7 +205,7 @@ export const RemoteSigningPortal: React.FC<RemoteSigningPortalProps> = ({
       setIsSuccess(true);
     } catch (err: any) {
       console.error(err);
-      setFormError('Chyba při odesílání podpisu: ' + (err?.message || 'Zkuste to prosím znovu.'));
+      setFormError('Podpis se nepodařilo odeslat. Zkontrolujte připojení k internetu a zkuste to prosím znovu.');
     } finally {
       setIsSubmitting(false);
     }

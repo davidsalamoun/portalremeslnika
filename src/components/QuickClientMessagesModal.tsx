@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   X,
   MessageSquare,
@@ -13,11 +13,14 @@ import {
 import { Contract } from '../types/contract';
 import { triggerHaptic } from '../utils/haptics';
 import { safeOpenExternalUrl } from '../utils/shareUtils';
+import { ensureSignShare, generateSignToken, buildSigningUrl } from '../utils/signShares';
 
 interface QuickClientMessagesModalProps {
   isOpen: boolean;
   onClose: () => void;
   contract: Contract;
+  /** Uloží změnu smlouvy (tajný kód odkazu k online podpisu) */
+  onUpdateContract?: (updated: Contract) => void;
   onToast: (type: 'success' | 'error' | 'info', message: string) => void;
 }
 
@@ -25,6 +28,7 @@ export const QuickClientMessagesModal: React.FC<QuickClientMessagesModalProps> =
   isOpen,
   onClose,
   contract,
+  onUpdateContract,
   onToast,
 }) => {
   const [selectedTemplateIndex, setSelectedTemplateIndex] = useState(0);
@@ -32,6 +36,9 @@ export const QuickClientMessagesModal: React.FC<QuickClientMessagesModalProps> =
   const [resumeDate, setResumeDate] = useState('zítra v 8:00');
   const [deliveryDate, setDeliveryDate] = useState('zítra ráno');
   const [copied, setCopied] = useState(false);
+
+  // Tajný kód odkazu k online podpisu: uložený u smlouvy, nebo nově vygenerovaný
+  const signToken = useMemo(() => contract.signToken || generateSignToken(), [contract.id, contract.signToken]);
 
   if (!isOpen) return null;
 
@@ -70,14 +77,25 @@ export const QuickClientMessagesModal: React.FC<QuickClientMessagesModalProps> =
       icon: FileSignature,
       color: 'purple',
       getText: () =>
-        `Dobrý den, ${clientName}, připravil jsem pro vás k podpisu dokumenty k zakázce "${contract.workDescription.slice(0, 45)}...". Můžete je pohodlně zkontrolovat a podepsat prstem přímo ve vašem mobilu: ${window.location.origin}?sign=${contract.id}. Děkuji, ${contractorName}.`,
+        `Dobrý den, ${clientName}, připravil jsem pro vás k podpisu dokumenty k zakázce "${contract.workDescription.slice(0, 45)}...". Můžete je pohodlně zkontrolovat a podepsat prstem přímo ve vašem mobilu: ${buildSigningUrl(signToken)}. Děkuji, ${contractorName}.`,
     },
   ];
 
   const currentText = templates[selectedTemplateIndex].getText();
 
+  // U výzvy k podpisu se před odesláním založí odkaz v databázi a kód se uloží ke smlouvě
+  const prepareSigningLink = () => {
+    if (templates[selectedTemplateIndex].id !== 'signing') return;
+    if (!contract.signToken) onUpdateContract?.({ ...contract, signToken });
+    ensureSignShare(contract, signToken).catch((err) => {
+      console.warn('Odkaz k podpisu se nepodařilo uložit:', err?.message || err);
+      onToast('error', 'Odkaz k podpisu se nepodařilo připravit. Zkontrolujte připojení k internetu a zprávu pošlete znovu.');
+    });
+  };
+
   const handleSendWhatsApp = () => {
     triggerHaptic('success');
+    prepareSigningLink();
     let phone = cleanPhone;
     if (phone.startsWith('00')) phone = phone.substring(2);
     if (!phone.startsWith('+')) {
@@ -95,6 +113,7 @@ export const QuickClientMessagesModal: React.FC<QuickClientMessagesModalProps> =
 
   const handleCopy = () => {
     triggerHaptic('light');
+    prepareSigningLink();
     navigator.clipboard.writeText(currentText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

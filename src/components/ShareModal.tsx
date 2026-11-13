@@ -24,7 +24,7 @@ import {
 import { Contract } from '../types/contract';
 import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
 import { ShareDocType, sanitizePhoneForWhatsApp, buildShareMessage } from '../utils/shareUtils';
-import { auth, createPublicSignShare, subscribePublicSignShare, getPublicSignShare } from '../utils/firebase';
+import { ensureSignShare, watchSignedShare, getSignedShare, generateSignToken, buildSigningUrl } from '../utils/signShares';
 
 export type MessageTemplateType =
   | 'document'           // Standard document share (smlouva / faktura / zaloha / dodatek / ppd / nabidka)
@@ -41,6 +41,8 @@ interface ShareModalProps {
   activeDocType: ShareDocType;
   onToast?: (type: 'success' | 'error' | 'info', text: string) => void;
   onUpdateContract?: (updated: Contract) => void;
+  /** Zavolá se, když pro smlouvu vznikne nový tajný kód odkazu k online podpisu */
+  onSignTokenCreated?: (token: string) => void;
 }
 
 export const ShareModal: React.FC<ShareModalProps> = ({
@@ -50,6 +52,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   activeDocType,
   onToast,
   onUpdateContract,
+  onSignTokenCreated,
 }) => {
   const [selectedTemplate, setSelectedTemplate] = useState<MessageTemplateType>('document');
   const [copied, setCopied] = useState(false);
@@ -86,15 +89,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     }
   }, [startDate]);
 
-  const signingUrl = useMemo(() => {
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.set('sign', contract.id);
-      return url.toString();
-    } catch {
-      return `${window.location.origin}?sign=${contract.id}`;
-    }
-  }, [contract.id]);
+  // Tajný kód odkazu: uložený u smlouvy, nebo nově vygenerovaný (uloží se při prvním sdílení)
+  const signToken = useMemo(() => contract.signToken || generateSignToken(), [contract.id, contract.signToken]);
+  const signingUrl = useMemo(() => buildSigningUrl(signToken), [signToken]);
 
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
 
@@ -104,37 +101,39 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         .then(setQrCodeUrl)
         .catch(console.error);
 
-      createPublicSignShare(contract, auth.currentUser?.uid || 'anonymous').catch((err) => {
-        console.warn('Upozornění při ukládání odkazu podpisu:', err?.message || err);
+      // Nově vygenerovaný kód si rodič uloží ke smlouvě, aby odkaz zůstal stejný i příště
+      if (!contract.signToken) onSignTokenCreated?.(signToken);
+
+      ensureSignShare(contract, signToken).catch((err) => {
+        console.warn('Odkaz k podpisu se nepodařilo uložit:', err?.message || err);
+        onToast?.('error', 'Odkaz k podpisu se nepodařilo připravit. Zkontrolujte připojení k internetu a zkuste to znovu.');
       });
 
-      // Realtime posluchač pro okamžité propsání podpisu jakmile zákazník podepíše
-      const unsub = subscribePublicSignShare(contract.id, (share) => {
-        if (share && share.status === 'signed' && share.clientSignature) {
-          const datePart = (share.clientSignedAt || new Date().toISOString()).split('T')[0];
-          const updated: Contract = {
-            ...contract,
-            clientSignature: share.clientSignature,
-            clientSignatureDate: datePart,
-            status: contract.status === 'draft' ? 'signed' : (contract.status || 'signed'),
-          };
-          onUpdateContract?.(updated);
-        }
+      if (contract.clientSignature) return;
+
+      // Průběžná kontrola, zda zákazník už podepsal
+      const unsub = watchSignedShare(contract.id, (share) => {
+        const updated: Contract = {
+          ...contract,
+          clientSignature: share.clientSignature,
+          clientSignatureDate: share.signedDate,
+          status: contract.status === 'draft' ? 'signed' : (contract.status || 'signed'),
+        };
+        onUpdateContract?.(updated);
       });
       return () => unsub();
     }
-  }, [selectedTemplate, signingUrl, contract, onUpdateContract]);
+  }, [selectedTemplate, signingUrl, signToken, contract, onUpdateContract, onSignTokenCreated]);
 
   const handleManualCheckSign = async () => {
     setIsCheckingSign(true);
     try {
-      const share = await getPublicSignShare(contract.id);
-      if (share && share.status === 'signed' && share.clientSignature) {
-        const datePart = (share.clientSignedAt || new Date().toISOString()).split('T')[0];
+      const share = await getSignedShare(contract.id);
+      if (share) {
         const updated: Contract = {
           ...contract,
           clientSignature: share.clientSignature,
-          clientSignatureDate: datePart,
+          clientSignatureDate: share.signedDate,
           status: contract.status === 'draft' ? 'signed' : (contract.status || 'signed'),
         };
         onUpdateContract?.(updated);

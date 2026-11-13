@@ -589,6 +589,9 @@ export const WarrantyCertificateView: React.FC<WarrantyCertificateViewProps> = (
           contract={contract}
           activeDocType="zaruka"
           onToast={onToast}
+          onSignTokenCreated={(token) => {
+            if (!contract.signToken) onUpdateContract({ ...contract, signToken: token });
+          }}
         />
       )}
     </div>
