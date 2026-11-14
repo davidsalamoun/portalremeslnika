@@ -40,6 +40,7 @@ import {
   formatDateCs,
   formatPlaceWithPreposition,
   formatCurrency,
+  formatSignedCurrency,
 } from '../utils/numberToWordsCs';
 import { exportContractToDocx } from '../utils/exportDocx';
 import { exportContractToPdf } from '../utils/exportPdf';
@@ -323,13 +324,38 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
   };
 
   const handleDownloadPdf = async () => {
-    if (!paperRef.current) return;
+    // Uloží se právě zobrazený dokument (smlouva, dodatek, doklad, protokol, faktura, záruční list, nabídka)
+    const paper =
+      activeDocType === 'smlouva' && paperRef.current
+        ? paperRef.current
+        : document.querySelector<HTMLElement>(
+            'main .contract-page, main #amendment-printable-paper, main #quote-printable-paper, main .print-content, main [data-pdf-paper]'
+          );
+    if (!paper) {
+      onToast?.('info', 'Nejprve otevřete nebo vystavte dokument, který chcete uložit do PDF.');
+      return;
+    }
+    const pdfDocNames: Record<DocumentType, string> = {
+      smlouva: 'Smlouva_o_dilo',
+      nabidka: 'Cenova_nabidka',
+      dodatek: 'Dodatek',
+      pokladni_doklad: 'Prijmovy_doklad',
+      protokol: 'Predavaci_protokol',
+      faktura: 'Faktura',
+      zaloha: 'Zalohova_faktura',
+      zaruka: 'Zarucni_list',
+    };
     try {
       setIsPdfGenerating(true);
-      await exportContractToPdf(paperRef.current, currentContract, (status) => {
-        setPdfStatusText(status);
-      });
-      onToast?.('success', 'PDF smlouvy bylo úspěšně staženo');
+      await exportContractToPdf(
+        paper,
+        currentContract,
+        (status) => {
+          setPdfStatusText(status);
+        },
+        pdfDocNames[activeDocType]
+      );
+      onToast?.('success', 'PDF bylo úspěšně staženo');
     } catch (err) {
       console.error('Chyba při stahování PDF:', err);
       window.print();
@@ -1102,7 +1128,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
                       <strong>Upozornění o dodatcích:</strong> K této smlouvě byly sjednány{' '}
                       <strong>{currentContract.amendments.length} písemné dodatky</strong> na vícepráce v celkové výši{' '}
                       <strong>
-                        +{formatCurrency(
+                        {formatSignedCurrency(
                           currentContract.amendments.reduce((s, a) => s + (a.priceDifference || 0), 0)
                         )}
                       </strong>.

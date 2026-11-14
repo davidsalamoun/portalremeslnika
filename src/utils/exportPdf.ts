@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
 import { Contract } from '../types/contract';
 import { generateContractFilename } from './exportDocx';
 
@@ -10,7 +10,8 @@ import { generateContractFilename } from './exportDocx';
 export async function exportContractToPdf(
   contractElement: HTMLElement,
   contract: Contract,
-  onProgress?: (status: string) => void
+  onProgress?: (status: string) => void,
+  docName?: string
 ): Promise<void> {
   onProgress?.('Připravuji PDF dokument...');
 
@@ -22,6 +23,8 @@ export async function exportContractToPdf(
       logging: false,
       backgroundColor: '#ffffff',
       windowWidth: contractElement.scrollWidth,
+      // Ovládací prvky určené jen pro obrazovku (tlačítka na dokumentu) do PDF nepatří, stejně jako do tisku
+      ignoreElements: (el) => el.classList?.contains('no-print') ?? false,
     });
 
     onProgress?.('Zpracovávám stránky...');
@@ -49,7 +52,7 @@ export async function exportContractToPdf(
       heightLeft -= pdfHeight;
     }
 
-    const filename = generateContractFilename(contract, 'pdf');
+    const filename = generateContractFilename(contract, 'pdf', docName);
     pdf.save(filename);
     onProgress?.('PDF úspěšně staženo');
   } catch (err) {

@@ -23,7 +23,8 @@ import {
   formatDateCs,
   formatContractPriceWithWords,
   formatPlaceWithPreposition,
-  numberToWordsCs,
+  amountInWordsCzk,
+  formatSignedCurrency,
 } from '../utils/numberToWordsCs';
 import { SignatureModal } from './SignatureModal';
 import { getWhatsAppShareUrl, getMailtoShareUrl } from '../utils/shareUtils';
@@ -375,7 +376,7 @@ export const AmendmentView: React.FC<AmendmentViewProps> = ({
                   </strong>{' '}
                   (slovy:{' '}
                   <em>
-                    {numberToWordsCs(selectedAmendment.priceDifference, true)} korun českých
+                    {amountInWordsCzk(selectedAmendment.priceDifference)}
                   </em>
                   ).
                 </p>
@@ -386,7 +387,7 @@ export const AmendmentView: React.FC<AmendmentViewProps> = ({
                   </div>
                   <div className="flex justify-between text-amber-900 font-semibold">
                     <span>Cena víceprací (Dodatek č. {selectedAmendment.amendmentNumber}):</span>
-                    <span>+{formatCurrency(selectedAmendment.priceDifference)}</span>
+                    <span>{formatSignedCurrency(selectedAmendment.priceDifference)}</span>
                   </div>
                   <div className="flex justify-between text-sm font-bold text-slate-900 pt-1 border-t border-amber-200">
                     <span>Nová celková cena díla po započtení tohoto dodatku:</span>

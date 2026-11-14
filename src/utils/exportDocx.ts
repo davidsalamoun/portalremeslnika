@@ -29,10 +29,14 @@ export function getClientSurnameOrName(clientName: string): string {
   return sanitizeFilename(surname || 'klient');
 }
 
-export function generateContractFilename(contract: Contract, extension: 'docx' | 'pdf'): string {
+export function generateContractFilename(
+  contract: Contract,
+  extension: 'docx' | 'pdf',
+  docName = 'Smlouva_o_dilo'
+): string {
   const surname = getClientSurnameOrName(contract.client.name);
   const dateFormatted = contract.conclusionDate || new Date().toISOString().split('T')[0];
-  return `Smlouva_o_dilo_${surname}_${dateFormatted}.${extension}`;
+  return `${docName}_${surname}_${dateFormatted}.${extension}`;
 }
 
 export async function exportContractToDocx(contract: Contract): Promise<void> {

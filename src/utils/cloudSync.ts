@@ -234,7 +234,8 @@ export function trackLocalChange(key: string, oldRaw: string | null, newRaw: str
     console.warn('Změnu se nepodařilo zařadit k synchronizaci:', err);
     return;
   }
-  setStatus({});
+  // Stav se oznámí až po dokončení právě probíhajícího vykreslení (zápis může přijít i během něj)
+  queueMicrotask(() => setStatus({}));
   window.clearTimeout(pushTimer);
   pushTimer = window.setTimeout(() => void syncNow(), 1500);
 }

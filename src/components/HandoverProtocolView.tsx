@@ -29,13 +29,43 @@ export const HandoverProtocolView: React.FC<HandoverProtocolViewProps> = ({
 }) => {
   const paperRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<'protokol' | 'fotky'>('protokol');
-  const [hasDefects, setHasDefects] = useState(false);
+  // Stav protokolu se načte z uloženého předání (handoverData), pokud už dílo předáno bylo
+  const [hasDefects, setHasDefectsState] = useState(contract.handoverData?.status === 's_vadami');
   const [defectsText, setDefectsText] = useState(
-    'Drobné zapravení silikonu kolem lišty (nebrání užívání).'
+    contract.handoverData?.defectsNotes || 'Drobné zapravení silikonu kolem lišty (nebrání užívání).'
   );
-  const [resolutionDate, setResolutionDate] = useState(
-    contract.deliveryDate || new Date().toISOString().split('T')[0]
+  const [resolutionDate, setResolutionDateState] = useState(
+    contract.handoverData?.resolutionTerm || contract.deliveryDate || new Date().toISOString().split('T')[0]
   );
+
+  const buildHandoverData = (
+    over: { hasDefects?: boolean; defectsText?: string; resolutionDate?: string; handoverDate?: string } = {}
+  ): NonNullable<Contract['handoverData']> => {
+    const withDefects = over.hasDefects ?? hasDefects;
+    return {
+      handoverDate:
+        over.handoverDate || contract.handoverData?.handoverDate || new Date().toISOString().split('T')[0],
+      status: withDefects ? 's_vadami' : 'bez_vad',
+      defectsNotes: withDefects ? (over.defectsText ?? defectsText).trim() || undefined : undefined,
+      resolutionTerm: withDefects ? over.resolutionDate ?? resolutionDate : undefined,
+    };
+  };
+
+  // Úpravy po podpisu protokolu se ukládají hned; před podpisem je protokol jen rozpracovaný
+  const persistIfHandedOver = (over: Parameters<typeof buildHandoverData>[0]) => {
+    if (!contract.handoverData) return;
+    onUpdateContract?.({ ...contract, handoverData: buildHandoverData(over) });
+  };
+
+  const setHasDefects = (value: boolean) => {
+    setHasDefectsState(value);
+    if (value !== hasDefects) persistIfHandedOver({ hasDefects: value });
+  };
+
+  const setResolutionDate = (value: string) => {
+    setResolutionDateState(value);
+    if (value !== resolutionDate) persistIfHandedOver({ resolutionDate: value });
+  };
   const [signatureModalRole, setSignatureModalRole] = useState<'contractor' | 'client' | null>(null);
 
   const DEFECT_PRESETS = [
@@ -47,6 +77,7 @@ export const HandoverProtocolView: React.FC<HandoverProtocolViewProps> = ({
 
   const handleApplyDefectPreset = (preset: string) => {
     setDefectsText(preset);
+    persistIfHandedOver({ defectsText: preset });
     triggerHaptic('selection');
     onToast?.('info', 'Vložen popis vady');
   };
@@ -58,7 +89,8 @@ export const HandoverProtocolView: React.FC<HandoverProtocolViewProps> = ({
     triggerHaptic('selection');
   };
 
-  const handoverDate = contract.deliveryDate || new Date().toISOString().split('T')[0];
+  const handoverDate =
+    contract.handoverData?.handoverDate || contract.deliveryDate || new Date().toISOString().split('T')[0];
   const place = contract.executionPlace || contract.contractor.defaultPlace || 'v místě plnění';
   const photos = contract.photos || [];
 
@@ -85,6 +117,8 @@ export const HandoverProtocolView: React.FC<HandoverProtocolViewProps> = ({
             clientSignatureDate: today,
           }),
       status: 'handover_done',
+      // Podpisem se předání uloží (datum, stav, vady) – čte ho záruční list i složka zakázky
+      handoverData: buildHandoverData({ handoverDate: contract.handoverData?.handoverDate || today }),
     };
 
     onUpdateContract?.(updated);
@@ -287,6 +321,11 @@ export const HandoverProtocolView: React.FC<HandoverProtocolViewProps> = ({
                         <textarea
                           value={defectsText}
                           onChange={(e) => setDefectsText(e.target.value)}
+                          onBlur={() => {
+                            if ((contract.handoverData?.defectsNotes || '') !== defectsText.trim()) {
+                              persistIfHandedOver({ defectsText });
+                            }
+                          }}
                           className="w-full text-xs bg-transparent border-0 focus:outline-hidden p-0 resize-none font-serif-contract"
                           rows={2}
                         />

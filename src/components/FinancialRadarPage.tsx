@@ -77,6 +77,8 @@ export const FinancialRadarPage: React.FC<FinancialRadarPageProps> = ({
   // Filtrované zakázky pro daný rok
   const yearContracts = useMemo(() => {
     return contracts.filter((c) => {
+      // Cenová nabídka není smlouva – do obratu ani příjmů se nepočítá
+      if (c.docKind === 'quote') return false;
       const year = new Date(c.conclusionDate || c.createdAt).getFullYear();
       return year === selectedYear;
     });

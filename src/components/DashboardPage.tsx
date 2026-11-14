@@ -48,6 +48,7 @@ import { getVocative } from '../utils/vocativeCs';
 import { TabType } from './Navbar';
 import { WeatherWidget } from './WeatherWidget';
 import { getSubscriptionInfo, isProUser } from '../utils/subscription';
+import { isInvoiceable, isContractPaid, getFinalBalance, getInvoiceStatus } from '../utils/invoiceMath';
 
 interface DashboardPageProps {
   contracts: Contract[];
@@ -129,24 +130,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const unpaidInvoices = useMemo(() => {
     return contracts
       .filter((c) => {
-        // Pouze zakázky, které nejsou 'paid' a mají stanovenou cenu
-        if (c.status === 'paid' || c.paidDate) return false;
+        // Pouze smlouvy s cenou, které nejsou zaplacené (nabídka ani poptávka pohledávkou nejsou)
+        if (!isInvoiceable(c) || isContractPaid(c)) return false;
         if (c.status === 'draft' && !c.leadStage) return false;
         return true;
       })
       .map((c) => {
-        // Splatnost standardně 14 dní od předání nebo uzavření
-        const baseDate = c.conclusionDate || c.createdAt.split('T')[0];
-        const dueObj = new Date(baseDate);
-        dueObj.setDate(dueObj.getDate() + 14);
-        const dueDateStr = dueObj.toISOString().split('T')[0];
-        const isOverdue = dueDateStr < todayStr;
-        const diffMs = Math.abs(new Date(todayStr).getTime() - dueObj.getTime());
-        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
-        const paidAdvance = c.advanceAmount || 0;
-        const total = c.price + (c.amendments || []).reduce((s, a) => s + (a.priceDifference || 0), 0);
-        const remainingToPay = Math.max(0, total - paidAdvance);
+        // Splatnost 14 dní od předání díla – stejně jako na dokladu faktury (utils/invoiceMath)
+        const { dueDate: dueDateStr, isOverdue, daysPastDue } = getInvoiceStatus(c, todayStr);
+        const diffDays = Math.abs(daysPastDue);
+        const remainingToPay = getFinalBalance(c);
 
         return {
           contract: c,

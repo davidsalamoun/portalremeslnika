@@ -150,8 +150,17 @@ export function getVocative(nameOrText?: string): string {
   if (!nameOrText || !nameOrText.trim()) return '';
 
   // Očistíme text: odstraníme tituly, firmu, pomlčky (např. "Jan Novák – Řemeslné práce" -> "Jan")
+  // Firmu neoslovujeme křestním jménem
+  if (/(s\.\s?r\.\s?o\.?|a\.\s?s\.|spol\.|v\.\s?o\.\s?s\.?|k\.\s?s\.|z\.\s?s\.|o\.\s?p\.\s?s\.?|družstvo)/i.test(nameOrText)) {
+    return '';
+  }
+
   const withoutTrades = nameOrText.split('–')[0].split('-')[0].trim();
-  const tokens = withoutTrades.split(/\s+/).filter(Boolean);
+  // Tituly a oslovení před jménem přeskočíme (Ing. Petr Svoboda → Petr)
+  const tokens = withoutTrades
+    .split(/\s+/)
+    .filter(Boolean)
+    .filter((t) => !/^(ing|mgr|bc|mudr|mvdr|judr|phdr|rndr|paeddr|pharmdr|thdr|dr|doc|prof|dis|mga|bca|ing\.arch|arch|pan|paní|pani|p|sl)\.?,?$/i.test(t));
   if (tokens.length === 0) return '';
 
   // Vezmeme první slovo jako křestní jméno
