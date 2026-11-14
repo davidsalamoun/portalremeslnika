@@ -227,3 +227,34 @@ $$;
 revoke all on function public.delete_own_account() from public;
 revoke all on function public.delete_own_account() from anon;
 grant execute on function public.delete_own_account() to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Obrázky, na které odkazují data přihlášeného uživatele
+-- ---------------------------------------------------------------------------
+-- Podklad pro úklid nepoužívaných souborů v bucketu `photos`: aplikace smí smazat jen soubor,
+-- který v tomto seznamu není (a je dost starý). Běží s právy volajícího, takže vidí jen jeho řádky.
+create or replace function public.list_referenced_images()
+returns setof text
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select distinct m[1]
+  from (
+    select data::text as t from public.profiles where user_id = (select auth.uid()) and deleted_at is null
+    union all
+    select data::text from public.clients where user_id = (select auth.uid()) and deleted_at is null
+    union all
+    select data::text from public.contracts where user_id = (select auth.uid()) and deleted_at is null
+    union all
+    select data::text from public.calendar_events where user_id = (select auth.uid()) and deleted_at is null
+    union all
+    select data::text from public.price_list_items where user_id = (select auth.uid()) and deleted_at is null
+  ) d,
+  regexp_matches(d.t, '@img:([A-Za-z0-9_]+)', 'g') m;
+$$;
+
+revoke all on function public.list_referenced_images() from public;
+revoke all on function public.list_referenced_images() from anon;
+grant execute on function public.list_referenced_images() to authenticated;

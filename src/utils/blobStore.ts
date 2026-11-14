@@ -160,3 +160,39 @@ export async function clearAllBlobs(): Promise<void> {
   if (!ready) return;
   await tx('readwrite', (s) => s.clear()).catch((err) => console.warn('Obrázky se nepodařilo smazat:', err));
 }
+
+/** Přehled obrázků v zařízení pro úklid: které jsou nahrané v účtu a jak jsou staré. */
+export async function listBlobInfo(): Promise<{ id: string; createdAt: string; uploaded: boolean }[]> {
+  if (!ready) return [];
+  const all = (await tx<StoredImage[]>('readonly', (s) => s.getAll())) || [];
+  return all.map((item) => ({ id: item.id, createdAt: item.createdAt, uploaded: !!item.uploaded }));
+}
+
+/** Smaže z tohoto zařízení obrázky, na které už nic neodkazuje. */
+export async function deleteLocalBlobs(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  for (const id of ids) {
+    memory.delete(id);
+    pendingUploads.delete(id);
+  }
+  if (!ready) return;
+  await new Promise<void>((resolve, reject) => {
+    if (!db) return resolve();
+    const t = db.transaction(STORE, 'readwrite');
+    const store = t.objectStore(STORE);
+    ids.forEach((id) => store.delete(id));
+    t.oncomplete = () => resolve();
+    t.onerror = () => reject(t.error);
+    t.onabort = () => reject(t.error);
+  }).catch((err) => console.warn('Nepoužívané obrázky se nepodařilo smazat ze zařízení:', err));
+}
+
+/** Označí obrázek k opětovnému nahrání (v účtu chybí, i když na něj data odkazují). */
+export async function markBlobForReupload(id: string): Promise<void> {
+  const dataUrl = memory.get(id);
+  if (dataUrl === undefined) return;
+  pendingUploads.add(id);
+  if (!ready) return;
+  const record: StoredImage = { id, dataUrl, uploaded: 0, createdAt: new Date().toISOString() };
+  await tx('readwrite', (s) => s.put(record)).catch((err) => console.warn('Stav obrázku se nepodařilo uložit:', err));
+}

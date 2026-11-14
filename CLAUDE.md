@@ -48,6 +48,13 @@ obsluhuje jediná funkce `api/index.ts` (Express aplikace jako výchozí export)
 Proměnné (případně `STRIPE_SECRET_KEY`) se nastavují v projektu na Vercelu, ne v repozitáři.
 `api/index.ts` nesmí importovat nic z `src/` ani `vite` a musí zůstat jedním souborem bez relativních importů.
 
+## Načítání aplikace
+
+Úvodní balík obsahuje jen přihlášení, navigaci a přehled. Ostatní stránky a modály jsou v `App.tsx` přes `React.lazy`
+(seznam `lazyLoaders`) a knihovny pro Word a PDF se načítají přes `utils/lazyExports.ts`. Po startu je
+`preloadLazyChunks` dotáhne všechny na pozadí, aby aplikace po načtení fungovala i bez připojení. Novou stránku nebo
+modál přidávat do `lazyLoaders`, ne statickým importem; `exportDocx`/`exportPdf` nikdy neimportovat přímo z komponent.
+
 ## Technologie
 
 React 19, TypeScript, Vite 8, Tailwind CSS 4 (`@tailwindcss/vite`), `motion`, `lucide-react`,
@@ -74,6 +81,7 @@ src/
     storage.ts                čtení/zápis localStorage (jediné místo čtení a zápisu dat)
     imageRefs.ts              nahrazení obrázků odkazy `@img:<id>` při ukládání a zpět při čtení
     blobStore.ts              úložiště obrázků v prohlížeči (IndexedDB + paměť)
+    imageCleanup.ts           pravidla úklidu nepoužívaných obrázků
     supabase.ts               klient Supabase, české hlášky chyb přihlášení
     syncEngine.ts             logika synchronizace localStorage ↔ databáze (bez závislosti na prohlížeči)
     cloudSync.ts              napojení synchronizace na Supabase a prohlížeč, odhlášení
@@ -83,7 +91,8 @@ src/
     spayd.ts                  QR platba (SPAYD), převod čísla účtu na IBAN
     invoiceMath.ts            jednotná pravidla pro částky, data a splatnost faktur
     ares.ts                   dohledání firmy podle IČO v ARES
-    exportDocx.ts, exportPdf.ts   export dokumentů
+    exportDocx.ts, exportPdf.ts   export dokumentů (velké knihovny – importovat jen přes lazyExports.ts)
+    lazyExports.ts, exportNames.ts  odložené načtení exportů, názvy exportovaných souborů
     numberToWordsCs.ts, vocativeCs.ts   částka slovy, 5. pád jmen
 ```
 
@@ -105,6 +114,11 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
   stahuje; do té doby se zobrazí šedý zástupný obrázek (nese id, při uložení se odkaz neztratí). Data ze starší
   verze (obrázky přímo v localStorage) převádí `migrateInlineImages` po startu. Bez IndexedDB zůstávají obrázky
   v datech jako dřív.
+- **Úklid nepoužívaných obrázků** (`cleanupUnusedImages` v `cloudSync.ts`, rozhodování v `imageCleanup.ts`): nejvýš
+  jednou denně po úspěšné synchronizaci. Smaže se jen soubor starší 30 dnů, na který neodkazuje účet (databázová
+  funkce `list_referenced_images`) ani data v zařízení. Odkazovaný obrázek, který v účtu chybí, se nahraje znovu.
+  Nová tabulka, jejíž data mohou obsahovat obrázky, musí být přidána do `list_referenced_images` i do
+  `IMAGE_BEARING_KEYS` ve `storage.ts` – jinak by úklid její obrázky po 30 dnech smazal.
 - **Synchronizace s účtem**: `storage.ts` po každém zápisu ohlásí změnu, `syncEngine.ts` ji zařadí do fronty
   (klíč `cloud_sync_state`), odešle do Supabase a stahuje změny z jiných zařízení. Tabulky `profiles`, `clients`,
   `contracts`, `calendar_events`, `price_list_items` mají stejný tvar (`user_id`, `id`, `data` jsonb, `updated_at`,
@@ -151,5 +165,4 @@ odstraněny včetně serverových endpointů a závislosti na Gemini. Nepřidáv
 - Testy pokrývají synchronizaci, odkazy na obrázky, výpočty faktur a české pomocné funkce; přihlášení a UI se ověřují ručně.
 - PDF je obrázek stránky (nejde v něm hledat text) a stránky se dělí bez ohledu na řádky.
 - Faktura plátce DPH nerozepisuje základ, sazbu a daň; sazba je všude 21 % (stavební práce pro bydlení mají 12 %).
-- Obrázky smazané ze smluv zůstávají v IndexedDB i v bucketu `photos` (úklid nepoužívaných zatím není).
 - Po startu se všechny obrázky účtu načtou do paměti; u tisíců fotek bude potřeba načítání na vyžádání.

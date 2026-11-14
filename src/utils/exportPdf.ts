@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas-pro';
 import { Contract } from '../types/contract';
-import { generateContractFilename } from './exportDocx';
+import { generateContractFilename } from './exportNames';
 
 /**
  * Vygeneruje a stáhne PDF soubor z HTML elementu smlouvy s podporou vícestránkového dělení
