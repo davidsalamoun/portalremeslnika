@@ -20,7 +20,7 @@ import {
   formatDateCs,
   formatContractPriceWithWords,
   formatPlaceWithPreposition,
-  numberToWordsCs,
+  amountInWordsCzk,
 } from '../utils/numberToWordsCs';
 import { SignatureModal } from './SignatureModal';
 import { CraftsmanStamp } from './CraftsmanStamp';
@@ -298,6 +298,7 @@ export const CashReceiptView: React.FC<CashReceiptViewProps> = ({
           {/* Printable Czech Cash Receipt Box (Classic official SEVT style) */}
           <div
             id="cash-receipt-printable"
+            data-pdf-paper
             className="bg-white text-slate-900 p-8 sm:p-10 rounded-xl shadow-lg border-2 border-slate-300 max-w-3xl mx-auto font-sans leading-normal text-xs"
           >
             {/* Header top bar */}
@@ -370,7 +371,7 @@ export const CashReceiptView: React.FC<CashReceiptViewProps> = ({
               <div className="mt-3 pt-3 border-t border-emerald-200 text-xs text-emerald-900">
                 <span className="font-bold">Slovy: </span>
                 <span className="italic font-medium">
-                  {numberToWordsCs(selectedReceipt.amount, true)} korun českých
+                  {amountInWordsCzk(selectedReceipt.amount)}
                 </span>
               </div>
             </div>

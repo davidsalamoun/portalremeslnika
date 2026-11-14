@@ -23,7 +23,7 @@ import {
   formatCurrency,
   formatDateCs,
   formatContractPriceWithWords,
-  numberToWordsCs,
+  amountInWordsCzk,
 } from '../utils/numberToWordsCs';
 import { getWhatsAppShareUrl, getMailtoShareUrl } from '../utils/shareUtils';
 import { CraftsmanStamp } from './CraftsmanStamp';
@@ -320,7 +320,7 @@ export const PriceQuoteView: React.FC<PriceQuoteViewProps> = ({
                 {formatCurrency(contract.price)}
               </div>
               <div className="text-xs text-slate-400 mt-1">
-                Slovy: {numberToWordsCs(contract.price, true)} korun českých
+                Slovy: {amountInWordsCzk(contract.price)}
               </div>
             </div>
 

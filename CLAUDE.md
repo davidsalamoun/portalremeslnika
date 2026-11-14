@@ -28,7 +28,7 @@ npm install
 npm run dev                      # Express + Vite middleware na http://localhost:3000 (PORT lze změnit)
 npm run build                    # produkční build frontendu do dist/
 npm run lint                     # tsc --noEmit
-npm test                         # testy synchronizace a odkazů na obrázky (tests/*.test.ts, node:test přes tsx)
+npm test                         # testy (tests/*.test.ts, node:test přes tsx)
 NODE_ENV=production npm start    # lokální produkční běh: Express servíruje dist/ + /api
 ```
 
@@ -48,7 +48,8 @@ Proměnné (případně `STRIPE_SECRET_KEY`) se nastavují v projektu na Vercelu
 ## Technologie
 
 React 19, TypeScript, Vite 8, Tailwind CSS 4 (`@tailwindcss/vite`), `motion`, `lucide-react`,
-Express 4 (`api/index.ts`, `server.ts`), Supabase (přihlášení + Postgres), Stripe, `docx`, `jspdf` + `html2canvas`, `qrcode`.
+Express 4 (`api/index.ts`, `server.ts`), Supabase (přihlášení + Postgres), Stripe, `docx`, `jspdf` + `html2canvas-pro`, `qrcode`.
+`html2canvas-pro` nenahrazovat původním `html2canvas` – ten neumí barvy oklch/oklab z Tailwindu 4 a export PDF spadne.
 
 ## Struktura
 
@@ -58,7 +59,7 @@ server.ts                     lokální spuštění: api/index.ts + Vite middlew
 vercel.json                   konfigurace nasazení na Vercel
 index.html, vite.config.ts    vstup a konfigurace Vite (alias @ = kořen repozitáře)
 supabase/schema.sql           databázové schéma a zabezpečení (spouští se ručně v Supabase SQL Editoru)
-tests/                        testy (synchronizace)
+tests/                        testy (synchronizace, obrázky, částky a data faktur, čeština, IBAN a QR platba)
 src/
   main.tsx, App.tsx           main.tsx obalí aplikaci přihlášením (AuthGate); App.tsx drží veškerý stav,
                               přepíná záložky (bez routeru) a otevírá modály
@@ -77,6 +78,7 @@ src/
     backup.ts                 export/import zálohy JSON
     subscription.ts           tarif PRO, zkušební doba, QR platba předplatného
     spayd.ts                  QR platba (SPAYD), převod čísla účtu na IBAN
+    invoiceMath.ts            jednotná pravidla pro částky, data a splatnost faktur
     ares.ts                   dohledání firmy podle IČO v ARES
     exportDocx.ts, exportPdf.ts   export dokumentů
     numberToWordsCs.ts, vocativeCs.ts   částka slovy, 5. pád jmen
@@ -113,6 +115,19 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
   (`toSharedContract`), ne náklady, fotky ani deník. Podepsaný odkaz už nejde změnit ani podepsat znovu; nepodepsaný
   vyprší po 90 dnech. Aplikace se na podpis ptá pravidelně (jen u smluv se `signToken` bez podpisu).
 
+## Faktury a částky
+
+Částky, data a stav faktur se počítají jen v `utils/invoiceMath.ts` – používá je doklad faktury, přehled pohledávek,
+úvodní stránka, počítadlo po splatnosti i export pro účetní. Nepočítat je znovu v komponentách.
+- Cena díla = `contract.price` + dodatky (vícepráce i méněpráce); doplatek = cena − sjednaná záloha.
+- Konečná faktura se vystavuje k předání díla (`handoverData.handoverDate`, jinak `deliveryDate`), DUZP je stejné,
+  splatnost 14 dnů. Zálohová faktura se vystavuje k datu uzavření smlouvy.
+- Cenová nabídka (`docKind: 'quote'`) a zakázka bez ceny nejsou pohledávkou ani tržbou.
+- U plátců jsou ceny včetně DPH; export pro účetní počítá daň jako 21/121 z ceny. Faktura sama základ a DPH nerozepisuje.
+- Částka slovy vždy přes `amountInWordsCzk` (rod a tvar měny), vícepráce/méněpráce přes `formatSignedCurrency`.
+- Předání díla (`handoverData`) se ukládá podpisem předávacího protokolu; čte ho záruční list, faktura i složka zakázky.
+- Export PDF (`exportPdf.ts`) vynechává prvky s třídou `no-print`; tlačítko „Uložit PDF“ ukládá právě zobrazený dokument.
+
 ## AI
 
 Aplikace žádné AI funkce neobsahuje – AI rozpočet, sken účtenek, checker smluv i AI rádce byly na pokyn vlastníka
@@ -124,6 +139,8 @@ odstraněny včetně serverových endpointů a závislosti na Gemini. Nepřidáv
   a bannery PRO, paywall i doklad k licenci se nezobrazují. Nezapínat, dokud platbu neověřuje server a v `PRO_CONFIG`
   nejsou skutečné údaje provozovatele – současné IČO a číslo účtu jsou vymyšlené, stejně jako platební formulář
   v `PaywallModal.tsx` (jen napodobuje Stripe). Aktivace PRO parametrem v adrese byla odstraněna.
-- Testy pokrývají synchronizaci a odkazy na obrázky; přihlášení a UI se ověřují ručně.
+- Testy pokrývají synchronizaci, odkazy na obrázky, výpočty faktur a české pomocné funkce; přihlášení a UI se ověřují ručně.
+- PDF je obrázek stránky (nejde v něm hledat text) a stránky se dělí bez ohledu na řádky.
+- Faktura plátce DPH nerozepisuje základ, sazbu a daň; sazba je všude 21 % (stavební práce pro bydlení mají 12 %).
 - Obrázky smazané ze smluv zůstávají v IndexedDB i v bucketu `photos` (úklid nepoužívaných zatím není).
 - Po startu se všechny obrázky účtu načtou do paměti; u tisíců fotek bude potřeba načítání na vyžádání.

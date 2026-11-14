@@ -383,5 +383,6 @@ export interface AppBackupData {
   clients: Client[];
   contracts: Contract[];
   priceList?: PriceListTemplateItem[];
+  calendarEvents?: CalendarEvent[];
 }
 

@@ -1,4 +1,4 @@
-import { AppBackupData, ContractorProfile, Client, Contract } from '../types/contract';
+import { AppBackupData, ContractorProfile, Client, Contract, CalendarEvent, PriceListTemplateItem } from '../types/contract';
 import {
   getContractorProfile,
   getStoredClients,
@@ -6,6 +6,10 @@ import {
   saveContractorProfile,
   saveStoredClients,
   saveStoredContracts,
+  getStoredPriceList,
+  saveStoredPriceList,
+  getStoredCalendarEvents,
+  saveStoredCalendarEvents,
 } from './storage';
 
 /**
@@ -17,11 +21,13 @@ export function exportAppBackup(): void {
   const contracts = getStoredContracts();
 
   const backupData: AppBackupData = {
-    version: '1.2.0',
+    version: '1.3.0',
     exportedAt: new Date().toISOString(),
     contractor,
     clients,
     contracts,
+    priceList: getStoredPriceList(),
+    calendarEvents: getStoredCalendarEvents(),
   };
 
   const jsonStr = JSON.stringify(backupData, null, 2);
@@ -63,6 +69,9 @@ export function parseBackupFile(jsonString: string): AppBackupData {
     contractor: parsed.contractor || null,
     clients: parsed.clients || [],
     contracts: parsed.contracts || [],
+    // Ceník a kalendář jsou v zálohách od verze 1.3.0; starší zálohy je neobsahují
+    priceList: Array.isArray(parsed.priceList) ? parsed.priceList : undefined,
+    calendarEvents: Array.isArray(parsed.calendarEvents) ? parsed.calendarEvents : undefined,
   };
 }
 
@@ -84,6 +93,9 @@ export function applyBackup(
     }
     saveStoredClients(backup.clients);
     saveStoredContracts(backup.contracts);
+    // Starší záloha ceník ani kalendář neobsahuje – stávající se pak ponechají
+    if (backup.priceList) saveStoredPriceList(backup.priceList);
+    if (backup.calendarEvents) saveStoredCalendarEvents(backup.calendarEvents);
 
     return {
       contractor: backup.contractor || getContractorProfile(),
@@ -121,9 +133,20 @@ export function applyBackup(
   }
   saveStoredContracts(mergedContracts);
 
+  if (backup.priceList) saveStoredPriceList(mergeById<PriceListTemplateItem>(getStoredPriceList(), backup.priceList));
+  if (backup.calendarEvents) {
+    saveStoredCalendarEvents(mergeById<CalendarEvent>(getStoredCalendarEvents(), backup.calendarEvents));
+  }
+
   return {
     contractor: nextContractor,
     clients: mergedClients,
     contracts: mergedContracts,
   };
+}
+
+// Přidá ze zálohy jen záznamy, které ještě neexistují (podle id)
+function mergeById<T extends { id: string }>(existing: T[], incoming: T[]): T[] {
+  const ids = new Set(existing.map((item) => item.id));
+  return [...existing, ...incoming.filter((item) => !ids.has(item.id))];
 }

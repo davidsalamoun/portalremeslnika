@@ -20,6 +20,7 @@ import {
 import { Contract, ContractorProfile, InvoiceReminder } from '../types/contract';
 import { generateQrPaymentDataUrl } from '../utils/spayd';
 import { formatCurrency } from '../utils/numberToWordsCs';
+import { isInvoiceable, getFinalBalance, getFinalInvoiceDates, getInvoiceStatus } from '../utils/invoiceMath';
 
 interface InvoicesOverviewPageProps {
   contracts: Contract[];
@@ -68,34 +69,12 @@ export const InvoicesOverviewPage: React.FC<InvoicesOverviewPageProps> = ({
     today.setHours(0, 0, 0, 0);
 
     return contracts
-      .filter((c) => (c.price && c.price > 0) || (c.items && c.items.length > 0))
+      .filter(isInvoiceable)
       .map((c) => {
-        // Compute total price: items or price + amendments
-        const basePrice = c.items?.length
-          ? c.items.reduce((sum, item) => sum + (item.totalPrice || item.unitPrice * item.quantity), 0)
-          : (c.price || 0);
-
-        const amendmentsTotal = c.amendments?.reduce((sum, a) => sum + (a.priceDifference || 0), 0) || 0;
-        const totalInvoicePrice = Math.max(0, basePrice + amendmentsTotal);
-
-        // Calculate issue date and due date
-        const issueDate = c.createdAt ? c.createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10);
-        
-        let dueDate = c.deliveryDate || issueDate;
-        if (!dueDate || dueDate === issueDate) {
-          const d = new Date(issueDate);
-          d.setDate(d.getDate() + 14);
-          dueDate = d.toISOString().slice(0, 10);
-        }
-
-        const dueDateTime = new Date(dueDate);
-        dueDateTime.setHours(0, 0, 0, 0);
-
-        const msDiff = today.getTime() - dueDateTime.getTime();
-        const daysDiff = Math.round(msDiff / (1000 * 60 * 60 * 24));
-
-        const isPaid = c.status === 'paid' || !!c.paidDate;
-        const isOverdue = !isPaid && daysDiff > 0;
+        // Částka i data podle jednotných pravidel (utils/invoiceMath) – stejná jako na dokladu faktury
+        const totalInvoicePrice = getFinalBalance(c);
+        const { issueDate, dueDate } = getFinalInvoiceDates(c);
+        const { isPaid, isOverdue, daysPastDue: daysDiff } = getInvoiceStatus(c);
 
         const invNum = c.invoiceNumber || (c.contractNumber ? `FV-${c.contractNumber}` : `FV-${c.id.slice(-6)}`);
         const vs = c.variableSymbol || c.contractNumber.replace(/\D/g, '') || c.id.replace(/\D/g, '').slice(0, 10) || '2026001';

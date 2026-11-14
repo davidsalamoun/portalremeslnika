@@ -19,7 +19,11 @@ import {
   Building2,
 } from 'lucide-react';
 import { Contract } from '../types/contract';
-import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
+import {
+  formatCurrency,
+  formatDateCs,
+  formatSignedCurrency,
+} from '../utils/numberToWordsCs';
 import { getWhatsAppShareUrl } from '../utils/shareUtils';
 import { triggerHaptic } from '../utils/haptics';
 
@@ -368,7 +372,7 @@ export const ContractArchiveModal: React.FC<ContractArchiveModalProps> = ({
                       <div className="text-slate-600 dark:text-slate-300">{a.description}</div>
                     </div>
                     <div className="text-right font-extrabold text-amber-700 dark:text-amber-300">
-                      +{formatCurrency(a.priceDifference)}
+                      {formatSignedCurrency(a.priceDifference)}
                     </div>
                   </div>
                 ))}

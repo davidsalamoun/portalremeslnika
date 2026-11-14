@@ -1,47 +1,42 @@
 import QRCode from 'qrcode';
 
+function mod97(numericStr: string): number {
+  // Velké číslo dělíme modulo 97 po blocích
+  let remainder = 0;
+  for (let i = 0; i < numericStr.length; i += 7) {
+    const block = remainder.toString() + numericStr.substring(i, i + 7);
+    remainder = parseInt(block, 10) % 97;
+  }
+  return remainder;
+}
+
 /**
  * Převede české číslo bankovního účtu na IBAN.
- * Formát účtu: [předčíslí-]číslo/kód_banky (např. 19-2345670237/0100 nebo 123456789/0800)
+ * Formát účtu: [předčíslí-]číslo/kód_banky (např. 19-2345670237/0100 nebo 123456789/0800).
+ * Mezery se ignorují. Přijme i přímo zadaný český IBAN. Při neplatném vstupu vrací prázdný řetězec.
  */
 export function czAccountToIban(accountStr: string): string {
-  try {
-    const clean = accountStr.trim();
-    const parts = clean.split('/');
-    if (parts.length !== 2) return '';
+  const clean = (accountStr || '').replace(/\s+/g, '').toUpperCase();
+  if (!clean) return '';
 
-    const bankCode = parts[1].padStart(4, '0');
-    const accParts = parts[0].split('-');
-
-    let prefix = '000000';
-    let accountNumber = '';
-
-    if (accParts.length === 2) {
-      prefix = accParts[0].padStart(6, '0');
-      accountNumber = accParts[1].padStart(10, '0');
-    } else {
-      accountNumber = accParts[0].padStart(10, '0');
-    }
-
-    // Pro výpočet kontrolních číslic dle MOD 97:
-    // bbbbppppppccccccccccCZ00
-    // CZ -> C=12, Z=35 => 123500
-    const bban = `${bankCode}${prefix}${accountNumber}`;
-    const numericStr = `${bban}123500`;
-
-    // Velké číslo dělíme modulo 97 po blocích
-    let remainder = 0;
-    for (let i = 0; i < numericStr.length; i += 7) {
-      const block = remainder.toString() + numericStr.substring(i, i + 7);
-      remainder = parseInt(block, 10) % 97;
-    }
-
-    const checkDigits = (98 - remainder).toString().padStart(2, '0');
-    return `CZ${checkDigits}${bban}`;
-  } catch (e) {
-    console.error('Chyba při výpočtu IBAN:', e);
-    return '';
+  // Přímo zadaný český IBAN: ověřit kontrolní číslice
+  if (/^CZ\d{22}$/.test(clean)) {
+    return mod97(`${clean.slice(4)}1235${clean.slice(2, 4)}`) === 1 ? clean : '';
   }
+
+  const match = /^(?:(\d{1,6})-)?(\d{1,10})\/(\d{4})$/.exec(clean);
+  if (!match) return '';
+
+  const prefix = (match[1] || '').padStart(6, '0');
+  const accountNumber = match[2].padStart(10, '0');
+  const bankCode = match[3];
+
+  // Pro výpočet kontrolních číslic dle MOD 97:
+  // bbbbppppppccccccccccCZ00
+  // CZ -> C=12, Z=35 => 123500
+  const bban = `${bankCode}${prefix}${accountNumber}`;
+  const checkDigits = (98 - mod97(`${bban}123500`)).toString().padStart(2, '0');
+  return `CZ${checkDigits}${bban}`;
 }
 
 export interface SpaydPaymentOptions {
@@ -55,11 +50,11 @@ export interface SpaydPaymentOptions {
  * Vytvoří řetězec SPAYD dle standardu České bankovní asociace (QR Platba)
  */
 export function generateSpaydString(options: SpaydPaymentOptions): string {
+  // SPAYD vyžaduje IBAN v parametru ACC; bez platného účtu ani částky QR platbu nevytváříme
   const iban = czAccountToIban(options.account);
-  // SPAYD vyžaduje IBAN v parametru ACC
-  const accParam = iban ? iban : options.account.replace(/[^0-9/-]/g, '');
+  if (!iban || !Number.isFinite(options.amount) || options.amount < 0) return '';
 
-  let spayd = `SPD*1.0*ACC:${accParam}*AM:${options.amount.toFixed(2)}*CC:CZK`;
+  let spayd = `SPD*1.0*ACC:${iban}*AM:${options.amount.toFixed(2)}*CC:CZK`;
 
   if (options.vs) {
     const cleanVs = options.vs.replace(/\D/g, '').substring(0, 10);
@@ -69,9 +64,15 @@ export function generateSpaydString(options: SpaydPaymentOptions): string {
   }
 
   if (options.message) {
-    // Odstranění hvězdiček a oříznutí na max 60 znaků
-    const cleanMsg = options.message.replace(/\*/g, ' ').substring(0, 60);
-    spayd += `*MSG:${cleanMsg}`;
+    // Bez diakritiky (některé bankovní aplikace ji ve zprávě nečtou správně), bez hvězdiček, max 60 znaků
+    const cleanMsg = options.message
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\*/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .substring(0, 60);
+    if (cleanMsg) spayd += `*MSG:${cleanMsg}`;
   }
 
   spayd += '*';
@@ -83,6 +84,7 @@ export function generateSpaydString(options: SpaydPaymentOptions): string {
  */
 export async function generateQrPaymentDataUrl(options: SpaydPaymentOptions): Promise<string> {
   const spaydString = generateSpaydString(options);
+  if (!spaydString) return '';
   try {
     const dataUrl = await QRCode.toDataURL(spaydString, {
       errorCorrectionLevel: 'M',

@@ -61,6 +61,7 @@ import { cleanPlaceName } from './utils/numberToWordsCs';
 import { applyBackup } from './utils/backup';
 import { checkAndSyncRemoteSignatures } from './utils/signShares';
 import { useCloudUser } from './components/AuthGate';
+import { isInvoiceable, getInvoiceStatus } from './utils/invoiceMath';
 import { CLOUD_DATA_CHANGED_EVENT } from './utils/cloudSync';
 import { isProUser, PRO_CONFIG, PAYMENTS_ENABLED } from './utils/subscription';
 
@@ -205,17 +206,7 @@ export default function App() {
 
   // Compute overdue invoices count for navbar badge
   const overdueInvoicesCount = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    return contracts.filter((c) => {
-      if (c.status === 'paid' || !!c.paidDate) return false;
-      const dueDate = c.deliveryDate;
-      if (!dueDate) return false;
-      const d = new Date(dueDate);
-      d.setHours(0, 0, 0, 0);
-      return today.getTime() > d.getTime();
-    }).length;
+    return contracts.filter((c) => isInvoiceable(c) && getInvoiceStatus(c).isOverdue).length;
   }, [contracts]);
 
   // Automatic sync of remote signatures
@@ -315,6 +306,7 @@ export default function App() {
     setClients(result.clients);
     setContracts(result.contracts);
     setSavedContractIds(new Set(result.contracts.map((c) => c.id)));
+    setCalendarEvents(getStoredCalendarEvents());
   };
 
   // Delete contract

@@ -19,6 +19,7 @@ import {
   formatCurrency,
   formatDateCs,
   formatContractPriceWithWords,
+  formatSignedCurrency,
 } from '../utils/numberToWordsCs';
 import {
   generateQrPaymentDataUrl,
@@ -28,6 +29,7 @@ import { exportContractToPdf } from '../utils/exportPdf';
 import { getWhatsAppShareUrl, getMailtoShareUrl } from '../utils/shareUtils';
 import { triggerHaptic } from '../utils/haptics';
 import { CraftsmanStamp } from './CraftsmanStamp';
+import { getAdvanceInvoiceDates, getFinalInvoiceDates } from '../utils/invoiceMath';
 
 interface InvoiceViewProps {
   contract: Contract;
@@ -71,13 +73,11 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
 
   const variableSymbol = (contract.variableSymbol || contract.invoiceNumber || '2026001').replace(/\D/g, '');
 
-  const todayIso = new Date().toISOString().split('T')[0];
-  const issueDate = contract.conclusionDate || todayIso;
-  
-  // Splatnost 14 dní od vystavení
-  const dueDateObj = new Date(issueDate);
-  dueDateObj.setDate(dueDateObj.getDate() + 14);
-  const dueDateIso = dueDateObj.toISOString().split('T')[0];
+  // Data dokladu podle jednotných pravidel (utils/invoiceMath): zálohová faktura při uzavření smlouvy,
+  // konečná faktura k předání díla; splatnost 14 dnů
+  const invoiceDates = isAdvance ? getAdvanceInvoiceDates(contract) : getFinalInvoiceDates(contract);
+  const issueDate = invoiceDates.issueDate;
+  const dueDateIso = invoiceDates.dueDate;
 
   const iban = czAccountToIban(contract.contractor.bankAccount);
 
@@ -363,7 +363,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
 
           <div>
             <span className="text-[10px] font-semibold text-slate-500 uppercase block">DUZP</span>
-            <span className="font-bold text-slate-900 text-xs">{formatDateCs(contract.deliveryDate || issueDate)}</span>
+            <span className="font-bold text-slate-900 text-xs">{formatDateCs(invoiceDates.taxDate)}</span>
           </div>
 
           <div>
@@ -460,10 +460,10 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
                       </td>
                       <td className="py-2.5 px-3 text-center font-medium text-amber-900">1 kpl.</td>
                       <td className="py-2.5 px-3 text-right font-medium text-amber-900">
-                        +{formatCurrency(amend.priceDifference)}
+                        {formatSignedCurrency(amend.priceDifference)}
                       </td>
                       <td className="py-2.5 px-3 text-right font-bold text-amber-900">
-                        +{formatCurrency(amend.priceDifference)}
+                        {formatSignedCurrency(amend.priceDifference)}
                       </td>
                     </tr>
                   ))}

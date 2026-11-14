@@ -1,6 +1,6 @@
 /**
  * Převod celého čísla na slova v češtině.
- * Podporuje standardní české číslovky od 0 do 999 999 999.
+ * Podporuje standardní české číslovky od 0 do 999 999 999 999.
  *
  * Příklad:
  * 1111 => "jedentisícjednostojedenáct" (při compact: true)
@@ -68,24 +68,40 @@ function convertGroupOfThree(num: number, compact: boolean): string[] {
   return parts;
 }
 
-export function numberToWordsCs(amount: number, compact = true): string {
+/**
+ * @param feminine true pro počítání podstatných jmen ženského rodu (koruna): „jedna“, „dvě“ místo „jeden“, „dva“
+ */
+export function numberToWordsCs(amount: number, compact = true, feminine = false): string {
+  if (!Number.isFinite(amount)) return 'nula';
   const n = Math.floor(Math.abs(amount));
   if (n === 0) return 'nula';
 
+  const billions = Math.floor(n / 1_000_000_000) % 1000;
   const millions = Math.floor(n / 1_000_000) % 1000;
   const thousands = Math.floor(n / 1_000) % 1000;
   const units = n % 1000;
 
   const resultParts: string[] = [];
+  const sep = compact ? '' : ' ';
+
+  // Miliardy (ženský rod: jedna miliarda, dvě miliardy)
+  if (billions > 0) {
+    const bParts = convertGroupOfThree(billions, compact);
+    applyFeminine(bParts, billions);
+    let bSuffix = 'miliard';
+    if (billions === 1) bSuffix = 'miliarda';
+    else if (billions >= 2 && billions <= 4) bSuffix = 'miliardy';
+    resultParts.push(`${bParts.join(sep)}${sep}${bSuffix}`);
+  }
 
   // Miliony
   if (millions > 0) {
-    const mWords = convertGroupOfThree(millions, compact).join(compact ? '' : ' ');
+    const mWords = convertGroupOfThree(millions, compact).join(sep);
     let mSuffix = 'milionů';
     if (millions === 1) mSuffix = 'milion';
     else if (millions >= 2 && millions <= 4) mSuffix = 'miliony';
 
-    resultParts.push(`${mWords}${compact ? '' : ' '}${mSuffix}`);
+    resultParts.push(`${mWords}${sep}${mSuffix}`);
   }
 
   // Tisíce
@@ -94,36 +110,46 @@ export function numberToWordsCs(amount: number, compact = true): string {
     if (thousands === 1) {
       resultParts.push(compact ? 'jedentisíc' : 'jeden tisíc');
     } else {
-      const tWords = convertGroupOfThree(thousands, compact).join(compact ? '' : ' ');
+      const tWords = convertGroupOfThree(thousands, compact).join(sep);
       if (thousands >= 2 && thousands <= 4) {
         tSuffix = 'tisíce';
       }
-      resultParts.push(`${tWords}${compact ? '' : ' '}${tSuffix}`);
+      resultParts.push(`${tWords}${sep}${tSuffix}`);
     }
   }
 
   // Jednotky (stovky, desítky, jednotky)
   if (units > 0) {
-    const uWords = convertGroupOfThree(units, compact).join(compact ? '' : ' ');
-    resultParts.push(uWords);
+    const uParts = convertGroupOfThree(units, compact);
+    if (feminine) applyFeminine(uParts, units);
+    resultParts.push(uParts.join(sep));
   }
 
-  return compact ? resultParts.join('') : resultParts.join(' ');
+  return resultParts.join(sep);
+}
+
+// Poslední číslovku skupiny převede do ženského rodu (jeden → jedna, dva → dvě), mimo 11–19
+function applyFeminine(parts: string[], group: number): void {
+  const lastTwo = group % 100;
+  if (lastTwo >= 10 && lastTwo <= 19) return;
+  const last = parts.length - 1;
+  if (group % 10 === 1) parts[last] = 'jedna';
+  else if (group % 10 === 2) parts[last] = 'dvě';
 }
 
 /**
- * Zformátuje cenu včetně slovního vyjádření dle českých právních zvyklostí.
- * Příklad: "1 111 Kč, slovy jedentisícjednostojedenáct korun českých"
+ * Částka slovy včetně měny ve správném tvaru: „jedna koruna česká“, „dvě koruny české“,
+ * „osmdesátpěttisíc korun českých“. Záporná částka (méněpráce) začíná slovem „minus“.
  */
-export function formatContractPriceWithWords(amount: number): string {
-  const formattedNumber = new Intl.NumberFormat('cs-CZ').format(amount);
-  const words = numberToWordsCs(amount, true);
-  
+export function amountInWordsCzk(amount: number): string {
+  const safe = Number.isFinite(amount) ? amount : 0;
+  const whole = Math.floor(Math.abs(safe));
+  const words = numberToWordsCs(whole, true, true);
+
   let currencyDeclension = 'korun českých';
-  const lastTwo = Math.floor(amount) % 100;
-  const lastOne = Math.floor(amount) % 10;
-  
-  if (lastTwo < 10 || lastTwo > 20) {
+  const lastTwo = whole % 100;
+  const lastOne = whole % 10;
+  if (whole > 0 && (lastTwo < 10 || lastTwo > 20)) {
     if (lastOne === 1) {
       currencyDeclension = 'koruna česká';
     } else if (lastOne >= 2 && lastOne <= 4) {
@@ -131,7 +157,17 @@ export function formatContractPriceWithWords(amount: number): string {
     }
   }
 
-  return `${formattedNumber} Kč, slovy ${words} ${currencyDeclension}`;
+  return `${safe < 0 && whole > 0 ? 'minus ' : ''}${words} ${currencyDeclension}`;
+}
+
+/**
+ * Zformátuje cenu včetně slovního vyjádření dle českých právních zvyklostí.
+ * Příklad: "1 111 Kč, slovy jedentisícjednostojedenáct korun českých"
+ */
+export function formatContractPriceWithWords(amount: number): string {
+  const safe = Number.isFinite(amount) ? amount : 0;
+  const formattedNumber = new Intl.NumberFormat('cs-CZ').format(safe);
+  return `${formattedNumber} Kč, slovy ${amountInWordsCzk(safe)}`;
 }
 
 /**
@@ -139,6 +175,14 @@ export function formatContractPriceWithWords(amount: number): string {
  */
 export function formatCurrency(amount: number): string {
   return `${new Intl.NumberFormat('cs-CZ').format(amount)} Kč`;
+}
+
+/**
+ * Částka se znaménkem pro vícepráce a méněpráce: „+4 502 Kč“, „−1 200 Kč“.
+ */
+export function formatSignedCurrency(amount: number): string {
+  const abs = formatCurrency(Math.abs(amount));
+  return amount < 0 ? `−${abs}` : `+${abs}`;
 }
 
 /**

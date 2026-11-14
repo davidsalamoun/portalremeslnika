@@ -1,5 +1,9 @@
 import { Contract } from '../types/contract';
-import { formatCurrency, formatDateCs } from './numberToWordsCs';
+import {
+  formatCurrency,
+  formatDateCs,
+  formatSignedCurrency,
+} from './numberToWordsCs';
 
 export type ShareDocType =
   | 'smlouva'
@@ -63,7 +67,7 @@ ${contractorName}`;
 v návaznosti na naši dohodu ohledně víceprací na stavbě zasílám Dodatek č. ${amendNum} ke Smlouvě o dílo č. ${contract.contractNumber}:
 "${lastAmend?.title || 'Vícepráce a úprava rozsahu díla'}"
 
-• Cena víceprací: +${formatCurrency(amendPrice)}
+• Cena víceprací: ${formatSignedCurrency(amendPrice)}
 ${lastAmend?.newDeliveryDate ? `• Nový termín dokončení: ${formatDateCs(lastAmend.newDeliveryDate)}\n` : ''}
 Dodatek si můžete prohlédnout a podepsat v přiloženém dokumentu.
 
@@ -74,7 +78,7 @@ Tel.: ${contractorPhone}`;
     return {
       subject,
       body,
-      shortSummary: `Dodatek č. ${amendNum} (+${formatCurrency(amendPrice)}) ke smlouvě ${contract.contractNumber}`,
+      shortSummary: `Dodatek č. ${amendNum} (${formatSignedCurrency(amendPrice)}) ke smlouvě ${contract.contractNumber}`,
     };
   }
 
