@@ -1410,7 +1410,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
               <div className="mt-14 pt-4 border-t border-slate-200 flex items-center justify-between text-[11px] font-sans text-slate-400">
                 <span>Evidenční číslo: {contract.contractNumber}</span>
                 <span>Strana 1 z 1</span>
-                <span>Vyhotoveno v aplikaci Smlouvy pro živnostníky</span>
+                <span>Vyhotoveno v aplikaci Řemeslník PRO</span>
               </div>
             </div>
           </>
@@ -1440,6 +1440,12 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
         onSave={handleSaveSignature}
         onClose={() => setSignatureModalRole(null)}
       />
+
+      {/* Upozornění ke vzorům dokumentů – jen na obrazovce, do tisku ani PDF se nepromítá */}
+      <p className="no-print max-w-3xl mx-auto mt-6 px-4 text-center text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+        Vzory smluv a dokumentů slouží jako pomůcka a nenahrazují právní poradenství. Před použitím si je přizpůsobte
+        své situaci, v případě pochybností je nechte zkontrolovat advokátem.
+      </p>
 
       {/* Komunikační & Odesílací dialog se šablonami SMS a WhatsApp */}
       <ShareModal
