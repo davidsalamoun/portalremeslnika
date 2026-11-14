@@ -306,3 +306,49 @@ export async function signOutAndClear(): Promise<boolean> {
   window.location.reload();
   return true;
 }
+
+export type DeleteAccountResult = 'deleted' | 'wrong_password' | 'failed';
+
+/**
+ * Nenávratně smaže účet se všemi daty: soubory obrázků, záznamy v databázi i data v tomto zařízení.
+ * Před smazáním se ověří heslo. Při chybě zůstává účet beze změny (nebo jen bez části obrázků).
+ */
+export async function deleteAccount(email: string, password: string): Promise<DeleteAccountResult> {
+  window.clearTimeout(pushTimer);
+
+  const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+  if (authError) {
+    const wrong = authError.code === 'invalid_credentials' || /invalid login credentials/i.test(authError.message);
+    return wrong ? 'wrong_password' : 'failed';
+  }
+
+  try {
+    const userId = await currentUserId();
+
+    // 1. Soubory obrázků ve složce uživatele (po dávkách, dokud nějaké zbývají)
+    for (;;) {
+      const { data: files, error } = await supabase.storage.from(PHOTO_BUCKET).list(userId, { limit: 100 });
+      if (error) throw error;
+      if (!files || files.length === 0) break;
+      const { error: removeError } = await supabase.storage
+        .from(PHOTO_BUCKET)
+        .remove(files.map((f) => `${userId}/${f.name}`));
+      if (removeError) throw removeError;
+    }
+
+    // 2. Účet a všechny záznamy v databázi
+    const { error: rpcError } = await supabase.rpc('delete_own_account');
+    if (rpcError) throw rpcError;
+  } catch (err) {
+    console.error('Smazání účtu se nezdařilo:', err);
+    return 'failed';
+  }
+
+  // 3. Data v tomto zařízení
+  await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+  engine.clearLocal();
+  await clearAllBlobs();
+  window.localStorage.removeItem('last_cloud_sync');
+  window.location.reload();
+  return 'deleted';
+}

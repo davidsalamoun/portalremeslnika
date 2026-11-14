@@ -202,3 +202,28 @@ drop policy if exists "vlastni fotky - smazani" on storage.objects;
 create policy "vlastni fotky - smazani" on storage.objects
   for delete to authenticated
   using (bucket_id = 'photos' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+-- ---------------------------------------------------------------------------
+-- Smazání vlastního účtu
+-- ---------------------------------------------------------------------------
+-- Přihlášený uživatel smaže sám sebe; řádky ve všech tabulkách aplikace zmizí s ním (on delete cascade).
+-- Soubory v bucketu `photos` maže aplikace předem přes Storage API (přímé mazání ze storage tabulek je zakázané).
+create or replace function public.delete_own_account()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := (select auth.uid());
+begin
+  if v_uid is null then
+    raise exception 'not authenticated' using errcode = '28000';
+  end if;
+  delete from auth.users where id = v_uid;
+end;
+$$;
+
+revoke all on function public.delete_own_account() from public;
+revoke all on function public.delete_own_account() from anon;
+grant execute on function public.delete_own_account() to authenticated;

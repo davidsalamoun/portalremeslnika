@@ -257,7 +257,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
           </div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Zatím žádné uložené smlouvy</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mb-6">
-            Vytvořte smlouvu a v náhledu klikněte na „Uložit do historie“. Smlouvy zůstanou bezpečně uloženy ve vašem prohlížeči.
+            Vytvořte smlouvu a v náhledu klikněte na „Uložit do historie“. Smlouvy zůstanou uložené ve vašem účtu.
           </p>
           <button
             onClick={onNewContract}
