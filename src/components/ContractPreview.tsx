@@ -137,6 +137,13 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
 
   const [isCheckingSignature, setIsCheckingSignature] = useState(false);
 
+  // Zálohová faktura dává smysl jen se sjednanou zálohou; jinak se zobrazí konečná faktura
+  useEffect(() => {
+    if (activeDocType === 'zaloha' && !(currentContract.advanceAmount && currentContract.advanceAmount > 0)) {
+      setActiveDocType('faktura');
+    }
+  }, [activeDocType, currentContract.advanceAmount]);
+
   // Sync if parent updates contract prop
   useEffect(() => {
     if (contract && contract.id !== currentContract.id) {
@@ -1408,7 +1415,6 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
               {/* Document Page Footer */}
               <div className="mt-14 pt-4 border-t border-slate-200 flex items-center justify-between text-[11px] font-sans text-slate-400">
                 <span>Evidenční číslo: {contract.contractNumber}</span>
-                <span>Strana 1 z 1</span>
                 <span>Vyhotoveno v aplikaci Řemeslník PRO</span>
               </div>
             </div>

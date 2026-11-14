@@ -143,7 +143,8 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
 úvodní stránka, počítadlo po splatnosti i export pro účetní. Nepočítat je znovu v komponentách.
 - Cena díla = `contract.price` + dodatky (vícepráce i méněpráce); doplatek = cena − sjednaná záloha.
 - Konečná faktura se vystavuje k předání díla (`handoverData.handoverDate`, jinak `deliveryDate`), DUZP je stejné,
-  splatnost 14 dnů. Zálohová faktura se vystavuje k datu uzavření smlouvy.
+  splatnost 14 dnů. Zálohová faktura se vystavuje k datu uzavření smlouvy a jen na zálohu sjednanou ve smlouvě
+  (`advanceAmount`); bez ní se nenabízí a žádná částka se nedomýšlí.
 - Cenová nabídka (`docKind: 'quote'`) a zakázka bez ceny nejsou pohledávkou ani tržbou.
 - U plátců jsou ceny včetně DPH; export pro účetní počítá daň jako 21/121 z ceny. Faktura sama základ a DPH nerozepisuje.
 - Částka slovy vždy přes `amountInWordsCzk` (rod a tvar měny), vícepráce/méněpráce přes `formatSignedCurrency`.
@@ -163,6 +164,7 @@ odstraněny včetně serverových endpointů a závislosti na Gemini. Nepřidáv
   nejsou skutečné údaje provozovatele – současné IČO a číslo účtu jsou vymyšlené, stejně jako platební formulář
   v `PaywallModal.tsx` (jen napodobuje Stripe). Aktivace PRO parametrem v adrese byla odstraněna.
 - Testy pokrývají synchronizaci, odkazy na obrázky, výpočty faktur a české pomocné funkce; přihlášení a UI se ověřují ručně.
-- PDF je obrázek stránky (nejde v něm hledat text) a stránky se dělí bez ohledu na řádky.
+- PDF je obrázek stránky (nejde v něm hledat text). Strany se dělí v mezeře mezi řádky (`computePageSlices`
+  v `exportPdf.ts`), ne podle odstavců nebo bloků – nadpis tak může zůstat na konci strany bez svého textu.
 - Faktura plátce DPH nerozepisuje základ, sazbu a daň; sazba je všude 21 % (stavební práce pro bydlení mají 12 %).
 - Po startu se všechny obrázky účtu načtou do paměti; u tisíců fotek bude potřeba načítání na vyžádání.
