@@ -59,7 +59,9 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
   const amendments = contract.amendments || [];
   const totalAmendmentsPrice = amendments.reduce((sum, a) => sum + (a.priceDifference || 0), 0);
   const totalContractPriceWithAmendments = contract.price + totalAmendmentsPrice;
-  const advanceAmount = contract.advanceAmount || (isAdvance ? Math.round(contract.price * 0.4) : 0);
+  // Zálohová faktura se vystavuje jen na zálohu sjednanou ve smlouvě – žádná částka se nedomýšlí
+  const advanceAmount = contract.advanceAmount || 0;
+  const hasAdvance = advanceAmount > 0;
 
   // Final invoice balance (doplatek k úhradě)
   const finalBalanceToPay = Math.max(0, totalContractPriceWithAmendments - (contract.advanceAmount || 0));
@@ -176,7 +178,13 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => onChangeInvoiceType('advance')}
+                onClick={() => {
+                  if (!hasAdvance) {
+                    onToast?.('info', 'Ke smlouvě není sjednána záloha. Zálohovou fakturu lze vystavit, až zálohu ve smlouvě doplníte.');
+                    return;
+                  }
+                  onChangeInvoiceType('advance');
+                }}
                 className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
                   isAdvance
                     ? 'bg-white dark:bg-slate-900 text-[#1E3A78] dark:text-blue-300 shadow-xs'
