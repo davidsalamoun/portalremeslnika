@@ -1,35 +1,13 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
+import { preloadExportLibraries } from './utils/lazyExports';
 import { Navbar, TabType } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
 import { DashboardPage } from './components/DashboardPage';
-import { CalendarPage } from './components/CalendarPage';
-import { LeadsPipelinePage } from './components/LeadsPipelinePage';
-import { InvoicesOverviewPage } from './components/InvoicesOverviewPage';
-import { ContractForm } from './components/ContractForm';
-import { ContractPreview, DocumentType } from './components/ContractPreview';
-import { ClientsPage } from './components/ClientsPage';
-import { HistoryPage } from './components/HistoryPage';
-import { SettingsPage } from './components/SettingsPage';
-import { FinancialRadarPage } from './components/FinancialRadarPage';
+import type { DocumentType } from './components/ContractPreview';
 import { ClientDialog } from './components/ClientDialog';
 import { CloudAccountModal } from './components/CloudAccountModal';
-import { RemoteSigningPortal } from './components/RemoteSigningPortal';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { OfflineStatusIndicator } from './components/OfflineStatusIndicator';
-import { QuickClientMessagesModal } from './components/QuickClientMessagesModal';
-import { QuickEstimateCalculatorModal } from './components/QuickEstimateCalculatorModal';
-import { ClientSigningKioskModal } from './components/ClientSigningKioskModal';
-import { ShoppingListModal } from './components/ShoppingListModal';
-import { QuickCashReceiptModal } from './components/QuickCashReceiptModal';
-import { LogbookModal } from './components/LogbookModal';
-import { AccountantExportModal } from './components/AccountantExportModal';
-import { TechnicalProtocolsModal } from './components/TechnicalProtocolsModal';
-import { SubcontractorsModal } from './components/SubcontractorsModal';
-import { ToolRentalModal } from './components/ToolRentalModal';
-import { DepartureChecklistModal } from './components/DepartureChecklistModal';
-import { ContractArchiveModal } from './components/ContractArchiveModal';
-import { PaywallModal } from './components/PaywallModal';
-import { SubscriptionInvoiceModal } from './components/SubscriptionInvoiceModal';
 import { compressImageFile } from './utils/imageCompression';
 import { triggerHaptic } from './utils/haptics';
 import {
@@ -64,6 +42,72 @@ import { useCloudUser } from './components/AuthGate';
 import { isInvoiceable, getInvoiceStatus } from './utils/invoiceMath';
 import { CLOUD_DATA_CHANGED_EVENT } from './utils/cloudSync';
 import { isProUser, PRO_CONFIG, PAYMENTS_ENABLED } from './utils/subscription';
+
+// Stránky a modály se stahují až při prvním použití; po startu se na pozadí dotáhnou všechny,
+// aby aplikace fungovala i bez připojení (viz preloadLazyChunks níže).
+const lazyLoaders = {
+  CalendarPage: () => import('./components/CalendarPage'),
+  LeadsPipelinePage: () => import('./components/LeadsPipelinePage'),
+  InvoicesOverviewPage: () => import('./components/InvoicesOverviewPage'),
+  ContractForm: () => import('./components/ContractForm'),
+  ContractPreview: () => import('./components/ContractPreview'),
+  ClientsPage: () => import('./components/ClientsPage'),
+  HistoryPage: () => import('./components/HistoryPage'),
+  SettingsPage: () => import('./components/SettingsPage'),
+  FinancialRadarPage: () => import('./components/FinancialRadarPage'),
+  RemoteSigningPortal: () => import('./components/RemoteSigningPortal'),
+  QuickClientMessagesModal: () => import('./components/QuickClientMessagesModal'),
+  QuickEstimateCalculatorModal: () => import('./components/QuickEstimateCalculatorModal'),
+  ClientSigningKioskModal: () => import('./components/ClientSigningKioskModal'),
+  ShoppingListModal: () => import('./components/ShoppingListModal'),
+  QuickCashReceiptModal: () => import('./components/QuickCashReceiptModal'),
+  LogbookModal: () => import('./components/LogbookModal'),
+  AccountantExportModal: () => import('./components/AccountantExportModal'),
+  TechnicalProtocolsModal: () => import('./components/TechnicalProtocolsModal'),
+  SubcontractorsModal: () => import('./components/SubcontractorsModal'),
+  ToolRentalModal: () => import('./components/ToolRentalModal'),
+  DepartureChecklistModal: () => import('./components/DepartureChecklistModal'),
+  ContractArchiveModal: () => import('./components/ContractArchiveModal'),
+  PaywallModal: () => import('./components/PaywallModal'),
+  SubscriptionInvoiceModal: () => import('./components/SubscriptionInvoiceModal'),
+};
+const CalendarPage = lazy(() => lazyLoaders.CalendarPage().then((m) => ({ default: m.CalendarPage })));
+const LeadsPipelinePage = lazy(() => lazyLoaders.LeadsPipelinePage().then((m) => ({ default: m.LeadsPipelinePage })));
+const InvoicesOverviewPage = lazy(() => lazyLoaders.InvoicesOverviewPage().then((m) => ({ default: m.InvoicesOverviewPage })));
+const ContractForm = lazy(() => lazyLoaders.ContractForm().then((m) => ({ default: m.ContractForm })));
+const ContractPreview = lazy(() => lazyLoaders.ContractPreview().then((m) => ({ default: m.ContractPreview })));
+const ClientsPage = lazy(() => lazyLoaders.ClientsPage().then((m) => ({ default: m.ClientsPage })));
+const HistoryPage = lazy(() => lazyLoaders.HistoryPage().then((m) => ({ default: m.HistoryPage })));
+const SettingsPage = lazy(() => lazyLoaders.SettingsPage().then((m) => ({ default: m.SettingsPage })));
+const FinancialRadarPage = lazy(() => lazyLoaders.FinancialRadarPage().then((m) => ({ default: m.FinancialRadarPage })));
+const RemoteSigningPortal = lazy(() => lazyLoaders.RemoteSigningPortal().then((m) => ({ default: m.RemoteSigningPortal })));
+const QuickClientMessagesModal = lazy(() => lazyLoaders.QuickClientMessagesModal().then((m) => ({ default: m.QuickClientMessagesModal })));
+const QuickEstimateCalculatorModal = lazy(() => lazyLoaders.QuickEstimateCalculatorModal().then((m) => ({ default: m.QuickEstimateCalculatorModal })));
+const ClientSigningKioskModal = lazy(() => lazyLoaders.ClientSigningKioskModal().then((m) => ({ default: m.ClientSigningKioskModal })));
+const ShoppingListModal = lazy(() => lazyLoaders.ShoppingListModal().then((m) => ({ default: m.ShoppingListModal })));
+const QuickCashReceiptModal = lazy(() => lazyLoaders.QuickCashReceiptModal().then((m) => ({ default: m.QuickCashReceiptModal })));
+const LogbookModal = lazy(() => lazyLoaders.LogbookModal().then((m) => ({ default: m.LogbookModal })));
+const AccountantExportModal = lazy(() => lazyLoaders.AccountantExportModal().then((m) => ({ default: m.AccountantExportModal })));
+const TechnicalProtocolsModal = lazy(() => lazyLoaders.TechnicalProtocolsModal().then((m) => ({ default: m.TechnicalProtocolsModal })));
+const SubcontractorsModal = lazy(() => lazyLoaders.SubcontractorsModal().then((m) => ({ default: m.SubcontractorsModal })));
+const ToolRentalModal = lazy(() => lazyLoaders.ToolRentalModal().then((m) => ({ default: m.ToolRentalModal })));
+const DepartureChecklistModal = lazy(() => lazyLoaders.DepartureChecklistModal().then((m) => ({ default: m.DepartureChecklistModal })));
+const ContractArchiveModal = lazy(() => lazyLoaders.ContractArchiveModal().then((m) => ({ default: m.ContractArchiveModal })));
+const PaywallModal = lazy(() => lazyLoaders.PaywallModal().then((m) => ({ default: m.PaywallModal })));
+const SubscriptionInvoiceModal = lazy(() => lazyLoaders.SubscriptionInvoiceModal().then((m) => ({ default: m.SubscriptionInvoiceModal })));
+
+function preloadLazyChunks() {
+  const run = () => {
+    Object.entries(lazyLoaders).forEach(([name, load]) => {
+      // Platební obrazovky se při vypnutém placení nikdy nezobrazí, není třeba je stahovat
+      if (!PAYMENTS_ENABLED && (name === 'PaywallModal' || name === 'SubscriptionInvoiceModal')) return;
+      void load().catch(() => undefined);
+    });
+    void preloadExportLibraries().catch(() => undefined);
+  };
+  if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 4000 });
+  else setTimeout(run, 2000);
+}
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
@@ -202,6 +246,9 @@ export default function App() {
 
     const ids = new Set(loadedContracts.map((c) => c.id));
     setSavedContractIds(ids);
+
+    // Zákazník v portálu podpisu zbytek aplikace nepotřebuje
+    if (!signParam) preloadLazyChunks();
   }, []);
 
   // Compute overdue invoices count for navbar badge
@@ -548,6 +595,7 @@ export default function App() {
   // Remote signing portal check
   if (signParam) {
     return (
+      <Suspense fallback={null}>
       <RemoteSigningPortal
         shareId={signParam}
         onBackToApp={() => {
@@ -555,6 +603,7 @@ export default function App() {
           window.location.assign(window.location.pathname);
         }}
       />
+      </Suspense>
     );
   }
 
@@ -601,6 +650,7 @@ export default function App() {
 
       {/* Hlavní obsah */}
       <main className="flex-1 w-full px-3 sm:px-6 pt-5 sm:pt-7 pb-28 sm:pb-12">
+        <Suspense fallback={null}>
         {previewContract ? (
           <ContractPreview
             contract={previewContract}
@@ -794,6 +844,7 @@ export default function App() {
             )}
           </>
         )}
+        </Suspense>
       </main>
 
       {/* Spodní lišta pro pohodlné ovládání palcem na mobilu */}
@@ -810,6 +861,7 @@ export default function App() {
         onOpenPaywall={openPaywallProp}
       />
 
+      <Suspense fallback={null}>
       {/* Rychlé zprávy pro klienta */}
       {quickMessagesContract && (
         <QuickClientMessagesModal
@@ -965,6 +1017,8 @@ export default function App() {
         contractor={contractor}
       />
       )}
+
+      </Suspense>
 
       {/* Footer */}
       <footer className="no-print border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 mb-16 md:mb-0 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">

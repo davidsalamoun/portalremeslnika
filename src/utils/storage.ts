@@ -59,6 +59,17 @@ export function findMissingImageIds(): string[] {
   return [...missing];
 }
 
+/** Id všech obrázků, na které data v tomto zařízení odkazují. */
+export function getReferencedImageIds(): string[] {
+  const ids = new Set<string>();
+  for (const key of IMAGE_BEARING_KEYS) {
+    const raw = localStorage.getItem(key);
+    if (!raw) continue;
+    for (const id of collectImageRefs(raw)) ids.add(id);
+  }
+  return [...ids];
+}
+
 const STORAGE_KEYS = {
   ZHOTOVITEL: 'zhotovitel',
   KLIENTI: 'klienti',

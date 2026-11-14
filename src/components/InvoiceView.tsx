@@ -25,7 +25,7 @@ import {
   generateQrPaymentDataUrl,
   czAccountToIban,
 } from '../utils/spayd';
-import { exportContractToPdf } from '../utils/exportPdf';
+import { exportContractToPdf } from '../utils/lazyExports';
 import { getWhatsAppShareUrl, getMailtoShareUrl } from '../utils/shareUtils';
 import { triggerHaptic } from '../utils/haptics';
 import { CraftsmanStamp } from './CraftsmanStamp';

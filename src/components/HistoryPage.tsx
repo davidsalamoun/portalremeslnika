@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { Contract, ContractStatus } from '../types/contract';
 import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
-import { exportContractToDocx } from '../utils/exportDocx';
+import { exportContractToDocx } from '../utils/lazyExports';
 import { getStatusMeta, ALL_STATUSES } from '../utils/contractStatus';
 import { getWhatsAppShareUrl } from '../utils/shareUtils';
 import { DocumentType } from './ContractPreview';

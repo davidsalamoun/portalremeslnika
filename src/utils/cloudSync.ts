@@ -9,8 +9,12 @@ import {
   storeDownloadedBlob,
   loadBlobFromDisk,
   clearAllBlobs,
+  listBlobInfo,
+  deleteLocalBlobs,
+  markBlobForReupload,
 } from './blobStore';
-import { migrateInlineImages, findMissingImageIds } from './storage';
+import { planImageCleanup } from './imageCleanup';
+import { migrateInlineImages, findMissingImageIds, getReferencedImageIds } from './storage';
 
 /**
  * Propojení synchronizace (syncEngine.ts) se Supabase a s prohlížečem:
@@ -132,6 +136,55 @@ async function downloadMissingImages(): Promise<boolean> {
   return added;
 }
 
+const IMAGE_CLEANUP_KEY = 'image_cleanup_at';
+const IMAGE_CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Úklid obrázků, na které už nic neodkazuje (fotka odebraná ze smlouvy, smazaná smlouva).
+ * Běží nejvýš jednou denně, jen když je vše synchronizované. Co se smí smazat, rozhoduje
+ * planImageCleanup (jen staré soubory, na které neodkazuje účet ani toto zařízení).
+ */
+async function cleanupUnusedImages(): Promise<void> {
+  const last = Number(window.localStorage.getItem(IMAGE_CLEANUP_KEY) || 0);
+  if (Date.now() - last < IMAGE_CLEANUP_INTERVAL_MS) return;
+  if (engine.pendingCount() > 0 || pendingUploadCount() > 0) return;
+
+  const userId = await currentUserId();
+
+  // Odkazy podle účtu (databáze) i podle tohoto zařízení – obrázek se maže, jen když chybí v obou
+  const { data: remoteRefs, error: refsError } = await supabase.rpc('list_referenced_images');
+  if (refsError) throw refsError;
+  const referenced = new Set<string>([...((remoteRefs as string[] | null) || []), ...getReferencedImageIds()]);
+
+  const remote: { id: string; createdAt: string }[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data: files, error } = await supabase.storage.from(PHOTO_BUCKET).list(userId, { limit: 1000, offset });
+    if (error) throw error;
+    for (const f of files || []) remote.push({ id: f.name, createdAt: f.created_at || '' });
+    if (!files || files.length < 1000) break;
+  }
+
+  const local = await listBlobInfo();
+  const plan = planImageCleanup({
+    referenced,
+    remote,
+    localUploaded: local.filter((l) => l.uploaded),
+    localIds: local.map((l) => l.id),
+  });
+
+  for (const id of plan.reupload) await markBlobForReupload(id);
+  for (let i = 0; i < plan.deleteRemote.length; i += 100) {
+    const { error } = await supabase.storage
+      .from(PHOTO_BUCKET)
+      .remove(plan.deleteRemote.slice(i, i + 100).map((id) => `${userId}/${id}`));
+    if (error) throw error;
+  }
+  await deleteLocalBlobs(plan.deleteLocal);
+
+  window.localStorage.setItem(IMAGE_CLEANUP_KEY, String(Date.now()));
+  if (plan.reupload.length > 0) window.setTimeout(() => void syncNow(), 0);
+}
+
 /**
  * Příprava po startu aplikace: načte obrázky do paměti a převede data ze starší verze
  * (obrázky přímo v localStorage) na odkazy. Volá se před prvním čtením dat.
@@ -212,6 +265,8 @@ export function syncNow(): Promise<boolean> {
         return false;
       }
       setStatus({ phase: 'idle', lastSyncAt: new Date().toISOString() });
+      // Úklid nepoužívaných obrázků nesmí synchronizaci shodit; při chybě se zkusí příště
+      cleanupUnusedImages().catch((err) => console.warn('Úklid nepoužívaných obrázků se nezdařil:', err));
       return true;
     } catch (err) {
       console.warn('Synchronizace s cloudem se nezdařila:', err);
@@ -303,6 +358,7 @@ export async function signOutAndClear(): Promise<boolean> {
   engine.clearLocal();
   await clearAllBlobs();
   window.localStorage.removeItem('last_cloud_sync');
+  window.localStorage.removeItem(IMAGE_CLEANUP_KEY);
   window.location.reload();
   return true;
 }
@@ -349,6 +405,7 @@ export async function deleteAccount(email: string, password: string): Promise<De
   engine.clearLocal();
   await clearAllBlobs();
   window.localStorage.removeItem('last_cloud_sync');
+  window.localStorage.removeItem(IMAGE_CLEANUP_KEY);
   window.location.reload();
   return 'deleted';
 }

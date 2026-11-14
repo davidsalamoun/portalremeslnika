@@ -42,8 +42,7 @@ import {
   formatCurrency,
   formatSignedCurrency,
 } from '../utils/numberToWordsCs';
-import { exportContractToDocx } from '../utils/exportDocx';
-import { exportContractToPdf } from '../utils/exportPdf';
+import { exportContractToDocx, exportContractToPdf } from '../utils/lazyExports';
 import { InvoiceView } from './InvoiceView';
 import { HandoverProtocolView } from './HandoverProtocolView';
 import { PriceQuoteView } from './PriceQuoteView';
