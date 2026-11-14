@@ -37,7 +37,7 @@ export function exportAppBackup(): void {
   const dateStr = new Date().toISOString().split('T')[0];
   const a = document.createElement('a');
   a.href = url;
-  a.download = `smlouvy-remeslnik-zaloha-${dateStr}.json`;
+  a.download = `remeslnik-pro-zaloha-${dateStr}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

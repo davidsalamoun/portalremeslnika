@@ -159,7 +159,7 @@ export const ContractArchiveModal: React.FC<ContractArchiveModalProps> = ({
   ` : ''}
 
   <div class="footer">
-    Vygenerováno systémem Smlouvy pro živnostníky · Kompletní složka zakázky byla archivována dne ${new Date().toLocaleDateString('cs-CZ')}.
+    Vygenerováno v aplikaci Řemeslník PRO · Kompletní složka zakázky byla archivována dne ${new Date().toLocaleDateString('cs-CZ')}.
   </div>
 </body>
 </html>`;

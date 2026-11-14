@@ -1,8 +1,0 @@
-{
-  "name": "Smlouvy pro živnostníky",
-  "description": "Generátor smluv o dílo pro řemeslníky a OSVČ s exportem do PDF a Word (.docx)",
-  "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
-}

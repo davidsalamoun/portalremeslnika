@@ -1,4 +1,7 @@
-# Portál živnostníka
+# Řemeslník PRO
+
+Název aplikace je **Řemeslník PRO** (repozitář se z historických důvodů jmenuje `portalremeslnika`); jiné názvy
+v UI nepoužívat. „Mistr PRO“ je název placeného tarifu, ne aplikace.
 
 Webová aplikace pro české řemeslníky a OSVČ: smlouvy o dílo, cenové nabídky, faktury s QR platbou,
 předávací protokoly, kalendář, klienti, náklady a daňový přehled. Původně vygenerováno v Google AI Studiu,
@@ -131,6 +134,7 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
 - U plátců jsou ceny včetně DPH; export pro účetní počítá daň jako 21/121 z ceny. Faktura sama základ a DPH nerozepisuje.
 - Částka slovy vždy přes `amountInWordsCzk` (rod a tvar měny), vícepráce/méněpráce přes `formatSignedCurrency`.
 - Předání díla (`handoverData`) se ukládá podpisem předávacího protokolu; čte ho záruční list, faktura i složka zakázky.
+- Pod náhledem dokumentů je upozornění, že vzory nenahrazují právní poradenství (jen na obrazovce, třída `no-print`).
 - Export PDF (`exportPdf.ts`) vynechává prvky s třídou `no-print`; tlačítko „Uložit PDF“ ukládá právě zobrazený dokument.
 
 ## AI
