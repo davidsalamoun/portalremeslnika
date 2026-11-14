@@ -108,6 +108,11 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
   `deleted_at`); smazání je značka `deleted_at`. Řádky chrání RLS – každý vidí jen své.
 - **První přihlášení v prohlížeči** nahraje do účtu data, která v něm vznikla dříve. **Odhlášení** data účtu
   z prohlížeče smaže (zůstávají v účtu). Při konfliktu vyhrává poslední zápis celého záznamu.
+- **Smazání účtu** (`deleteAccount` v `cloudSync.ts`, tlačítko v modálu účtu): po ověření hesla smaže soubory uživatele
+  v bucketu `photos`, pak zavolá databázovou funkci `delete_own_account` (smaže uživatele, řádky zmizí kaskádou)
+  a vyčistí zařízení. Nová tabulka s daty uživatele proto musí mít `user_id … references auth.users on delete cascade`.
+- **Informace o datech** jsou v modálu účtu („Kde jsou moje data?“). Když se změní, kde nebo jak se data ukládají
+  nebo komu se posílají, upravit i tento text – nesmí slibovat nic, co neplatí.
 - Změna schématu = úprava `supabase/schema.sql` (musí jít spustit opakovaně) a její nasazení v Supabase.
 - **Online podpis** (`utils/signShares.ts`, tabulka `sign_shares`): řemeslník založí odkaz `?sign=<token>` s náhodným
   tajným kódem (uložen u smlouvy jako `signToken`). Zákazník se nepřihlašuje a k tabulce přístup nemá – smlouvu čte
