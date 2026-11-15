@@ -39,6 +39,7 @@ import { cleanPlaceName } from './utils/numberToWordsCs';
 import { applyBackup } from './utils/backup';
 import { checkAndSyncRemoteSignatures } from './utils/signShares';
 import { useCloudUser } from './components/AuthGate';
+import { resolveIsDark, applyTheme, watchSystemTheme, saveThemeChoice } from './utils/theme';
 import { isInvoiceable, getInvoiceStatus } from './utils/invoiceMath';
 import { CLOUD_DATA_CHANGED_EVENT } from './utils/cloudSync';
 import { isProUser, PRO_CONFIG, PAYMENTS_ENABLED } from './utils/subscription';
@@ -117,26 +118,20 @@ export default function App() {
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
 
   // Dark mode state
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    try {
-      // Výchozí je světlý režim; tmavý jen když si ho uživatel sám zapnul
-      return localStorage.getItem('theme') === 'dark';
-    } catch {
-      return false;
-    }
-  });
+  // Režim se řídí zařízením, dokud si uživatel sám nepřepne (viz utils/theme.ts)
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(resolveIsDark);
 
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
+    applyTheme(isDarkMode);
   }, [isDarkMode]);
 
-  const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
+  useEffect(() => watchSystemTheme(setIsDarkMode), []);
+
+  const toggleDarkMode = () =>
+    setIsDarkMode((prev) => {
+      saveThemeChoice(prev ? 'light' : 'dark');
+      return !prev;
+    });
 
   // Preview state
   const [previewContract, setPreviewContract] = useState<Contract | null>(null);

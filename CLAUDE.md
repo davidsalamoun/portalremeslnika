@@ -66,8 +66,8 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   animace `animate-metr` proběhne jednou.
 - **Navigace:** `Navbar.tsx` = boční nabídka od šířky `lg`, pod ní úzká horní lišta; `BottomNav.tsx` = spodní lišta
   pod `lg`. Kořen aplikace má `lg:pl-60`.
-- **Režimy:** výchozí světlý, tmavý si uživatel zapíná přepínačem (klíč `theme` v localStorage); každá úprava musí
-  fungovat v obou.
+- **Režimy:** aplikace se řídí světlým/tmavým režimem zařízení; přepínačem si uživatel nastaví vlastní volbu
+  (`utils/theme.ts`, klíč `theme_choice` v localStorage). Každá úprava musí fungovat v obou režimech.
 - **Dokumenty** (`.contract-page`, `#amendment-printable-paper`, `#quote-printable-paper`, `.print-content`,
   `[data-pdf-paper]`) mají v `index.css` vrácené původní barvy, rohy a písmo – vypadají jako papír, ne jako aplikace.
 - Ovládací prvky mají výšku aspoň 44 px a viditelné označení při ovládání klávesnicí.
@@ -129,7 +129,7 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
 - **Přihlášení** e-mailem a heslem přes Supabase Auth. `components/AuthGate.tsx` pustí do aplikace jen přihlášeného
   uživatele (`AuthScreen.tsx`: přihlášení, registrace, obnova hesla). Výjimka: portál online podpisu `?sign=…`.
 - **Aplikace čte a zapisuje do localStorage** (funguje i bez připojení): klíče `zhotovitel`, `klienti`, `smlouvy`,
-  `remeslnik_cenik`, `remeslnik_kalendar`, `theme`. Faktury, náklady, dodatky, deník, kniha jízd i protokoly jsou
+  `remeslnik_cenik`, `remeslnik_kalendar`. Faktury, náklady, dodatky, deník, kniha jízd i protokoly jsou
   vnořené v objektu `Contract` v klíči `smlouvy`.
 - **Obrázky** (fotky, účtenky, podpisy – data URL jpeg/png/webp od 2 kB) se neukládají do localStorage ani do
   řádků databáze. `storage.ts` je při zápisu nahradí odkazem `@img:<id>` (id z obsahu obrázku) a uloží do IndexedDB
