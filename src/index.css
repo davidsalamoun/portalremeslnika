@@ -2,22 +2,175 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Vzhled „Výkres a metr“
+ * Razítková modrá (navigace, odkazy, podpisy), žlutá ze svinovacího metru (hlavní akce a postup zakázky),
+ * grafit na text a linky, papír jako pozadí. Rohy 4 px, tenké linky místo stínů.
+ * Barvy se mění přemapováním palet Tailwindu, takže platí v celé aplikaci bez úprav jednotlivých komponent.
+ */
+@theme {
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Barlow Semi Condensed", "IBM Plex Sans", system-ui, sans-serif;
+
+  /* Grafit a papír (dříve slate) */
+  --color-slate-50: #f4f5f2;
+  --color-slate-100: #ecEEea;
+  --color-slate-200: #d4d7d2;
+  --color-slate-300: #b9beb8;
+  --color-slate-400: #8a9089;
+  --color-slate-500: #5d636a;
+  --color-slate-600: #474c52;
+  --color-slate-700: #33373c;
+  --color-slate-800: #24272b;
+  --color-slate-900: #1a1d21;
+  --color-slate-950: #111316;
+
+  /* Žlutá z metru (dříve amber) */
+  --color-amber-50: #fff9db;
+  --color-amber-100: #fff1ad;
+  --color-amber-200: #ffe56b;
+  --color-amber-300: #fbd432;
+  --color-amber-400: #f5c400;
+  --color-amber-500: #f5c400;
+  --color-amber-600: #d9ad00;
+  --color-amber-700: #8a6a00;
+  --color-amber-800: #6b5200;
+  --color-amber-900: #4d3b00;
+  --color-amber-950: #2e2300;
+
+  /* Razítková modrá (dříve blue) */
+  --color-blue-50: #eef2fa;
+  --color-blue-100: #dce5f5;
+  --color-blue-200: #bccbea;
+  --color-blue-300: #8fa7d9;
+  --color-blue-400: #6f8fd0;
+  --color-blue-500: #2a55ae;
+  --color-blue-600: #1b3f8b;
+  --color-blue-700: #17367a;
+  --color-blue-800: #122b61;
+  --color-blue-900: #0e2250;
+  --color-blue-950: #091736;
+
+  /* Rohy jako u štítků a výkresových rámečků */
+  --radius-md: 4px;
+  --radius-lg: 4px;
+  --radius-xl: 4px;
+  --radius-2xl: 4px;
+  --radius-3xl: 4px;
+
+  /* Plochy oddělují linky, ne stíny; stín zůstává jen oknům nad obsahem */
+  --shadow-2xs: 0 0 #0000;
+  --shadow-xs: 0 0 #0000;
+  --shadow-sm: 0 0 #0000;
+  --shadow-md: 0 0 #0000;
+  --shadow-lg: 0 6px 16px -6px rgb(17 19 22 / 0.18);
+
+  --animate-metr: metr-plneni 4.5s cubic-bezier(0.45, 0.05, 0.25, 1) both;
+  @keyframes metr-plneni {
+    from { width: 0; }
+    to { width: 100%; }
+  }
+}
+
 @layer base {
   body {
-    background-color: #F8F9FB;
-    color: #1e293b;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f4f5f2;
+    color: #1a1d21;
+    font-family: var(--font-sans);
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 
-  code, kbd, samp, pre, .font-mono {
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  /* Nadpisy a velká čísla písmem z typových štítků; dokumenty si nechávají své písmo */
+  :where(h1, h2, h3, h4):not(:is(.contract-page, #amendment-printable-paper, #quote-printable-paper, .print-content, [data-pdf-paper]) *) {
+    font-family: var(--font-display);
+    letter-spacing: 0;
   }
 }
 
 html.dark body {
-  background-color: #0B1120;
-  color: #f1f5f9;
+  background-color: #111316;
+  color: #f4f5f2;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Mimo dokumenty žádné drobné popisky verzálkami ani strojovým písmem */
+.uppercase:not(:is(.contract-page, #amendment-printable-paper, #quote-printable-paper, .print-content, [data-pdf-paper]) *) {
+  text-transform: none;
+  letter-spacing: normal;
+}
+.font-mono:not(:is(.contract-page, #amendment-printable-paper, #quote-printable-paper, .print-content, [data-pdf-paper]) *) {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+:is(.contract-page, #amendment-printable-paper, #quote-printable-paper, .print-content, [data-pdf-paper]) :is(code, kbd, samp, pre, .font-mono) {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Viditelné označení prvku při ovládání klávesnicí */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #1b3f8b;
+  outline-offset: 2px;
+}
+html.dark :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline-color: #f5c400;
+}
+
+/*
+ * Dokumenty (smlouva, dodatek, nabídka, faktura, doklad, protokol, záruční list) mají vypadat jako papír,
+ * ne jako aplikace: uvnitř nich platí původní barvy, rohy a písmo.
+ */
+:is(.contract-page, #amendment-printable-paper, #quote-printable-paper, .print-content, [data-pdf-paper]) {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --color-amber-50: oklch(98.7% 0.022 95.277);
+  --color-amber-100: oklch(96.2% 0.059 95.617);
+  --color-amber-200: oklch(92.4% 0.12 95.746);
+  --color-amber-300: oklch(87.9% 0.169 91.605);
+  --color-amber-400: oklch(82.8% 0.189 84.429);
+  --color-amber-500: oklch(76.9% 0.188 70.08);
+  --color-amber-600: oklch(66.6% 0.179 58.318);
+  --color-amber-700: oklch(55.5% 0.163 48.998);
+  --color-amber-800: oklch(47.3% 0.137 46.201);
+  --color-amber-900: oklch(41.4% 0.112 45.904);
+  --color-amber-950: oklch(27.9% 0.077 45.635);
+  --color-blue-50: oklch(97% 0.014 254.604);
+  --color-blue-100: oklch(93.2% 0.032 255.585);
+  --color-blue-200: oklch(88.2% 0.059 254.128);
+  --color-blue-300: oklch(80.9% 0.105 251.813);
+  --color-blue-400: oklch(70.7% 0.165 254.624);
+  --color-blue-500: oklch(62.3% 0.214 259.815);
+  --color-blue-600: oklch(54.6% 0.245 262.881);
+  --color-blue-700: oklch(48.8% 0.243 264.376);
+  --color-blue-800: oklch(42.4% 0.199 265.638);
+  --color-blue-900: oklch(37.9% 0.146 265.522);
+  --color-blue-950: oklch(28.2% 0.091 267.935);
+  --color-slate-50: oklch(98.4% 0.003 247.858);
+  --color-slate-100: oklch(96.8% 0.007 247.896);
+  --color-slate-200: oklch(92.9% 0.013 255.508);
+  --color-slate-300: oklch(86.9% 0.022 252.894);
+  --color-slate-400: oklch(70.4% 0.04 256.788);
+  --color-slate-500: oklch(55.4% 0.046 257.417);
+  --color-slate-600: oklch(44.6% 0.043 257.281);
+  --color-slate-700: oklch(37.2% 0.044 257.287);
+  --color-slate-800: oklch(27.9% 0.041 260.031);
+  --color-slate-900: oklch(20.8% 0.042 265.755);
+  --color-slate-950: oklch(12.9% 0.042 264.695);
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-4xl: 2rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-metr {
+    animation: none;
+  }
 }
 
 .font-serif-contract {

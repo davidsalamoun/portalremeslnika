@@ -10,8 +10,9 @@ dál se vyvíjí mimo něj.
 ## Závazná pravidla
 
 1. **Veškeré UI je v češtině.** Texty, hlášky, toasty, popisky i chybové stavy. Komentáře v kódu mohou být česky.
-2. **Zachovat současný vzhled.** Neměnit layout, barvy, typografii, Tailwind třídy ani animace, pokud to
-   úkol výslovně nevyžaduje. Refaktoring nesmí změnit vykreslený výsledek (světlý i tmavý režim, mobil i desktop, tisk).
+2. **Držet vzhled „Výkres a metr“** (viz oddíl Vzhled). Nové prvky stavět z jeho barev, písem a tvarů; nevracet
+   stíny, zaoblené karty, barevné přechody, popisky verzálkami ani strojové písmo. Dokumenty (smlouva, faktura,
+   protokol…) si drží vlastní papírový vzhled a neupravují se bez pokynu.
 3. **Právní texty šablon neměnit bez výslovného pokynu.** Týká se znění smluv, dodatků, protokolů, záručních
    listů, faktur a dokladů v `src/components/ContractPreview.tsx`, `AmendmentView.tsx`, `HandoverProtocolView.tsx`,
    `WarrantyCertificateView.tsx`, `InvoiceView.tsx`, `CashReceiptView.tsx`, `PriceQuoteView.tsx`,
@@ -47,6 +48,29 @@ Konfigurace je ve `vercel.json`: frontend se staví příkazem `npm run build` d
 obsluhuje jediná funkce `api/index.ts` (Express aplikace jako výchozí export). `server.ts` se na Vercelu nepoužívá.
 Proměnné (případně `STRIPE_SECRET_KEY`) se nastavují v projektu na Vercelu, ne v repozitáři.
 `api/index.ts` nesmí importovat nic z `src/` ani `vite` a musí zůstat jedním souborem bez relativních importů.
+
+## Vzhled
+
+Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2aA4MkA), zaveden po částech:
+část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; další části = přestavba jednotlivých obrazovek.
+
+- **Barvy** jsou v `src/index.css` v bloku `@theme` jako přemapované palety Tailwindu, takže stávající třídy platí dál:
+  `slate-*` = grafit a papír (text `slate-900` #1A1D21, pozadí `slate-50` #F4F5F2), `blue-*` = razítková modrá
+  (`blue-600` #1B3F8B: navigace, odkazy, podpisy), `amber-*` = žlutá z metru (`amber-400` #F5C400: jen hlavní akce
+  a postup zakázky). Zelená = zaplaceno/hotovo, červená = po splatnosti/chyby. Nepřidávat další akcentní barvy.
+- **Písmo:** IBM Plex Sans na texty (`font-sans`), Barlow Semi Condensed na nadpisy a velká čísla (`h1`–`h4` automaticky,
+  jinak třída `font-display`). Třídy `uppercase` a `font-mono` jsou mimo dokumenty záměrně zneškodněné.
+- **Tvary:** rohy 4 px (`rounded-md` až `rounded-3xl`), `rounded-full` jen pro odznaky. Plochy oddělují linky 1 px;
+  stín mají jen okna nad obsahem (`shadow-xl`, `shadow-2xl`).
+- **Značka a metr:** `components/Logo.tsx` (`LogoMark`, `Logo`, `Metr`). Metr je pruh s dílky ukazující postup zakázky;
+  animace `animate-metr` proběhne jednou.
+- **Navigace:** `Navbar.tsx` = boční nabídka od šířky `lg`, pod ní úzká horní lišta; `BottomNav.tsx` = spodní lišta
+  pod `lg`. Kořen aplikace má `lg:pl-60`.
+- **Režimy:** výchozí světlý, tmavý si uživatel zapíná přepínačem (klíč `theme` v localStorage); každá úprava musí
+  fungovat v obou.
+- **Dokumenty** (`.contract-page`, `#amendment-printable-paper`, `#quote-printable-paper`, `.print-content`,
+  `[data-pdf-paper]`) mají v `index.css` vrácené původní barvy, rohy a písmo – vypadají jako papír, ne jako aplikace.
+- Ovládací prvky mají výšku aspoň 44 px a viditelné označení při ovládání klávesnicí.
 
 ## Načítání aplikace
 

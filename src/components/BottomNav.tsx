@@ -62,7 +62,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       {/* "More" Sheet Overlay for mobile */}
       {isMoreMenuOpen && (
         <div
-          className="md:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex flex-col justify-end animate-in fade-in duration-200"
+          className="no-print lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex flex-col justify-end animate-in fade-in duration-200"
           onClick={() => setIsMoreMenuOpen(false)}
         >
           <div
@@ -264,7 +264,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       )}
 
       {/* Fixed Bottom Navigation Bar for Mobile */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/90 dark:border-slate-800 px-2 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
+      <nav className="no-print lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/90 dark:border-slate-800 px-2 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
         <div className="flex items-center justify-around max-w-lg mx-auto">
           {/* 1. Dnes */}
           <button
@@ -278,7 +278,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             <div className={`p-1 rounded-lg ${activeTab === 'dashboard' ? 'bg-slate-100 dark:bg-slate-800 text-slate-950 dark:text-white' : ''}`}>
               <LayoutDashboard className="w-5 h-5" />
             </div>
-            <span className="text-3xs font-semibold mt-0.5">Dnes</span>
+            <span className="text-3xs font-semibold mt-0.5">Přehled</span>
           </button>
 
           {/* 2. Poptávky / CRM / Archiv */}

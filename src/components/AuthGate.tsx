@@ -15,8 +15,8 @@ type Phase = 'loading' | 'signed-out' | 'recovery' | 'connecting' | 'connect-err
 
 function applySavedTheme() {
   try {
-    const saved = localStorage.getItem('theme');
-    const dark = saved ? saved === 'dark' : window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+    // Výchozí je světlý režim; tmavý jen když si ho uživatel sám zapnul
+    const dark = localStorage.getItem('theme') === 'dark';
     document.documentElement.classList.toggle('dark', !!dark);
   } catch {
     // bez přístupu k úložišti zůstane světlý režim
@@ -24,7 +24,7 @@ function applySavedTheme() {
 }
 
 const FullScreenMessage: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#F8F9FB] dark:bg-[#0B1120] text-slate-700 dark:text-slate-200 px-4 text-center">
+  <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#F4F5F2] dark:bg-[#111316] text-slate-700 dark:text-slate-200 px-4 text-center">
     {children}
   </div>
 );
