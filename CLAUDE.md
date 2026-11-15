@@ -52,7 +52,8 @@ Proměnné (případně `STRIPE_SECRET_KEY`) se nastavují v projektu na Vercelu
 ## Vzhled
 
 Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2aA4MkA), zaveden po částech:
-část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; další části = přestavba jednotlivých obrazovek.
+část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; část 2 = přestavba obrazovek (hotovo: přehled;
+zbývá: zakázky, faktury, formulář smlouvy); část 3 = klienti, kalendář, finance, nastavení a dialogy.
 
 - **Barvy** jsou v `src/index.css` v bloku `@theme` jako přemapované palety Tailwindu, takže stávající třídy platí dál:
   `slate-*` = grafit a papír (text `slate-900` #1A1D21, pozadí `slate-50` #F4F5F2), `blue-*` = razítková modrá
@@ -64,6 +65,10 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   stín mají jen okna nad obsahem (`shadow-xl`, `shadow-2xl`).
 - **Značka a metr:** `components/Logo.tsx` (`LogoMark`, `Logo`, `Metr`). Metr je pruh s dílky ukazující postup zakázky;
   animace `animate-metr` proběhne jednou.
+- **Fáze zakázky:** `utils/jobStage.ts` (`getJobStage`, `isActiveJob`) určuje fázi Poptávka → Nabídka → Smlouva →
+  Realizace → Předáno → Zaplaceno, podíl na metru a větu „co dál“. Používat ji všude, kde se ukazuje postup zakázky.
+- **Přehled** (`DashboardPage.tsx`) je vzor pro další obrazovky: nadpis sekce + odkaz vpravo, bílý rámeček s řádky
+  oddělenými linkou, velká čísla písmem `font-display`, vedlejší akce jako tlačítka s obrysem, žádné dlaždice se statistikami.
 - **Navigace:** `Navbar.tsx` = boční nabídka od šířky `lg`, pod ní úzká horní lišta; `BottomNav.tsx` = spodní lišta
   pod `lg`. Kořen aplikace má `lg:pl-60`.
 - **Režimy:** aplikace se řídí světlým/tmavým režimem zařízení; přepínačem si uživatel nastaví vlastní volbu
