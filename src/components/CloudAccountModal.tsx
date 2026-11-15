@@ -239,8 +239,8 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
                   za to, že je smíte zpracovávat.
                 </li>
                 <li>
-                  <strong>Jiné služby:</strong> při dohledání firmy podle IČO se dotaz posílá do registru ARES, předpověď
-                  počasí se načítá ze služby Open-Meteo.
+                  <strong>Jiné služby:</strong> při dohledání firmy podle IČO se dotaz posílá do registru ARES. Kvůli předpovědi
+                  počasí se službě Open-Meteo posílá název obce z adresy rozpracované zakázky (bez jména a ulice).
                 </li>
                 <li>
                   <strong>Záloha a smazání:</strong> všechna data si můžete stáhnout do souboru a účet kdykoli nenávratně
