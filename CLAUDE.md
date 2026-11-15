@@ -52,8 +52,8 @@ Proměnné (případně `STRIPE_SECRET_KEY`) se nastavují v projektu na Vercelu
 ## Vzhled
 
 Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2aA4MkA), zaveden po částech:
-část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; část 2 = přestavba obrazovek (hotovo: přehled, zakázky;
-zbývá: faktury, formulář smlouvy); část 3 = klienti, kalendář, finance, nastavení a dialogy.
+část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; část 2 = přestavba obrazovek (hotovo: přehled, zakázky, faktury;
+zbývá: formulář smlouvy); část 3 = klienti, kalendář, finance, nastavení a dialogy.
 
 - **Barvy** jsou v `src/index.css` v bloku `@theme` jako přemapované palety Tailwindu, takže stávající třídy platí dál:
   `slate-*` = grafit a papír (text `slate-900` #1A1D21, pozadí `slate-50` #F4F5F2), `blue-*` = razítková modrá
@@ -71,6 +71,10 @@ zbývá: faktury, formulář smlouvy); část 3 = klienti, kalendář, finance, 
   má dál jen pět původních hodnot – `completed` znamená předáno, zaplaceno se pozná podle `isContractPaid`.
 - **Zakázky** (`LeadsPipelinePage.tsx`): jeden seznam se záložkami fází (ne sloupce nástěnky), u každé zakázky metr,
   věta „co dál“ a tlačítko posunu pojmenované podle cílové fáze. Okno „Nová poptávka“ je vzor pro formuláře v oknech.
+- **Okna** nad obsahem stavět z `components/Dialog.tsx` (nadpis, křížek, Escape, klik mimo, na mobilu zdola). Starší
+  modály s tmavou hlavičkou se na něj převádějí postupně.
+- **Faktury** (`InvoicesOverviewPage.tsx`): souhrn v jednom rámečku, záložky stavů, seznam s odznakem splatnosti.
+  Texty upomínek skládá `utils/invoiceReminder.ts`; faktura před splatností se jen připomíná, bez volby tónu.
 - **Přehled** (`DashboardPage.tsx`) je vzor pro další obrazovky: nadpis sekce + odkaz vpravo, bílý rámeček s řádky
   oddělenými linkou, velká čísla písmem `font-display`, vedlejší akce jako tlačítka s obrysem, žádné dlaždice se statistikami.
 - **Počasí** (`utils/weather.ts`, `components/JobWeather.tsx`): u zakázky ve fázi Smlouva a Realizace se ukáže řádek jen
@@ -127,6 +131,8 @@ src/
     subscription.ts           tarif PRO, zkušební doba, QR platba předplatného
     spayd.ts                  QR platba (SPAYD), převod čísla účtu na IBAN
     invoiceMath.ts            jednotná pravidla pro částky, data a splatnost faktur
+    invoiceReminder.ts        texty upomínek k fakturám
+    jobStage.ts               fáze zakázky pro metr a posun mezi fázemi
     ares.ts                   dohledání firmy podle IČO v ARES
     weather.ts                počasí na stavbě: obec z adresy, předpověď Open-Meteo, rizika pro venkovní práce
     exportDocx.ts, exportPdf.ts   export dokumentů (velké knihovny – importovat jen přes lazyExports.ts)
