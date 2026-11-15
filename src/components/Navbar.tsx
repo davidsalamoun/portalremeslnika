@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  FileText,
   PlusCircle,
   Users,
   History,
@@ -20,6 +19,7 @@ import { CloudUser as User } from '../utils/supabase';
 import { ContractorProfile } from '../types/contract';
 import { getSubscriptionInfo } from '../utils/subscription';
 import { isAresVerified } from '../utils/ares';
+import { Logo } from './Logo';
 
 export type TabType =
   | 'dashboard'
@@ -61,7 +61,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const subInfo = getSubscriptionInfo(contractor || null);
   const operationalItems = [
-    { id: 'dashboard' as TabType, label: 'Dnes', icon: LayoutDashboard },
+    { id: 'dashboard' as TabType, label: 'Přehled', icon: LayoutDashboard },
     { id: 'kalendar' as TabType, label: 'Kalendář', icon: Calendar },
     { id: 'pipeline' as TabType, label: 'Zakázky', icon: GitPullRequest },
   ];
@@ -107,202 +107,150 @@ export const Navbar: React.FC<NavbarProps> = ({
     },
   ];
 
-  const renderNavItem = (item: {
-    id: TabType;
-    label: string;
-    icon: any;
-    isCta?: boolean;
-    badge?: string | number;
-    badgeColor?: string;
-  }) => {
-    const Icon = item.icon;
-    const isActive = activeTab === item.id;
+  const navItems = [...operationalItems, ...documentItems.filter((item) => !item.isCta), ...managementItems];
 
-    if (item.isCta) {
-      return (
-        <button
-          key={item.id}
-          onClick={() => onSelectTab(item.id)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer shadow-xs ${
-            isActive
-              ? 'bg-amber-600 text-slate-950 ring-2 ring-amber-400'
-              : 'bg-amber-500 hover:bg-amber-600 text-slate-950 active:scale-95'
-          }`}
-          title="Založit novou smlouvu o dílo nebo cenovou nabídku"
-        >
-          <Icon className="w-3.5 h-3.5" />
-          <span>{item.label}</span>
-        </button>
-      );
-    }
-
-    return (
-      <button
-        key={item.id}
-        onClick={() => onSelectTab(item.id)}
-        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
-          isActive
-            ? 'bg-slate-900 text-white dark:bg-blue-600 dark:text-white font-bold shadow-xs'
-            : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 font-medium'
-        }`}
-      >
-        <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-400 dark:text-slate-400'}`} />
-        <span>{item.label}</span>
-        {item.badge !== undefined && (
-          <span
-            className={`ml-0.5 text-[10px] font-mono tabular-nums px-1.5 py-0.2 rounded font-bold ${
-              item.badgeColor === 'rose'
-                ? 'bg-rose-600 text-white'
-                : isActive
-                ? 'bg-white/20 text-white'
-                : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-            }`}
-          >
-            {item.badge}
-          </span>
-        )}
-      </button>
-    );
-  };
+  const accountLabel = currentUser?.email || currentUser?.displayName || 'Účet';
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-2xs transition-colors">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 h-15 sm:h-16 flex items-center justify-between gap-3">
-        {/* Logo & Contractor Badge */}
-        <div className="flex items-center gap-3 shrink-0">
+    <>
+      {/* Mobil a tablet: úzká horní lišta se značkou; záložky jsou ve spodní liště */}
+      <header className="no-print lg:hidden sticky top-0 z-40 bg-blue-600 dark:bg-slate-950 text-white border-b border-blue-700 dark:border-slate-800">
+        <div className="px-4 h-14 flex items-center justify-between gap-3">
           <button
             onClick={() => onSelectTab('dashboard')}
-            className="flex items-center gap-2.5 text-left group focus:outline-hidden cursor-pointer"
+            className="min-h-11 flex items-center cursor-pointer"
+            aria-label="Řemeslník PRO – přehled"
           >
-            <div className="w-9 h-9 rounded-xl bg-slate-950 text-white flex items-center justify-center shadow-xs border border-slate-800 group-hover:border-amber-500/50 transition-colors">
-              <FileText className="w-4.5 h-4.5 text-amber-400" />
-            </div>
-            <div className="flex flex-col leading-tight">
-              <span className="font-black text-base text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
-                Řemeslník <span className="text-[10px] font-black px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 tracking-wide">PRO</span>
-              </span>
-              <span className="text-3xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">smlouvy & zakázky</span>
-            </div>
+            <Logo size={26} />
           </button>
+          <div className="flex items-center gap-1">
+            {onOpenCloudModal && (
+              <button
+                onClick={onOpenCloudModal}
+                className="w-11 h-11 inline-flex items-center justify-center rounded-md hover:bg-white/10 cursor-pointer"
+                title="Účet a synchronizace"
+                aria-label="Účet a synchronizace"
+              >
+                {currentUser ? <CloudCheck className="w-5 h-5" /> : <Cloud className="w-5 h-5" />}
+              </button>
+            )}
+            {onToggleDarkMode && (
+              <button
+                onClick={onToggleDarkMode}
+                className="w-11 h-11 inline-flex items-center justify-center rounded-md hover:bg-white/10 cursor-pointer"
+                title={isDarkMode ? 'Přepnout na světlý režim' : 'Přepnout na tmavý režim'}
+                aria-label={isDarkMode ? 'Přepnout na světlý režim' : 'Přepnout na tmavý režim'}
+              >
+                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
 
-          {contractor?.name && (
-            <div className="hidden xl:flex items-center gap-2 pl-3 border-l border-slate-200 dark:border-slate-800 text-left">
-              <div className="leading-tight">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
-                    {contractor.name}
-                  </span>
-                  {isAresVerified(contractor) && (
-                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold font-mono px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                    ARES ✓
-                  </span>
-                  )}
-                </div>
-                {contractor.ico && (
-                  <span className="text-[10px] font-mono text-slate-400">
-                    IČO: {contractor.ico}
+      {/* Počítač: boční nabídka */}
+      <aside className="no-print hidden lg:flex fixed inset-y-0 left-0 z-40 w-60 flex-col gap-6 px-4 py-6 bg-blue-600 dark:bg-slate-950 text-white border-r border-blue-700 dark:border-slate-800 overflow-y-auto">
+        <button
+          onClick={() => onSelectTab('dashboard')}
+          className="flex items-center px-2 text-left cursor-pointer"
+          aria-label="Řemeslník PRO – přehled"
+        >
+          <Logo size={30} />
+        </button>
+
+        <button
+          onClick={() => onSelectTab('nova-smlouva')}
+          className={`min-h-12 inline-flex items-center justify-center gap-2 rounded-md font-semibold text-base text-slate-900 cursor-pointer border ${
+            activeTab === 'nova-smlouva'
+              ? 'bg-white border-white'
+              : 'bg-amber-400 hover:bg-amber-300 border-amber-400'
+          }`}
+        >
+          <PlusCircle className="w-5 h-5" />
+          <span>Nová smlouva</span>
+        </button>
+
+        <nav aria-label="Hlavní nabídka" className="flex flex-col gap-0.5">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            const badge = 'badge' in item ? (item.badge as string | number | undefined) : undefined;
+            const isAlert = 'badgeColor' in item && item.badgeColor === 'rose';
+            return (
+              <button
+                key={item.id}
+                onClick={() => onSelectTab(item.id)}
+                aria-current={isActive ? 'page' : undefined}
+                className={`min-h-11 flex items-center gap-3 px-3 rounded-md text-base text-left cursor-pointer transition-colors ${
+                  isActive
+                    ? 'bg-white text-blue-600 dark:bg-slate-800 dark:text-white font-semibold'
+                    : 'text-white font-medium hover:bg-white/10'
+                }`}
+              >
+                <Icon className="w-5 h-5 shrink-0" />
+                <span className="flex-1">{item.label}</span>
+                {badge !== undefined && (
+                  <span
+                    className={`text-sm font-semibold px-2 rounded-full ${
+                      isAlert
+                        ? 'bg-white text-rose-700'
+                        : isActive
+                          ? 'bg-blue-100 text-blue-800 dark:bg-slate-700 dark:text-slate-100'
+                          : 'bg-white/15 text-white'
+                    }`}
+                  >
+                    {isAlert ? String(badge).replace('!', '') : badge}
                   </span>
                 )}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="mt-auto flex flex-col gap-3 pt-4 border-t border-white/20 text-sm">
+          {contractor?.name && (
+            <div className="px-2 leading-snug">
+              <div className="font-semibold truncate">{contractor.name}</div>
+              <div className="text-blue-100 dark:text-slate-400">
+                {contractor.ico ? `IČO ${contractor.ico}` : ''}
+                {isAresVerified(contractor) ? `${contractor.ico ? ', ' : ''}ověřeno v ARES` : ''}
               </div>
             </div>
           )}
-        </div>
 
-        {/* Desktop Nav Items in 3 clear functional sections */}
-        <nav className="hidden lg:flex items-center gap-1 bg-slate-50 dark:bg-slate-950/60 p-1 rounded-xl border border-slate-200 dark:border-slate-800/80">
-          {/* Provoz na stavbě */}
-          <div className="flex items-center gap-0.5">
-            {operationalItems.map(renderNavItem)}
-          </div>
-
-          <div className="w-px h-5 bg-slate-200 dark:bg-slate-800 mx-1" />
-
-          {/* Smlouvy & Faktury */}
-          <div className="flex items-center gap-1">
-            {documentItems.map(renderNavItem)}
-          </div>
-
-          <div className="w-px h-5 bg-slate-200 dark:border-slate-800 mx-1" />
-
-          {/* Agenda & Rejstřík */}
-          <div className="flex items-center gap-0.5">
-            {managementItems.map(renderNavItem)}
-          </div>
-        </nav>
-
-        {/* Actions on Right */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* PRO License Status Button */}
           {onOpenPaywall && (
             <button
               onClick={onOpenPaywall}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-2xs border ${
-                subInfo.isPro
-                  ? 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-800'
-                  : 'bg-amber-500 hover:bg-amber-600 text-slate-950 font-black border-amber-400'
-              }`}
-              title={
-                subInfo.isPro
-                  ? `Aktivní licence: ${subInfo.label}`
-                  : 'Přejít na plnou verzi Řemeslník PRO'
-              }
+              className="min-h-11 flex items-center gap-3 px-3 rounded-md text-left font-medium hover:bg-white/10 cursor-pointer"
+              title={subInfo.isPro ? `Aktivní licence: ${subInfo.label}` : 'Přejít na plnou verzi Řemeslník PRO'}
             >
-              <Crown className="w-3.5 h-3.5 fill-current" />
-              <span className="hidden sm:inline">
-                {subInfo.isPro
-                  ? subInfo.plan === 'pro_trial'
-                    ? `PRO (${subInfo.daysLeft ?? 14}d)`
-                    : 'Mistr PRO'
-                  : 'Aktivovat PRO'}
-              </span>
-              <span className="sm:hidden font-extrabold">PRO</span>
+              <Crown className="w-5 h-5 shrink-0" />
+              <span>{subInfo.isPro ? subInfo.label : 'Aktivovat PRO'}</span>
             </button>
           )}
 
-          {/* Cloud Account Button */}
           {onOpenCloudModal && (
             <button
               onClick={onOpenCloudModal}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border shadow-2xs ${
-                currentUser
-                  ? 'bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-200'
-              }`}
-              title="Cloudový účet a synchronizace zakázek"
+              className="min-h-11 flex items-center gap-3 px-3 rounded-md text-left font-medium hover:bg-white/10 cursor-pointer"
+              title="Účet a synchronizace zakázek"
             >
-              {currentUser ? (
-                <>
-                  <CloudCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span className="max-w-[70px] truncate hidden sm:inline">
-                    {currentUser.displayName?.split(' ')[0] || 'Cloud'}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Cloud className="w-3.5 h-3.5 text-blue-600" />
-                  <span className="hidden sm:inline">Cloud</span>
-                </>
-              )}
+              {currentUser ? <CloudCheck className="w-5 h-5 shrink-0" /> : <Cloud className="w-5 h-5 shrink-0" />}
+              <span className="truncate">{accountLabel}</span>
             </button>
           )}
 
-          {/* Dark Mode Toggle */}
           {onToggleDarkMode && (
             <button
               onClick={onToggleDarkMode}
-              className="p-1.5 rounded-lg text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer border border-slate-200 dark:border-slate-700 shadow-2xs"
-              title={isDarkMode ? 'Přepnout na denní režim' : 'Přepnout na noční režim'}
-              aria-label="Přepnout noční režim"
+              className="min-h-11 flex items-center gap-3 px-3 rounded-md text-left font-medium hover:bg-white/10 cursor-pointer"
             >
-              {isDarkMode ? (
-                <Sun className="w-3.5 h-3.5 text-amber-400" />
-              ) : (
-                <Moon className="w-3.5 h-3.5 text-slate-600" />
-              )}
+              {isDarkMode ? <Sun className="w-5 h-5 shrink-0" /> : <Moon className="w-5 h-5 shrink-0" />}
+              <span>{isDarkMode ? 'Světlý režim' : 'Tmavý režim'}</span>
             </button>
           )}
         </div>
-      </div>
-    </header>
+      </aside>
+    </>
   );
 };

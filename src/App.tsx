@@ -39,6 +39,7 @@ import { cleanPlaceName } from './utils/numberToWordsCs';
 import { applyBackup } from './utils/backup';
 import { checkAndSyncRemoteSignatures } from './utils/signShares';
 import { useCloudUser } from './components/AuthGate';
+import { resolveIsDark, applyTheme, watchSystemTheme, saveThemeChoice } from './utils/theme';
 import { isInvoiceable, getInvoiceStatus } from './utils/invoiceMath';
 import { CLOUD_DATA_CHANGED_EVENT } from './utils/cloudSync';
 import { isProUser, PRO_CONFIG, PAYMENTS_ENABLED } from './utils/subscription';
@@ -117,27 +118,20 @@ export default function App() {
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
 
   // Dark mode state
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    try {
-      const saved = localStorage.getItem('theme');
-      if (saved) return saved === 'dark';
-      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    } catch {
-      return false;
-    }
-  });
+  // Režim se řídí zařízením, dokud si uživatel sám nepřepne (viz utils/theme.ts)
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(resolveIsDark);
 
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
+    applyTheme(isDarkMode);
   }, [isDarkMode]);
 
-  const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
+  useEffect(() => watchSystemTheme(setIsDarkMode), []);
+
+  const toggleDarkMode = () =>
+    setIsDarkMode((prev) => {
+      saveThemeChoice(prev ? 'light' : 'dark');
+      return !prev;
+    });
 
   // Preview state
   const [previewContract, setPreviewContract] = useState<Contract | null>(null);
@@ -608,7 +602,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FB] dark:bg-[#0B1120] text-slate-900 dark:text-slate-100 transition-colors">
+    <div className="min-h-screen flex flex-col lg:pl-60 print:pl-0 bg-[#F4F5F2] dark:bg-[#111316] text-slate-900 dark:text-slate-100 transition-colors">
       {/* Offline Status Indicator */}
       <OfflineStatusIndicator />
 
@@ -649,7 +643,7 @@ export default function App() {
       />
 
       {/* Hlavní obsah */}
-      <main className="flex-1 w-full px-3 sm:px-6 pt-5 sm:pt-7 pb-28 sm:pb-12">
+      <main className="flex-1 w-full px-3 sm:px-6 pt-5 sm:pt-7 pb-28 lg:pb-12">
         <Suspense fallback={null}>
         {previewContract ? (
           <ContractPreview
@@ -1021,7 +1015,7 @@ export default function App() {
       </Suspense>
 
       {/* Footer */}
-      <footer className="no-print border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 mb-16 md:mb-0 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
+      <footer className="no-print border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 mb-16 lg:mb-0 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p>© {new Date().getFullYear()} Řemeslník PRO · Komplexní systém řemeslníka pro smlouvy, faktury, kalendář a poptávky</p>
           <p className="text-slate-400 dark:text-slate-500">Všechna data se ukládají lokálně i do cloudu.</p>

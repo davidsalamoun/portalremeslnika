@@ -3,6 +3,7 @@ import { RefreshCw, CloudOff } from 'lucide-react';
 import { supabase, toCloudUser, CloudUser } from '../utils/supabase';
 import { connectAccount, needsAccountConnect, startAutoSync, prepareLocalData } from '../utils/cloudSync';
 import { AuthScreen } from './AuthScreen';
+import { resolveIsDark, applyTheme, watchSystemTheme } from '../utils/theme';
 
 const CloudUserContext = createContext<CloudUser | null>(null);
 
@@ -13,18 +14,8 @@ export function useCloudUser(): CloudUser | null {
 
 type Phase = 'loading' | 'signed-out' | 'recovery' | 'connecting' | 'connect-error' | 'ready';
 
-function applySavedTheme() {
-  try {
-    const saved = localStorage.getItem('theme');
-    const dark = saved ? saved === 'dark' : window.matchMedia?.('(prefers-color-scheme: dark)').matches;
-    document.documentElement.classList.toggle('dark', !!dark);
-  } catch {
-    // bez přístupu k úložišti zůstane světlý režim
-  }
-}
-
 const FullScreenMessage: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#F8F9FB] dark:bg-[#0B1120] text-slate-700 dark:text-slate-200 px-4 text-center">
+  <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#F4F5F2] dark:bg-[#111316] text-slate-700 dark:text-slate-200 px-4 text-center">
     {children}
   </div>
 );
@@ -49,8 +40,10 @@ export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const [connectAttempt, setConnectAttempt] = useState(0);
   const localReady = useRef(false);
 
+  // Režim podle zařízení nebo vlastní volby uživatele – i na přihlašovací obrazovce
   useEffect(() => {
-    applySavedTheme();
+    applyTheme(resolveIsDark());
+    return watchSystemTheme(applyTheme);
   }, []);
 
   // Sledování přihlášení
