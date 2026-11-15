@@ -35,7 +35,7 @@ import {
   deleteStoredCalendarEvent,
   seedSampleData,
 } from './utils/storage';
-import { cleanPlaceName } from './utils/numberToWordsCs';
+import { cleanPlaceName, formatDateCs } from './utils/numberToWordsCs';
 import { applyBackup } from './utils/backup';
 import { checkAndSyncRemoteSignatures } from './utils/signShares';
 import { useCloudUser } from './components/AuthGate';
@@ -483,7 +483,7 @@ export default function App() {
       leadStage: 'inquiry',
       inquiryDate: today,
       nextStepDate: leadData.inspectionDate,
-      nextStepNote: leadData.inspectionDate ? `Obhlídka dne ${leadData.inspectionDate}` : undefined,
+      nextStepNote: leadData.inspectionDate ? `Obhlídka ${formatDateCs(leadData.inspectionDate)}` : undefined,
       docKind: 'quote',
       status: 'draft',
     };

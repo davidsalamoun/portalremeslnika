@@ -52,8 +52,8 @@ Proměnné (případně `STRIPE_SECRET_KEY`) se nastavují v projektu na Vercelu
 ## Vzhled
 
 Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2aA4MkA), zaveden po částech:
-část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; část 2 = přestavba obrazovek (hotovo: přehled;
-zbývá: zakázky, faktury, formulář smlouvy); část 3 = klienti, kalendář, finance, nastavení a dialogy.
+část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; část 2 = přestavba obrazovek (hotovo: přehled, zakázky;
+zbývá: faktury, formulář smlouvy); část 3 = klienti, kalendář, finance, nastavení a dialogy.
 
 - **Barvy** jsou v `src/index.css` v bloku `@theme` jako přemapované palety Tailwindu, takže stávající třídy platí dál:
   `slate-*` = grafit a papír (text `slate-900` #1A1D21, pozadí `slate-50` #F4F5F2), `blue-*` = razítková modrá
@@ -67,6 +67,10 @@ zbývá: zakázky, faktury, formulář smlouvy); část 3 = klienti, kalendář,
   animace `animate-metr` proběhne jednou.
 - **Fáze zakázky:** `utils/jobStage.ts` (`getJobStage`, `isActiveJob`) určuje fázi Poptávka → Nabídka → Smlouva →
   Realizace → Předáno → Zaplaceno, podíl na metru a větu „co dál“. Používat ji všude, kde se ukazuje postup zakázky.
+  Posun mezi fázemi dělá `moveJobStage` (nastaví `leadStage` a `status`, při zaplacení i `paidDate`); `leadStage`
+  má dál jen pět původních hodnot – `completed` znamená předáno, zaplaceno se pozná podle `isContractPaid`.
+- **Zakázky** (`LeadsPipelinePage.tsx`): jeden seznam se záložkami fází (ne sloupce nástěnky), u každé zakázky metr,
+  věta „co dál“ a tlačítko posunu pojmenované podle cílové fáze. Okno „Nová poptávka“ je vzor pro formuláře v oknech.
 - **Přehled** (`DashboardPage.tsx`) je vzor pro další obrazovky: nadpis sekce + odkaz vpravo, bílý rámeček s řádky
   oddělenými linkou, velká čísla písmem `font-display`, vedlejší akce jako tlačítka s obrysem, žádné dlaždice se statistikami.
 - **Počasí** (`utils/weather.ts`, `components/JobWeather.tsx`): u zakázky ve fázi Smlouva a Realizace se ukáže řádek jen

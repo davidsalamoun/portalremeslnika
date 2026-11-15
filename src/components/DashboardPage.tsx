@@ -410,6 +410,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               const term =
                 stage.key === 'quote' && contract.quoteValidUntil
                   ? `nabídka platí do ${formatDateCs(contract.quoteValidUntil)}`
+                  : stage.key === 'inquiry'
+                  ? contract.nextStepDate
+                    ? `obhlídka ${formatDateCs(contract.nextStepDate)}`
+                    : ''
                   : contract.deliveryDate
                     ? `předání ${formatDateCs(contract.deliveryDate)}`
                     : '';
