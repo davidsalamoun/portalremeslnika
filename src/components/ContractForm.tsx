@@ -253,7 +253,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     }
 
     if (!formData.clientId) {
-      newErrors.clientId = 'Vyberte zákazníka ze seznamu nebo přidejte nového.';
+      newErrors.clientId = 'Vyberte klienta ze seznamu nebo přidejte nového.';
     }
 
     if (!formData.workDescription.trim()) {
@@ -420,7 +420,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
           {/* 1. Strany */}
           <section id="sekce-strany" tabIndex={-1} aria-labelledby="nadpis-strany" className="p-5 sm:p-6 space-y-5 scroll-mt-24 outline-none">
             <h2 id="nadpis-strany" className={sectionTitle}>
-              1. Zhotovitel a zákazník
+              1. Zhotovitel a klient
             </h2>
 
             <div>
@@ -458,7 +458,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
 
             <div>
               <label htmlFor="client-select" className={fieldLabel}>
-                Zákazník (objednatel)
+                Klient (objednatel)
               </label>
               <div className="flex flex-col sm:flex-row gap-2.5">
                 <select
@@ -469,7 +469,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                   className={`${fieldBase} flex-1 min-w-0 cursor-pointer ${errors.clientId ? fieldBad : fieldOk}`}
                 >
                   {clients.length === 0 ? (
-                    <option value="">Zatím nemáte žádného zákazníka</option>
+                    <option value="">Zatím nemáte žádného klienta</option>
                   ) : (
                     clients.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -482,7 +482,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 </select>
                 <button type="button" onClick={onOpenNewClientDialog} className={`${outlineButton} !min-h-12 shrink-0`}>
                   <UserPlus className="w-[18px] h-[18px]" />
-                  <span>Nový zákazník</span>
+                  <span>Nový klient</span>
                 </button>
               </div>
               {errors.clientId && (
@@ -495,12 +495,12 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-slate-600 dark:text-slate-400">
                   <div className="min-w-0">
                     {[selectedClientObj.address, selectedClientObj.phone, selectedClientObj.email].filter(Boolean).join(', ') ||
-                      'Zákazník nemá vyplněnou adresu ani kontakt.'}
+                      'Klient nemá vyplněnou adresu ani kontakt.'}
                   </div>
                   {onEditClient && (
                     <button type="button" onClick={() => onEditClient(selectedClientObj)} className={textLink}>
                       <Pencil className="w-4 h-4" />
-                      <span>Upravit zákazníka</span>
+                      <span>Upravit klienta</span>
                     </button>
                   )}
                 </div>
@@ -773,7 +773,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               )}
             </div>
             {[
-              { label: 'Zákazník', value: selectedClientObj?.name, missing: 'nevybrán' },
+              { label: 'Klient', value: selectedClientObj?.name, missing: 'nevybrán' },
               { label: 'Termín předání', value: formData.deliveryDate ? formatDateCs(formData.deliveryDate) : '', missing: 'nezadán' },
               {
                 label: 'Cena',

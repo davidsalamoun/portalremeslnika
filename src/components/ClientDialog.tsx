@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, UserPlus, Check, UserCheck, Search, Loader2 } from 'lucide-react';
+import { Check, Search, Loader2 } from 'lucide-react';
+import { Dialog } from './Dialog';
 import { Client } from '../types/contract';
 import { fetchCompanyByIco } from '../utils/ares';
 
@@ -9,6 +10,13 @@ interface ClientDialogProps {
   onSave: (clientData: Omit<Client, 'id' | 'createdAt'>, existingId?: string) => void;
   clientToEdit?: Client | null;
 }
+
+const fieldLabel = 'block font-semibold text-slate-900 dark:text-slate-100 mb-1.5';
+const fieldBase = 'w-full min-h-12 px-3.5 py-2 rounded-md border-[1.5px] bg-white dark:bg-slate-950 text-slate-900 dark:text-white';
+const fieldOk = 'border-slate-900 dark:border-slate-500';
+const fieldBad = 'border-rose-700 dark:border-rose-400';
+const errorText = 'mt-1.5 font-medium text-rose-700 dark:text-rose-400';
+const optional = <span className="font-normal text-slate-600 dark:text-slate-400">(nepovinné)</span>;
 
 export const ClientDialog: React.FC<ClientDialogProps> = ({
   isOpen,
@@ -49,7 +57,7 @@ export const ClientDialog: React.FC<ClientDialogProps> = ({
   const handleAresLookup = async (targetIco?: string) => {
     const icoToQuery = (typeof targetIco === 'string' ? targetIco : ico).trim();
     if (!icoToQuery || icoToQuery.length !== 8) {
-      setErrors((prev) => ({ ...prev, ico: 'Zadejte platné 8místné IČO pro vyhledání v ARES.' }));
+      setErrors((prev) => ({ ...prev, ico: 'IČO má 8 číslic.' }));
       return;
     }
 
@@ -59,7 +67,7 @@ export const ClientDialog: React.FC<ClientDialogProps> = ({
       const data = await fetchCompanyByIco(icoToQuery);
       if (data.name) setName(data.name);
       if (data.address) setAddress(data.address);
-      setAresMessage(`Údaje načteny z ARES: ${data.name}`);
+      setAresMessage(`Načteno z ARES: ${data.name}`);
       setErrors((prev) => {
         const next = { ...prev };
         delete next.ico;
@@ -68,7 +76,7 @@ export const ClientDialog: React.FC<ClientDialogProps> = ({
         return next;
       });
     } catch (err: any) {
-      setAresMessage(err.message || 'Nepodařilo se načíst z ARES');
+      setAresMessage(err.message || 'Údaje se z ARES nepodařilo načíst.');
     } finally {
       setIsAresLoading(false);
     }
@@ -82,7 +90,7 @@ export const ClientDialog: React.FC<ClientDialogProps> = ({
     }
 
     if (ico.trim() && !/^\d{8}$/.test(ico.trim())) {
-      newErrors.ico = 'IČO musí mít přesně 8 číslic (pokud je vyplněno).';
+      newErrors.ico = 'IČO má 8 číslic.';
     }
 
     if (!address.trim()) {
@@ -92,7 +100,7 @@ export const ClientDialog: React.FC<ClientDialogProps> = ({
     if (!email.trim()) {
       newErrors.email = 'Zadejte kontaktní e-mail.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      newErrors.email = 'Zadejte e-mail v platném formátu (např. klient@email.cz).';
+      newErrors.email = 'E-mail nemá správný tvar, například klient@email.cz.';
     }
 
     if (!phone.trim()) {
@@ -120,187 +128,128 @@ export const ClientDialog: React.FC<ClientDialogProps> = ({
     onClose();
   };
 
+  const field = (
+    id: string,
+    label: React.ReactNode,
+    value: string,
+    onChange: (v: string) => void,
+    error: string | undefined,
+    props: React.InputHTMLAttributes<HTMLInputElement> = {},
+  ) => (
+    <div>
+      <label htmlFor={id} className={fieldLabel}>
+        {label}
+      </label>
+      <input
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-invalid={!!error}
+        className={`${fieldBase} ${error ? fieldBad : fieldOk}`}
+        {...props}
+      />
+      {error && (
+        <p role="alert" className={errorText}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div
-        className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-200"
-        role="dialog"
-        aria-modal="true"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/80 text-[#1E3A78] dark:text-blue-300 flex items-center justify-center">
-              {clientToEdit ? <UserCheck className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-lg">
-                {clientToEdit ? 'Upravit klienta' : 'Nový klient (objednatel)'}
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Údaje budou použity ve smlouvě i na faktuře
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* IČO s ARES tlačítkem */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">IČO</label>
-              <span className="text-xs text-slate-400 dark:text-slate-500">Nepovinné pro fyzické osoby</span>
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={8}
-                value={ico}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, '').slice(0, 8);
-                  setIco(val);
-                  if (val.length === 8 && val !== lastAutoIco.current) {
-                    lastAutoIco.current = val;
-                    handleAresLookup(val);
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (ico.length === 8) {
-                      handleAresLookup(ico);
-                    }
-                  }
-                }}
-                placeholder="8 číslic (např. 12345678)"
-                className={`flex-1 px-3.5 py-2.5 rounded-xl border text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-all focus:outline-hidden focus:ring-2 ${
-                  errors.ico
-                    ? 'border-rose-300 ring-rose-200 bg-rose-50/30'
-                    : 'border-slate-300 dark:border-slate-700 focus:border-[#1E3A78] dark:focus:border-blue-500 focus:ring-blue-100 dark:focus:ring-blue-950'
-                }`}
-              />
-              <button
-                type="button"
-                onClick={() => handleAresLookup()}
-                disabled={isAresLoading || ico.length !== 8}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
-                title="Doplnit název firmy a adresu ze státního registru ARES (nebo stiskněte Enter)"
-              >
-                {isAresLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
-                <span>Načíst z ARES</span>
-              </button>
-            </div>
-            {aresMessage && (
-              <p className="text-xs text-blue-800 dark:text-blue-300 mt-1 bg-blue-50 dark:bg-blue-950/60 p-1.5 rounded-md">{aresMessage}</p>
-            )}
-            {errors.ico && <p className="text-xs text-rose-600 mt-1">{errors.ico}</p>}
-          </div>
-
-          {/* Jméno / Firma */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">
-              Jméno a příjmení / Firma <span className="text-rose-500">*</span>
-            </label>
+    <Dialog
+      title={clientToEdit ? 'Upravit klienta' : 'Nový klient'}
+      subtitle="Údaje se použijí ve smlouvě i na faktuře."
+      size="lg"
+      onClose={onClose}
+    >
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        <div>
+          <label htmlFor="klient-ico" className={fieldLabel}>
+            IČO {optional}
+          </label>
+          <div className="flex gap-2">
             <input
+              id="klient-ico"
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="např. Ing. Petr Svoboda nebo Nova Real s.r.o."
-              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-all focus:outline-hidden focus:ring-2 ${
-                errors.name
-                  ? 'border-rose-300 ring-rose-200 bg-rose-50/30'
-                  : 'border-slate-300 dark:border-slate-700 focus:border-[#1E3A78] dark:focus:border-blue-500 focus:ring-blue-100 dark:focus:ring-blue-950'
-              }`}
+              inputMode="numeric"
+              maxLength={8}
+              value={ico}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 8);
+                setIco(val);
+                if (val.length === 8 && val !== lastAutoIco.current) {
+                  lastAutoIco.current = val;
+                  handleAresLookup(val);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (ico.length === 8) handleAresLookup(ico);
+                }
+              }}
+              placeholder="8 číslic"
+              aria-invalid={!!errors.ico}
+              className={`${fieldBase} flex-1 min-w-0 tabular-nums ${errors.ico ? fieldBad : fieldOk}`}
             />
-            {errors.name && <p className="text-xs text-rose-600 mt-1">{errors.name}</p>}
-          </div>
-
-          {/* Adresa */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">
-              Adresa bydliště / sídla <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="např. Hlavní 420, 250 01 Brandýs nad Labem"
-              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-all focus:outline-hidden focus:ring-2 ${
-                errors.address
-                  ? 'border-rose-300 ring-rose-200 bg-rose-50/30'
-                  : 'border-slate-300 dark:border-slate-700 focus:border-[#1E3A78] dark:focus:border-blue-500 focus:ring-blue-100 dark:focus:ring-blue-950'
-              }`}
-            />
-            {errors.address && <p className="text-xs text-rose-600 mt-1">{errors.address}</p>}
-          </div>
-
-          {/* E-mail a Telefon */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                E-mail <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="petr.svoboda@email.cz"
-                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-all focus:outline-hidden focus:ring-2 ${
-                  errors.email
-                    ? 'border-rose-300 ring-rose-200 bg-rose-50/30'
-                    : 'border-slate-300 dark:border-slate-700 focus:border-[#1E3A78] dark:focus:border-blue-500 focus:ring-blue-100 dark:focus:ring-blue-950'
-                }`}
-              />
-              {errors.email && <p className="text-xs text-rose-600 mt-1">{errors.email}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                Telefon <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="tel"
-                inputMode="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+420 777 000 111"
-                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-all focus:outline-hidden focus:ring-2 ${
-                  errors.phone
-                    ? 'border-rose-300 ring-rose-200 bg-rose-50/30'
-                    : 'border-slate-300 dark:border-slate-700 focus:border-[#1E3A78] dark:focus:border-blue-500 focus:ring-blue-100 dark:focus:ring-blue-950'
-                }`}
-              />
-              {errors.phone && <p className="text-xs text-rose-600 mt-1">{errors.phone}</p>}
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              onClick={() => handleAresLookup()}
+              disabled={isAresLoading || ico.length !== 8}
+              className="min-h-12 px-4 shrink-0 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-default"
             >
-              Zrušit
-            </button>
-            <button
-              type="submit"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#1E3A78] dark:bg-blue-600 text-white text-sm font-semibold hover:bg-[#162c5c] dark:hover:bg-blue-500 shadow-md shadow-blue-900/10 transition-colors cursor-pointer"
-            >
-              <Check className="w-4 h-4" />
-              <span>{clientToEdit ? 'Uložit změny' : 'Přidat klienta'}</span>
+              {isAresLoading ? <Loader2 className="w-[18px] h-[18px] animate-spin" /> : <Search className="w-[18px] h-[18px]" />}
+              <span>Načíst z ARES</span>
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+          {errors.ico && (
+            <p role="alert" className={errorText}>
+              {errors.ico}
+            </p>
+          )}
+          {aresMessage && !errors.ico && (
+            <p role="status" className="mt-1.5 text-slate-600 dark:text-slate-400">
+              {aresMessage}
+            </p>
+          )}
+        </div>
+
+        {field('klient-jmeno', 'Jméno a příjmení nebo firma', name, setName, errors.name, {
+          type: 'text',
+          placeholder: 'např. Petr Svoboda nebo Nova Real s.r.o.',
+          autoFocus: !clientToEdit,
+        })}
+        {field('klient-adresa', 'Adresa bydliště nebo sídla', address, setAddress, errors.address, {
+          type: 'text',
+          placeholder: 'např. Hlavní 420, 250 01 Brandýs nad Labem',
+        })}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {field('klient-email', 'E-mail', email, setEmail, errors.email, { type: 'email', placeholder: 'petr.svoboda@email.cz' })}
+          {field('klient-telefon', 'Telefon', phone, setPhone, errors.phone, {
+            type: 'tel',
+            inputMode: 'tel',
+            placeholder: '+420 777 000 111',
+          })}
+        </div>
+
+        <div className="pt-1 flex flex-wrap justify-end gap-2.5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="min-h-11 px-4 inline-flex items-center justify-center rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+          >
+            Zrušit
+          </button>
+          <button
+            type="submit"
+            className="min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-500 text-slate-900 font-semibold cursor-pointer transition-colors"
+          >
+            <Check className="w-[18px] h-[18px]" />
+            <span>{clientToEdit ? 'Uložit změny' : 'Přidat klienta'}</span>
+          </button>
+        </div>
+      </form>
+    </Dialog>
   );
 };
