@@ -28,7 +28,7 @@ import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
 import { getWhatsAppShareUrl } from '../utils/shareUtils';
 import { getVocative } from '../utils/vocativeCs';
 import { TabType } from './Navbar';
-import { WeatherWidget } from './WeatherWidget';
+import { JobWeather } from './JobWeather';
 import { getSubscriptionInfo, isProUser } from '../utils/subscription';
 import { isInvoiceable, isContractPaid, getFinalBalance, getInvoiceStatus, getContractTotal } from '../utils/invoiceMath';
 import { getJobStage, isActiveJob, JOB_STAGE_LABELS } from '../utils/jobStage';
@@ -450,6 +450,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     {stage.next}
                   </div>
 
+                  {(stage.key === 'contract' || stage.key === 'realization') && <JobWeather contract={contract} />}
+
                   <div className="flex flex-wrap gap-2">
                     {clientPhone && (
                       <a href={`tel:${clientPhone}`} className={smallAction}>
@@ -610,9 +612,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
         </section>
       </div>
-
-      {/* Počasí na stavbě */}
-      <WeatherWidget />
 
       {/* Začít ze šablony */}
       <section aria-labelledby="prehled-sablony" className="space-y-2.5">

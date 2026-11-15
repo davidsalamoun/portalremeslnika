@@ -69,6 +69,10 @@ zbývá: zakázky, faktury, formulář smlouvy); část 3 = klienti, kalendář,
   Realizace → Předáno → Zaplaceno, podíl na metru a větu „co dál“. Používat ji všude, kde se ukazuje postup zakázky.
 - **Přehled** (`DashboardPage.tsx`) je vzor pro další obrazovky: nadpis sekce + odkaz vpravo, bílý rámeček s řádky
   oddělenými linkou, velká čísla písmem `font-display`, vedlejší akce jako tlačítka s obrysem, žádné dlaždice se statistikami.
+- **Počasí** (`utils/weather.ts`, `components/JobWeather.tsx`): u zakázky ve fázi Smlouva a Realizace se ukáže řádek jen
+  tehdy, když předpověď pro obec stavby hlásí do tří dnů chladno, srážky nebo silný vítr. Obec se bere z adresy
+  zákazníka a dohledává u Open-Meteo; když se nenajde, nezobrazí se nic (nikdy nedosazovat jiné místo). Texty jsou
+  doporučení – neodkazovat v nich na normy (ČSN, BOZP) ani nepsat „zákaz“.
 - **Navigace:** `Navbar.tsx` = boční nabídka od šířky `lg`, pod ní úzká horní lišta; `BottomNav.tsx` = spodní lišta
   pod `lg`. Kořen aplikace má `lg:pl-60`.
 - **Režimy:** aplikace se řídí světlým/tmavým režimem zařízení; přepínačem si uživatel nastaví vlastní volbu
@@ -120,6 +124,7 @@ src/
     spayd.ts                  QR platba (SPAYD), převod čísla účtu na IBAN
     invoiceMath.ts            jednotná pravidla pro částky, data a splatnost faktur
     ares.ts                   dohledání firmy podle IČO v ARES
+    weather.ts                počasí na stavbě: obec z adresy, předpověď Open-Meteo, rizika pro venkovní práce
     exportDocx.ts, exportPdf.ts   export dokumentů (velké knihovny – importovat jen přes lazyExports.ts)
     lazyExports.ts, exportNames.ts  odložené načtení exportů, názvy exportovaných souborů
     numberToWordsCs.ts, vocativeCs.ts   částka slovy, 5. pád jmen
