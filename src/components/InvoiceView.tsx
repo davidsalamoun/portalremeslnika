@@ -489,7 +489,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
                   )}
 
                   {/* Odpočet sjednané a uhrazené zálohy */}
-                  {contract.advanceAmount && contract.advanceAmount > 0 && (
+                  {!!contract.advanceAmount && contract.advanceAmount > 0 && (
                     <tr className="bg-emerald-50/50 text-emerald-900">
                       <td className="py-2.5 px-3">
                         <strong className="block text-xs">

@@ -324,7 +324,7 @@ export const PriceQuoteView: React.FC<PriceQuoteViewProps> = ({
               </div>
             </div>
 
-            {contract.advanceAmount && contract.advanceAmount > 0 && (
+            {!!contract.advanceAmount && contract.advanceAmount > 0 && (
               <div className="p-3 bg-white/80 rounded-lg border border-blue-200 text-xs text-slate-700">
                 <div className="text-slate-500">Požadovaná záloha:</div>
                 <div className="text-base font-bold text-slate-900">

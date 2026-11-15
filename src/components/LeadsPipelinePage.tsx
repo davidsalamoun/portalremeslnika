@@ -1,11 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Plus, ArrowRight, ArrowLeft, Phone, MessageSquare, X } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Plus, ArrowRight, ArrowLeft, Phone, MessageSquare } from 'lucide-react';
 import { Contract, Client } from '../types/contract';
 import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
 import { getWhatsAppShareUrl } from '../utils/shareUtils';
 import { getContractTotal, todayIso } from '../utils/invoiceMath';
 import { getJobStage, getStageMoves, moveJobStage, JOB_STAGE_LABELS, JobStageKey } from '../utils/jobStage';
 import { Metr } from './Logo';
+import { Dialog } from './Dialog';
 
 interface LeadsPipelinePageProps {
   contracts: Contract[];
@@ -66,15 +67,6 @@ export const LeadsPipelinePage: React.FC<LeadsPipelinePageProps> = ({
   const [workDescription, setWorkDescription] = useState('');
   const [estimatedPrice, setEstimatedPrice] = useState('');
   const [inspectionDate, setInspectionDate] = useState('');
-
-  useEffect(() => {
-    if (!isQuickLeadModalOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsQuickLeadModalOpen(false);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isQuickLeadModalOpen]);
 
   // Zakázky s fází, nejdál pokročilé nahoře
   const jobs = useMemo(
@@ -302,28 +294,8 @@ export const LeadsPipelinePage: React.FC<LeadsPipelinePageProps> = ({
 
       {/* Okno nové poptávky */}
       {isQuickLeadModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 flex items-end sm:items-center justify-center sm:p-4">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="nova-poptavka-nadpis"
-            className="bg-white dark:bg-slate-900 border border-slate-900 dark:border-slate-600 rounded-t-md sm:rounded-md w-full max-w-md max-h-[92vh] overflow-y-auto shadow-2xl"
-          >
-            <div className="px-5 pt-5 flex items-start justify-between gap-3">
-              <h2 id="nova-poptavka-nadpis" className="text-[28px] font-bold leading-tight text-slate-900 dark:text-white">
-                Nová poptávka
-              </h2>
-              <button
-                type="button"
-                onClick={() => setIsQuickLeadModalOpen(false)}
-                aria-label="Zavřít"
-                className="w-11 h-11 -mr-2 -mt-1.5 inline-flex items-center justify-center rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-slate-900 dark:text-slate-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateLeadSubmit} className="p-5 space-y-4">
+        <Dialog title="Nová poptávka" onClose={() => setIsQuickLeadModalOpen(false)}>
+            <form onSubmit={handleCreateLeadSubmit} className="space-y-4">
               <div>
                 <label htmlFor="lead-jmeno" className={fieldLabel}>
                   Jméno zákazníka
@@ -421,8 +393,7 @@ export const LeadsPipelinePage: React.FC<LeadsPipelinePageProps> = ({
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </Dialog>
       )}
     </div>
   );
