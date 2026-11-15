@@ -1,23 +1,49 @@
 import React, { useState, useMemo } from 'react';
-import {
-  Calendar as CalendarIcon,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Clock,
-  MapPin,
-  CheckCircle2,
-  Trash2,
-  X,
-  ExternalLink,
-  Briefcase,
-  AlertCircle,
-  Filter,
-  Phone,
-  Navigation,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2, Check, Phone, MapPin, FileText } from 'lucide-react';
 import { Contract, CalendarEvent, CalendarEventType, Client } from '../types/contract';
 import { formatDateCs } from '../utils/numberToWordsCs';
+import { todayIso } from '../utils/invoiceMath';
+import { getJobStage } from '../utils/jobStage';
+import { Dialog } from './Dialog';
+
+const TYPE_LABELS: Record<CalendarEventType, string> = {
+  obhlidka: 'Obhlídka',
+  realizace: 'Realizace',
+  predani: 'Předání',
+  material: 'Materiál',
+  zaloha: 'Záloha',
+  zaruka: 'Záruka',
+  jine: 'Jiné',
+};
+const TYPE_OPTIONS: { key: CalendarEventType; label: string }[] = [
+  { key: 'obhlidka', label: 'Obhlídka a zaměření' },
+  { key: 'realizace', label: 'Práce na zakázce' },
+  { key: 'predani', label: 'Předání díla' },
+  { key: 'material', label: 'Nákup a závoz materiálu' },
+  { key: 'zaloha', label: 'Splatnost zálohy nebo faktury' },
+  { key: 'jine', label: 'Jiná schůzka nebo úkol' },
+];
+const WEEKDAYS = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
+// Události odvozené ze zakázek (termín předání, milník, záruční prohlídka) nejdou v kalendáři měnit
+const isDerivedEvent = (id: string) => /^(contract_delivery_|milestone_|warranty_insp_)/.test(id);
+
+const sectionTitle = 'text-2xl font-semibold text-slate-900 dark:text-white';
+const fieldLabel = 'block font-semibold text-slate-900 dark:text-slate-100 mb-1.5';
+const fieldInput =
+  'w-full min-h-12 px-3.5 py-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white';
+const optional = <span className="font-normal text-slate-600 dark:text-slate-400">(nepovinné)</span>;
+const outlineButton =
+  'min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors';
+const primaryButton =
+  'min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-500 text-slate-900 font-semibold cursor-pointer transition-colors';
+const smallAction =
+  'min-h-11 min-w-11 px-3 inline-flex items-center justify-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-medium hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors';
+const chip = (active: boolean) =>
+  `min-h-11 px-3 inline-flex items-center justify-center rounded-md border font-medium cursor-pointer transition-colors ${
+    active
+      ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
+      : 'border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
+  }`;
 
 interface CalendarPageProps {
   contracts: Contract[];
@@ -39,10 +65,9 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
   onDeleteEvent,
   onOpenContract,
 }) => {
+  const today = todayIso();
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [selectedDateStr, setSelectedDateStr] = useState<string>(
-    new Date().toISOString().split('T')[0]
-  );
+  const [selectedDateStr, setSelectedDateStr] = useState<string>(todayIso());
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
@@ -61,7 +86,9 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
 
     // Automaticky vytvořit události pro termíny dokončení smluv
     contracts.forEach((c) => {
-      if (c.deliveryDate) {
+      const stageKey = getJobStage(c).key;
+      // Poptávka a nabídka ještě termín předání nemají sjednaný
+      if (c.deliveryDate && stageKey !== 'inquiry' && stageKey !== 'quote') {
         list.push({
           id: `contract_delivery_${c.id}`,
           title: `Předání díla: ${c.client.name}`,
@@ -73,7 +100,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
           location: c.client.address,
           note: `Termín předání dle smlouvy č. ${c.contractNumber}`,
           createdAt: c.createdAt,
-          done: c.status === 'handover_done' || c.status === 'paid',
+          done: stageKey === 'handover' || stageKey === 'paid',
         });
       }
 
@@ -89,7 +116,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
             contractId: c.id,
             clientName: c.client.name,
             location: c.client.address,
-            note: `Zakázka: ${c.client.name} (#${c.contractNumber})`,
+            note: `Zakázka: ${c.client.name}, smlouva č. ${c.contractNumber}`,
             createdAt: c.createdAt,
             done: m.status === 'completed',
           });
@@ -100,14 +127,14 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
       (c.warranty?.annualInspections || []).forEach((insp) => {
         list.push({
           id: `warranty_insp_${c.id}_${insp.id}`,
-          title: `Roční garanční servis: ${c.client.name}`,
+          title: `Záruční prohlídka: ${c.client.name}`,
           date: insp.scheduledDate,
           time: '10:00',
           type: 'zaruka',
           contractId: c.id,
           clientName: c.client.name,
           location: c.executionPlace || c.client.address,
-          note: `Garanční prohlídka po ${insp.inspectionYear}. roce (Smlouva #${c.contractNumber}). Kontrola spár a silikonů.`,
+          note: `Záruční prohlídka po ${insp.inspectionYear}. roce, smlouva č. ${c.contractNumber}`,
           createdAt: c.createdAt,
           done: insp.status === 'completed',
         });
@@ -191,7 +218,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
   const handleToday = () => {
     const today = new Date();
     setCurrentDate(today);
-    setSelectedDateStr(today.toISOString().split('T')[0]);
+    setSelectedDateStr(todayIso());
   };
 
   // Události pro vybraný den
@@ -231,492 +258,325 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
     setIsAddModalOpen(false);
   };
 
-  const getTypeBadge = (type: CalendarEventType) => {
-    switch (type) {
-      case 'obhlidka':
-        return { label: 'Obhlídka & Zaměření', bg: 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-800' };
-      case 'realizace':
-        return { label: 'Montáž / Stavba', bg: 'bg-slate-900 dark:bg-slate-800 text-amber-400 border-slate-700' };
-      case 'predani':
-        return { label: 'Předání díla', bg: 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 border-emerald-300 dark:border-emerald-800' };
-      case 'material':
-        return { label: 'Závoz materiálu', bg: 'bg-blue-100 dark:bg-blue-950/80 text-blue-900 dark:text-blue-200 border-blue-300 dark:border-blue-800' };
-      case 'zaloha':
-        return { label: 'Splatnost zálohy', bg: 'bg-teal-100 dark:bg-teal-950/80 text-teal-900 dark:text-teal-200 border-teal-300 dark:border-teal-800' };
-      case 'zaruka':
-        return { label: 'Garanční revize', bg: 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 border-emerald-300 dark:border-emerald-800' };
-      default:
-        return { label: 'Ostatní výjezd', bg: 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700' };
-    }
+  const openAddDialog = () => {
+    setFormDate(selectedDateStr);
+    setIsAddModalOpen(true);
   };
 
+  const filterOptions: { id: string; label: string }[] = [
+    { id: 'all', label: 'Vše' },
+    ...(Object.keys(TYPE_LABELS) as CalendarEventType[]).map((key) => ({ id: key, label: TYPE_LABELS[key] })),
+  ];
+
   return (
-    <div className="max-w-[1200px] mx-auto pb-16 space-y-6">
-      {/* Hlavička dispečinku */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+    <div className="max-w-[1180px] mx-auto pb-16 space-y-7 text-[15px] leading-snug">
+      <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-slate-900 text-amber-400 border border-slate-800">
-              Dispečink zakázek
-            </span>
-            <span className="text-xs text-slate-500 font-mono">
-              Synchronizováno s aktivními SOD
-            </span>
+          <h1 className="text-4xl sm:text-[44px] font-bold leading-[1.05] text-slate-900 dark:text-white">Kalendář</h1>
+          <div className="mt-1 text-slate-600 dark:text-slate-400">
+            Obhlídky, práce a závozy. Termíny předání a záruční prohlídky se doplňují ze zakázek.
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-black shadow-xs">
-              <CalendarIcon className="w-5 h-5" />
-            </div>
-            Stavební dispečink & Harmonogram výjezdů
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Přehled obhlídek, montáží, závozů materiálu a garančních servisů v terénu.
-          </p>
         </div>
+        <button type="button" onClick={openAddDialog} className={`${primaryButton} w-full sm:w-auto`}>
+          <Plus className="w-[18px] h-[18px]" />
+          <span>Nová událost</span>
+        </button>
+      </header>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              setFormDate(selectedDateStr);
-              setIsAddModalOpen(true);
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm shadow-xs transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>+ Nový výjezd na stavbu</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Ovládací lišta měsíce & filtry */}
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-black text-slate-900 dark:text-white min-w-44 capitalize font-mono tracking-tight">
-            {monthName}
-          </h2>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={handlePrevMonth}
-              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer border border-slate-200 dark:border-slate-800"
-              title="Předchozí měsíc"
-            >
-              <ChevronLeft className="w-4 h-4" />
+      {/* Měsíc a výběr druhu */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-[30px] leading-tight font-semibold text-slate-900 dark:text-white">{monthName}</h2>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={handlePrevMonth} aria-label="Předchozí měsíc" className={smallAction}>
+              <ChevronLeft className="w-[18px] h-[18px]" />
             </button>
-            <button
-              onClick={handleToday}
-              className="px-3 py-1.5 rounded-lg text-xs font-black text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 transition-colors cursor-pointer font-mono"
-            >
-              DNES
+            <button type="button" onClick={handleToday} className={smallAction}>
+              Dnes
             </button>
-            <button
-              onClick={handleNextMonth}
-              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer border border-slate-200 dark:border-slate-800"
-              title="Další měsíc"
-            >
-              <ChevronRight className="w-4 h-4" />
+            <button type="button" onClick={handleNextMonth} aria-label="Další měsíc" className={smallAction}>
+              <ChevronRight className="w-[18px] h-[18px]" />
             </button>
           </div>
         </div>
-
-        {/* Filtr typů událostí */}
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          <span className="text-slate-400 font-bold mr-1 flex items-center gap-1 font-mono uppercase text-[11px]">
-            <Filter className="w-3.5 h-3.5" /> Filtr:
-          </span>
-          {[
-            { id: 'all', label: 'Vše' },
-            { id: 'obhlidka', label: 'Obhlídky' },
-            { id: 'realizace', label: 'Montáže' },
-            { id: 'predani', label: 'Předání' },
-            { id: 'material', label: 'Materiál' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setTypeFilter(tab.id)}
-              className={`px-3 py-1 rounded-md font-bold text-xs transition-colors cursor-pointer ${
-                typeFilter === tab.id
-                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
-              }`}
-            >
-              {tab.label}
+        <div role="group" aria-label="Druh událostí" className="flex flex-wrap gap-2">
+          {filterOptions.map((f) => (
+            <button key={f.id} type="button" aria-pressed={typeFilter === f.id} onClick={() => setTypeFilter(f.id)} className={chip(typeFilter === f.id)}>
+              {f.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Mřížka kalendáře + Detail dne vedle sebe */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Kalendářní mřížka (8/12) */}
-        <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs">
-          {/* Názvy dnů v týdnu */}
-          <div className="grid grid-cols-7 gap-1 text-center font-black font-mono text-[11px] uppercase tracking-wider text-slate-400 mb-2">
-            <span>Po</span>
-            <span>Út</span>
-            <span>St</span>
-            <span>Čt</span>
-            <span>Pá</span>
-            <span className="text-amber-600 dark:text-amber-400">So</span>
-            <span className="text-amber-600 dark:text-amber-400">Ne</span>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-7 items-start">
+        {/* Mřížka měsíce */}
+        <div className="lg:col-span-8 min-w-0">
+          <div className="grid grid-cols-7 text-center text-slate-600 dark:text-slate-400 font-medium pb-1.5">
+            {WEEKDAYS.map((d) => (
+              <span key={d}>{d}</span>
+            ))}
           </div>
-
-          {/* Dny */}
-          <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-            {daysMatrix.map((cell, idx) => {
+          <div className="grid grid-cols-7 bg-white dark:bg-slate-900 border-t border-l border-slate-300 dark:border-slate-700 rounded-md overflow-hidden">
+            {daysMatrix.map((cell) => {
               const dayEvents = filteredEvents.filter((e) => e.date === cell.dateStr);
               const isSelected = cell.dateStr === selectedDateStr;
-              const isToday = cell.dateStr === new Date().toISOString().split('T')[0];
-
+              const isToday = cell.dateStr === today;
               return (
-                <div
-                  key={idx}
+                <button
+                  key={cell.dateStr}
+                  type="button"
                   onClick={() => setSelectedDateStr(cell.dateStr)}
-                  className={`min-h-20 sm:min-h-24 p-1.5 sm:p-2 rounded-lg border transition-all cursor-pointer flex flex-col justify-between ${
-                    isSelected
-                      ? 'ring-2 ring-slate-900 dark:ring-amber-400 border-slate-900 dark:border-amber-400 bg-slate-50 dark:bg-slate-800/80 shadow-xs'
-                      : isToday
-                      ? 'border-amber-500 ring-2 ring-amber-500/40 bg-amber-50/20 dark:bg-amber-950/20'
-                      : cell.isCurrentMonth
-                      ? 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-400 dark:hover:border-slate-600'
-                      : 'border-transparent bg-slate-50/40 dark:bg-slate-950/30 opacity-35'
+                  aria-pressed={isSelected}
+                  aria-label={`${formatDateCs(cell.dateStr)}${dayEvents.length ? `, událostí: ${dayEvents.length}` : ''}`}
+                  className={`relative min-h-[58px] sm:min-h-[92px] p-1.5 text-left align-top flex flex-col gap-1 border-r border-b border-slate-300 dark:border-slate-700 cursor-pointer transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                    isSelected ? 'bg-slate-100 dark:bg-slate-800 shadow-[inset_0_0_0_2px_var(--color-slate-900)] dark:shadow-[inset_0_0_0_2px_#fff]' : ''
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={`text-xs font-mono font-bold w-6 h-6 rounded flex items-center justify-center ${
-                        isToday
-                          ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
-                          : isSelected
-                          ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-black'
-                          : 'text-slate-800 dark:text-slate-200'
-                      }`}
-                    >
-                      {cell.dayNum}
-                    </span>
-                    {dayEvents.length > 0 && (
-                      <span className="text-[10px] font-mono font-bold px-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                        {dayEvents.length}
+                  <span
+                    className={`font-display font-semibold tabular-nums text-[17px] leading-none min-w-7 h-7 px-1 inline-flex items-center justify-center rounded-sm self-start ${
+                      isToday
+                        ? 'bg-blue-600 text-white'
+                        : cell.isCurrentMonth
+                          ? 'text-slate-900 dark:text-white'
+                          : 'text-slate-400 dark:text-slate-600'
+                    }`}
+                  >
+                    {cell.dayNum}
+                  </span>
+                  {/* Na úzké obrazovce jen značky, jinak názvy */}
+                  <span className="sm:hidden flex gap-1 pl-1">
+                    {dayEvents.slice(0, 3).map((ev) => (
+                      <span key={ev.id} className={`w-2 h-2 rounded-full ${ev.done ? 'bg-slate-400' : 'bg-slate-900 dark:bg-white'}`} />
+                    ))}
+                  </span>
+                  <span className="hidden sm:flex flex-col gap-0.5 min-w-0 w-full">
+                    {dayEvents.slice(0, 2).map((ev) => (
+                      <span
+                        key={ev.id}
+                        className={`block truncate text-[13px] leading-tight ${
+                          ev.done ? 'text-slate-500 line-through' : 'text-slate-900 dark:text-slate-100'
+                        }`}
+                      >
+                        {ev.time ? `${ev.time} ` : ''}
+                        {ev.title}
                       </span>
-                    )}
-                  </div>
-
-                  {/* Události v políčku */}
-                  <div className="space-y-1 mt-1 overflow-hidden">
-                    {dayEvents.slice(0, 2).map((ev) => {
-                      const badge = getTypeBadge(ev.type);
-                      return (
-                        <div
-                          key={ev.id}
-                          className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded truncate font-medium border ${badge.bg}`}
-                          title={`${ev.time ? `${ev.time} ` : ''}${ev.title}`}
-                        >
-                          {ev.time ? `${ev.time} ` : ''}{ev.title}
-                        </div>
-                      );
-                    })}
+                    ))}
                     {dayEvents.length > 2 && (
-                      <span className="text-[9px] text-slate-500 font-mono font-bold block text-center">
-                        +{dayEvents.length - 2} další
-                      </span>
+                      <span className="text-[13px] leading-tight text-slate-600 dark:text-slate-400">a další {dayEvents.length - 2}</span>
                     )}
-                  </div>
-                </div>
+                  </span>
+                </button>
               );
             })}
           </div>
         </div>
 
-        {/* Detail vybraného dne (4/12) */}
-        <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
-            <div>
-              <span className="text-[10px] uppercase font-black font-mono tracking-wider text-amber-600 dark:text-amber-400">
-                Denní dispečink výjezdů
-              </span>
-              <h3 className="text-base font-black font-mono text-slate-900 dark:text-white mt-0.5">
-                {formatDateCs(selectedDateStr)}
-              </h3>
-            </div>
+        {/* Vybraný den */}
+        <section aria-labelledby="kalendar-den" className="lg:col-span-4 space-y-2.5 min-w-0">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 id="kalendar-den" className={sectionTitle}>
+              {selectedDateStr === today ? 'Dnes' : formatDateCs(selectedDateStr)}
+            </h2>
             <button
-              onClick={() => {
-                setFormDate(selectedDateStr);
-                setIsAddModalOpen(true);
-              }}
-              className="p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500 text-amber-700 dark:text-amber-400 hover:text-slate-950 transition-colors cursor-pointer border border-amber-500/30"
-              title="Přidat událost k tomuto dni"
+              type="button"
+              onClick={openAddDialog}
+              className="min-h-11 inline-flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-300 underline underline-offset-2 cursor-pointer"
             >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <Plus className="w-4 h-4" />
+              <span>Přidat</span>
             </button>
           </div>
-
-          {selectedDayEvents.length === 0 ? (
-            <div className="py-12 text-center text-slate-400 space-y-3 my-auto">
-              <CalendarIcon className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-700" />
-              <p className="text-xs font-medium">Na tento den nemáte naplánovaný žádný výjezd na stavbu.</p>
-              <button
-                onClick={() => {
-                  setFormDate(selectedDateStr);
-                  setIsAddModalOpen(true);
-                }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold cursor-pointer transition-colors shadow-xs"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>+ Naplánovat výjezd či montáž</span>
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3 overflow-y-auto max-h-[540px] pr-1">
-              {selectedDayEvents.map((event) => {
-                const badge = getTypeBadge(event.type);
-                const isAutoContractEvent = event.id.startsWith('contract_') || event.id.startsWith('milestone_');
-                const linkedContract = contracts.find((c) => c.id === event.contractId);
-                const clientPhone =
-                  linkedContract?.client?.phone?.trim() ||
-                  clients.find((c) => c.name === event.clientName)?.phone?.trim();
-
-                return (
-                  <div
-                    key={event.id}
-                    className={`p-3.5 rounded-lg border transition-all space-y-3 ${
-                      event.done
-                        ? 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 opacity-60'
-                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-400 dark:hover:border-slate-600'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase border ${badge.bg}`}>
-                            {badge.label}
-                          </span>
-                          {event.time && (
-                            <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
-                              <Clock className="w-3 h-3 text-slate-500" />
-                              {event.time}
-                            </span>
-                          )}
-                        </div>
-                        <h4 className={`text-sm font-bold tracking-tight ${event.done ? 'line-through text-slate-400' : 'text-slate-900 dark:text-white'}`}>
-                          {event.title}
-                        </h4>
-                      </div>
-
-                      {!isAutoContractEvent && (
-                        <button
-                          type="button"
-                          onClick={() => onDeleteEvent(event.id)}
-                          className="p-1 rounded text-slate-300 hover:text-rose-600 transition-colors cursor-pointer"
-                          title="Smazat událost"
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md divide-y divide-slate-100 dark:divide-slate-800">
+            {selectedDayEvents.length === 0 && (
+              <div className="px-5 py-5 text-slate-600 dark:text-slate-300">Na tento den není nic naplánováno.</div>
+            )}
+            {selectedDayEvents.map((event) => {
+              const derived = isDerivedEvent(event.id);
+              const linkedContract = contracts.find((c) => c.id === event.contractId);
+              const clientPhone =
+                linkedContract?.client?.phone?.trim() || clients.find((c) => c.name === event.clientName)?.phone?.trim();
+              return (
+                <div key={event.id} className={`px-5 py-4 space-y-2.5 ${event.done ? 'opacity-60' : ''}`}>
+                  <div className="flex items-start gap-3">
+                    {derived ? (
+                      <span className="w-6 h-6 mt-0.5 shrink-0 inline-flex items-center justify-center text-slate-600 dark:text-slate-400" title="Doplněno ze zakázky">
+                        {event.done ? <Check className="w-5 h-5" strokeWidth={3} /> : <FileText className="w-[18px] h-[18px]" />}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onUpdateEvent({ ...event, done: !event.done })}
+                        aria-pressed={!!event.done}
+                        aria-label={event.done ? `Označit „${event.title}“ jako nehotové` : `Označit „${event.title}“ jako hotové`}
+                        className="w-11 h-11 -m-2.5 mt-[-9px] shrink-0 inline-flex items-center justify-center cursor-pointer"
+                      >
+                        <span
+                          className={`w-6 h-6 rounded-sm border-[1.5px] inline-flex items-center justify-center ${
+                            event.done
+                              ? 'bg-emerald-700 border-emerald-700 text-white'
+                              : 'border-slate-900 dark:border-slate-400 bg-white dark:bg-slate-950'
+                          }`}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-
-                    {event.clientName && (
-                      <div className="p-2 rounded bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
-                        <div className="truncate">
-                          <span className="text-[10px] font-mono uppercase text-slate-400 block">Zákazník</span>
-                          <span className="font-bold text-slate-900 dark:text-white truncate block">{event.clientName}</span>
-                        </div>
-                        {clientPhone && (
-                          <a
-                            href={`tel:${clientPhone}`}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shrink-0 shadow-xs transition-colors"
-                            title="Zavolat zákazníkovi"
-                          >
-                            <Phone className="w-3.5 h-3.5 stroke-[2.5]" />
-                            <span>Zavolat</span>
-                          </a>
-                        )}
-                      </div>
+                          {event.done && <Check className="w-4 h-4" strokeWidth={3} />}
+                        </span>
+                      </button>
                     )}
-
-                    {event.location && (
-                      <div className="flex items-center justify-between gap-2 p-2 rounded bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs">
-                        <div className="truncate">
-                          <span className="text-[10px] font-mono uppercase text-slate-400 block">Místo stavby</span>
-                          <span className="text-slate-700 dark:text-slate-300 truncate block">{event.location}</span>
-                        </div>
+                    <div className="flex-1 min-w-0">
+                      <div className={`font-semibold text-slate-900 dark:text-white ${event.done ? 'line-through' : ''}`}>
+                        {event.time && <span className="font-display tabular-nums text-[19px] mr-2">{event.time}</span>}
+                        {event.title}
+                      </div>
+                      <div className="text-slate-600 dark:text-slate-400">
+                        {[TYPE_LABELS[event.type], event.clientName, event.location].filter(Boolean).join(', ')}
+                      </div>
+                      {event.note && <div className="mt-1 text-slate-600 dark:text-slate-400">{event.note}</div>}
+                    </div>
+                    {!derived && (
+                      <button
+                        type="button"
+                        onClick={() => onDeleteEvent(event.id)}
+                        aria-label={`Smazat událost ${event.title}`}
+                        title="Smazat"
+                        className="w-11 h-11 -m-2.5 mt-[-9px] shrink-0 inline-flex items-center justify-center rounded-md text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  {(clientPhone || event.location || linkedContract) && (
+                    <div className="flex flex-wrap gap-2">
+                      {clientPhone && (
+                        <a href={`tel:${clientPhone.replace(/\s+/g, '')}`} className={smallAction}>
+                          <Phone className="w-4 h-4" />
+                          <span>Zavolat</span>
+                        </a>
+                      )}
+                      {event.location && (
                         <a
                           href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-slate-900 dark:bg-white hover:bg-slate-800 text-white dark:text-slate-950 font-bold text-xs shrink-0 shadow-xs transition-colors"
-                          title="Spustit GPS navigaci na stavbu"
+                          className={smallAction}
                         >
-                          <Navigation className="w-3.5 h-3.5 stroke-[2.5]" />
+                          <MapPin className="w-4 h-4" />
                           <span>Navigovat</span>
                         </a>
-                      </div>
-                    )}
-
-                    {event.note && (
-                      <p className="text-xs text-slate-600 dark:text-slate-400 italic bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 p-2 rounded">
-                        {event.note}
-                      </p>
-                    )}
-
-                    {linkedContract && (
-                      <button
-                        onClick={() => onOpenContract(linkedContract)}
-                        className="inline-flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 font-bold hover:text-amber-500 dark:hover:text-amber-400 pt-0.5 cursor-pointer font-mono"
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                        <span>Smlouva o dílo #{linkedContract.contractNumber} &rarr;</span>
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                      )}
+                      {linkedContract && (
+                        <button type="button" onClick={() => onOpenContract(linkedContract)} className={smallAction}>
+                          <FileText className="w-4 h-4" />
+                          <span>Zakázka</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
       </div>
 
-      {/* Modal pro nový výjezd na stavbu */}
+      {/* Nová událost */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95">
-            <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900 text-white">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded bg-amber-500 text-slate-950 flex items-center justify-center font-black">
-                  <CalendarIcon className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm tracking-tight">Nový výjezd do dispečinku</h3>
-                  <p className="text-[11px] text-slate-400 font-mono">Harmonogram zakázek & stavby</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsAddModalOpen(false)}
-                className="w-7 h-7 rounded hover:bg-slate-800 flex items-center justify-center transition-colors cursor-pointer text-slate-400 hover:text-white"
+        <Dialog title="Nová událost" onClose={() => setIsAddModalOpen(false)}>
+          <form onSubmit={handleCreateSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="udalost-nazev" className={fieldLabel}>
+                Co se bude dít
+              </label>
+              <input
+                id="udalost-nazev"
+                type="text"
+                required
+                autoFocus
+                value={formTitle}
+                onChange={(e) => setFormTitle(e.target.value)}
+                placeholder="např. Zaměření obkladů"
+                className={fieldInput}
+              />
+            </div>
+            <div>
+              <label htmlFor="udalost-druh" className={fieldLabel}>
+                Druh
+              </label>
+              <select
+                id="udalost-druh"
+                value={formType}
+                onChange={(e) => setFormType(e.target.value as CalendarEventType)}
+                className={`${fieldInput} cursor-pointer`}
               >
-                <X className="w-4 h-4" />
+                {TYPE_OPTIONS.map((o) => (
+                  <option key={o.key} value={o.key}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="udalost-datum" className={fieldLabel}>
+                  Datum
+                </label>
+                <input id="udalost-datum" type="date" required value={formDate} onChange={(e) => setFormDate(e.target.value)} className={fieldInput} />
+              </div>
+              <div>
+                <label htmlFor="udalost-cas" className={fieldLabel}>
+                  Čas
+                </label>
+                <input id="udalost-cas" type="time" value={formTime} onChange={(e) => setFormTime(e.target.value)} className={fieldInput} />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="udalost-klient" className={fieldLabel}>
+                Klient {optional}
+              </label>
+              <select id="udalost-klient" value={formClientId} onChange={(e) => setFormClientId(e.target.value)} className={`${fieldInput} cursor-pointer`}>
+                <option value="">Bez klienta</option>
+                {clients.map((cl) => (
+                  <option key={cl.id} value={cl.id}>
+                    {cl.name}
+                    {cl.address ? `, ${cl.address}` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="udalost-misto" className={fieldLabel}>
+                Místo {optional}
+              </label>
+              <input
+                id="udalost-misto"
+                type="text"
+                value={formLocation}
+                onChange={(e) => setFormLocation(e.target.value)}
+                placeholder={formClientId ? 'Nevyplněné = adresa klienta' : 'např. Lipová 12, Praha 4'}
+                className={fieldInput}
+              />
+            </div>
+            <div>
+              <label htmlFor="udalost-poznamka" className={fieldLabel}>
+                Poznámka {optional}
+              </label>
+              <textarea
+                id="udalost-poznamka"
+                rows={2}
+                value={formNote}
+                onChange={(e) => setFormNote(e.target.value)}
+                placeholder="např. vzít křížový laser a vzorník dekorů"
+                className={fieldInput}
+              />
+            </div>
+            <div className="pt-1 flex flex-wrap justify-end gap-2.5">
+              <button type="button" onClick={() => setIsAddModalOpen(false)} className={outlineButton}>
+                Zrušit
+              </button>
+              <button type="submit" className={primaryButton}>
+                Uložit událost
               </button>
             </div>
-
-            <form onSubmit={handleCreateSubmit} className="p-5 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase font-mono mb-1">
-                  Typ výjezdu / události
-                </label>
-                <select
-                  value={formType}
-                  onChange={(e) => setFormType(e.target.value as CalendarEventType)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold focus:ring-2 focus:ring-amber-500"
-                >
-                  <option value="obhlidka">Obhlídka a zaměření na místě</option>
-                  <option value="realizace">Montáž a provádění prací</option>
-                  <option value="predani">Předání hotového díla</option>
-                  <option value="material">Nákup a závoz stavebního materiálu</option>
-                  <option value="zaloha">Splatnost zálohy / faktury</option>
-                  <option value="jine">Ostatní schůzka či úkol</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase font-mono mb-1">
-                  Popis výjezdu / název zakázky *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formTitle}
-                  onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="např. Zaměření obkladů, Montáž sádrokartonů"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase font-mono mb-1">
-                    Datum *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={formDate}
-                    onChange={(e) => setFormDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase font-mono mb-1">
-                    Čas srazu
-                  </label>
-                  <input
-                    type="time"
-                    value={formTime}
-                    onChange={(e) => setFormTime(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-mono"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase font-mono mb-1">
-                  Přiřadit ke klientovi (auto-vyplní telefon a adresu)
-                </label>
-                <select
-                  value={formClientId}
-                  onChange={(e) => setFormClientId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-amber-500"
-                >
-                  <option value="">-- Bez vazby na klienta --</option>
-                  {clients.map((cl) => (
-                    <option key={cl.id} value={cl.id}>
-                      {cl.name} ({cl.address})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase font-mono mb-1">
-                  Místo stavby / GPS navigace
-                </label>
-                <input
-                  type="text"
-                  value={formLocation}
-                  onChange={(e) => setFormLocation(e.target.value)}
-                  placeholder="např. Lipová 12, Praha 4"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase font-mono mb-1">
-                  Poznámka / Vybavení s sebou
-                </label>
-                <textarea
-                  rows={2}
-                  value={formNote}
-                  onChange={(e) => setFormNote(e.target.value)}
-                  placeholder="např. vzít křížový laser, velkou příklepovou vrtačku a vzorník dekorů"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
-                />
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                >
-                  Zrušit
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm shadow-xs transition-colors cursor-pointer"
-                >
-                  Uložit výjezd
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+          </form>
+        </Dialog>
       )}
     </div>
   );

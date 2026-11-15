@@ -52,7 +52,7 @@ Proměnné (případně `STRIPE_SECRET_KEY`) se nastavují v projektu na Vercelu
 ## Vzhled
 
 Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2aA4MkA), zaveden po částech:
-část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; část 2 (hotovo) = přehled, zakázky, faktury, formulář smlouvy s rozpočtem; část 3 = klienti, kalendář, finance, nastavení a dialogy.
+část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; část 2 (hotovo) = přehled, zakázky, faktury, formulář smlouvy s rozpočtem; část 3 = klienti a kalendář (hotovo), zbývá finance, archiv, nastavení a zbylá okna.
 
 - **Barvy** jsou v `src/index.css` v bloku `@theme` jako přemapované palety Tailwindu, takže stávající třídy platí dál:
   `slate-*` = grafit a papír (text `slate-900` #1A1D21, pozadí `slate-50` #F4F5F2), `blue-*` = razítková modrá
@@ -73,6 +73,8 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
 - **Formuláře** (vzor `ContractForm.tsx`, `BudgetItemsEditor.tsx`): popisek nad polem, pole vysoké aspoň 44 px s linkou
   1,5 px, volby jako přepínací tlačítka (`aria-pressed`), chyba červeně pod polem (`role="alert"`) a zmizí po opravě;
   při odeslání s chybou se stránka posune na první chybné pole. Nepředvyplňovat vymyšlené částky.
+- **Názvy:** v aplikaci se píše „klient“ (shodně s nabídkou Klienti) a „událost“ v kalendáři; ve zprávách odesílaných
+  lidem „zákazník“. Nepoužívat „dispečink“, „výjezd“, „pracovní stůl“ ani znak & v nadpisech.
 - **Okna** nad obsahem stavět z `components/Dialog.tsx` (nadpis, křížek, Escape, klik mimo, na mobilu zdola). Starší
   modály s tmavou hlavičkou se na něj převádějí postupně.
 - **Faktury** (`InvoicesOverviewPage.tsx`): souhrn v jednom rámečku, záložky stavů, seznam s odznakem splatnosti.
