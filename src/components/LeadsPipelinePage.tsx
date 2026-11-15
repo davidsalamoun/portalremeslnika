@@ -1,26 +1,11 @@
-import React, { useState, useMemo } from 'react';
-import {
-  Kanban,
-  Plus,
-  ArrowRight,
-  ArrowLeft,
-  Calendar,
-  Phone,
-  MessageSquare,
-  DollarSign,
-  User,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  ExternalLink,
-  ChevronRight,
-  FilePlus,
-  FileText,
-  X,
-} from 'lucide-react';
-import { Contract, Client, LeadStage } from '../types/contract';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Plus, ArrowRight, ArrowLeft, Phone, MessageSquare, X } from 'lucide-react';
+import { Contract, Client } from '../types/contract';
 import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
 import { getWhatsAppShareUrl } from '../utils/shareUtils';
+import { getContractTotal, todayIso } from '../utils/invoiceMath';
+import { getJobStage, getStageMoves, moveJobStage, JOB_STAGE_LABELS, JobStageKey } from '../utils/jobStage';
+import { Metr } from './Logo';
 
 interface LeadsPipelinePageProps {
   contracts: Contract[];
@@ -39,58 +24,39 @@ interface LeadsPipelinePageProps {
   onSwitchView?: () => void;
 }
 
-const STAGES: { id: LeadStage; title: string; color: string; bg: string; border: string; desc: string }[] = [
-  {
-    id: 'inquiry',
-    title: '1. Poptávka & Obhlídka',
-    color: 'text-slate-800 dark:text-slate-200',
-    bg: 'bg-slate-100 dark:bg-slate-800/80',
-    border: 'border-slate-300 dark:border-slate-700',
-    desc: 'Zákazník poptává práce, domluva zaměření',
-  },
-  {
-    id: 'quote',
-    title: '2. Cenová nabídka',
-    color: 'text-blue-700 dark:text-blue-400',
-    bg: 'bg-blue-50/70 dark:bg-blue-950/40',
-    border: 'border-blue-200 dark:border-blue-800',
-    desc: 'Rozpočet zpracován a odeslán klientovi',
-  },
-  {
-    id: 'contract',
-    title: '3. Podepsaná smlouva',
-    color: 'text-amber-700 dark:text-amber-400',
-    bg: 'bg-amber-50/70 dark:bg-amber-950/40',
-    border: 'border-amber-200 dark:border-amber-800',
-    desc: 'Schváleno, sjednána záloha a termín nástupu',
-  },
-  {
-    id: 'realization',
-    title: '4. V realizaci',
-    color: 'text-orange-700 dark:text-orange-400',
-    bg: 'bg-orange-50/70 dark:bg-orange-950/40',
-    border: 'border-orange-200 dark:border-orange-800',
-    desc: 'Právě probíhají montážní práce na stavbě',
-  },
-  {
-    id: 'completed',
-    title: '5. Předáno & Hotovo',
-    color: 'text-emerald-700 dark:text-emerald-400',
-    bg: 'bg-emerald-50/70 dark:bg-emerald-950/40',
-    border: 'border-emerald-200 dark:border-emerald-800',
-    desc: 'Dílo protokolárně předáno, vyfakturováno',
-  },
-];
+type StageFilter = 'active' | JobStageKey;
+
+const FORWARD_LABEL: Record<JobStageKey, string> = {
+  inquiry: 'Poptávka',
+  quote: 'Nabídka odeslána',
+  contract: 'Smlouva uzavřena',
+  realization: 'Zahájit realizaci',
+  handover: 'Dílo předáno',
+  paid: 'Zaplaceno',
+};
+
+const listBox =
+  'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md divide-y divide-slate-100 dark:divide-slate-800';
+const outlineButton =
+  'min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors';
+const primaryButton =
+  'min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-500 text-slate-900 font-semibold cursor-pointer transition-colors';
+const smallAction =
+  'min-h-11 min-w-11 px-3 inline-flex items-center justify-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-medium hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors';
+const textLink = 'min-h-11 inline-flex items-center font-medium text-blue-600 dark:text-blue-300 underline underline-offset-2 cursor-pointer';
+const fieldLabel = 'block font-semibold text-slate-900 dark:text-slate-100 mb-1.5';
+const fieldInput =
+  'w-full min-h-12 px-3.5 py-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white';
 
 export const LeadsPipelinePage: React.FC<LeadsPipelinePageProps> = ({
   contracts,
-  clients,
   onUpdateContract,
   onOpenContract,
   onNewContract,
   onAddQuickLead,
   onSwitchView,
 }) => {
+  const [filter, setFilter] = useState<StageFilter>('active');
   const [isQuickLeadModalOpen, setIsQuickLeadModalOpen] = useState(false);
 
   // Formulář pro rychlou poptávku
@@ -98,69 +64,48 @@ export const LeadsPipelinePage: React.FC<LeadsPipelinePageProps> = ({
   const [clientPhone, setClientPhone] = useState('');
   const [clientAddress, setClientAddress] = useState('');
   const [workDescription, setWorkDescription] = useState('');
-  const [estimatedPrice, setEstimatedPrice] = useState<number>(35000);
-  const [inspectionDate, setInspectionDate] = useState<string>('');
+  const [estimatedPrice, setEstimatedPrice] = useState('');
+  const [inspectionDate, setInspectionDate] = useState('');
 
-  // Rozřazení zakázek do fází pipeline
-  const contractsByStage = useMemo(() => {
-    const map: Record<LeadStage, Contract[]> = {
-      inquiry: [],
-      quote: [],
-      contract: [],
-      realization: [],
-      completed: [],
+  useEffect(() => {
+    if (!isQuickLeadModalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsQuickLeadModalOpen(false);
     };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isQuickLeadModalOpen]);
 
-    contracts.forEach((c) => {
-      let stage: LeadStage = 'contract';
-      if (c.leadStage) {
-        stage = c.leadStage;
-      } else if (c.docKind === 'quote') {
-        stage = 'quote';
-      } else if (c.status === 'in_progress') {
-        stage = 'realization';
-      } else if (c.status === 'paid' || c.status === 'handover_done') {
-        stage = 'completed';
-      }
+  // Zakázky s fází, nejdál pokročilé nahoře
+  const jobs = useMemo(
+    () =>
+      contracts
+        .map((contract) => ({ contract, stage: getJobStage(contract) }))
+        .sort(
+          (a, b) =>
+            b.stage.percent - a.stage.percent ||
+            (a.contract.deliveryDate || '').localeCompare(b.contract.deliveryDate || ''),
+        ),
+    [contracts],
+  );
 
-      if (map[stage]) {
-        map[stage].push(c);
-      } else {
-        map.contract.push(c);
-      }
+  const counts = useMemo(() => {
+    const map = { active: 0 } as Record<StageFilter, number>;
+    JOB_STAGE_LABELS.forEach((s) => (map[s.key] = 0));
+    jobs.forEach(({ stage }) => {
+      map[stage.key] += 1;
+      if (stage.key !== 'paid') map.active += 1;
     });
-
     return map;
-  }, [contracts]);
+  }, [jobs]);
 
-  const handleMoveStage = (contract: Contract, direction: 'forward' | 'backward') => {
-    const stageOrder: LeadStage[] = ['inquiry', 'quote', 'contract', 'realization', 'completed'];
-    const currentStage = contract.leadStage || (contract.docKind === 'quote' ? 'quote' : contract.status === 'in_progress' ? 'realization' : contract.status === 'paid' ? 'completed' : 'contract');
-    const currentIndex = stageOrder.indexOf(currentStage);
+  const shown = jobs.filter(({ stage }) => (filter === 'active' ? stage.key !== 'paid' : stage.key === filter));
+  const shownSum = shown.reduce((sum, { contract }) => sum + getContractTotal(contract), 0);
 
-    let nextIndex = currentIndex;
-    if (direction === 'forward' && currentIndex < stageOrder.length - 1) {
-      nextIndex = currentIndex + 1;
-    } else if (direction === 'backward' && currentIndex > 0) {
-      nextIndex = currentIndex - 1;
-    }
+  const filters: { key: StageFilter; label: string }[] = [{ key: 'active', label: 'Rozpracované' }, ...JOB_STAGE_LABELS];
 
-    if (nextIndex !== currentIndex) {
-      const nextStage = stageOrder[nextIndex];
-      const updated: Contract = {
-        ...contract,
-        leadStage: nextStage,
-        status:
-          nextStage === 'realization'
-            ? 'in_progress'
-            : nextStage === 'completed'
-            ? 'paid'
-            : nextStage === 'contract'
-            ? 'signed'
-            : 'draft',
-      };
-      onUpdateContract(updated);
-    }
+  const handleMove = (contract: Contract, target: JobStageKey) => {
+    onUpdateContract(moveJobStage(contract, target, todayIso()));
   };
 
   const handleCreateLeadSubmit = (e: React.FormEvent) => {
@@ -180,324 +125,299 @@ export const LeadsPipelinePage: React.FC<LeadsPipelinePageProps> = ({
     setClientPhone('');
     setClientAddress('');
     setWorkDescription('');
+    setEstimatedPrice('');
     setInspectionDate('');
     setIsQuickLeadModalOpen(false);
   };
 
-  const totalPipelineValue = useMemo(() => {
-    return contracts
-      .filter((c) => (c.leadStage || '') !== 'completed')
-      .reduce((sum, c) => sum + (c.price || 0), 0);
-  }, [contracts]);
+  const countWord = (n: number) => (n === 1 ? 'zakázka' : n >= 2 && n <= 4 ? 'zakázky' : 'zakázek');
 
   return (
-    <div className="max-w-[1400px] mx-auto pb-16 space-y-6">
+    <div className="max-w-[1180px] mx-auto pb-16 space-y-7 text-[15px] leading-snug">
       {/* Hlavička */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="flex flex-wrap items-center gap-2.5 mb-1.5">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-lg bg-slate-900 text-amber-400 flex items-center justify-center font-bold">
-                <Kanban className="w-5 h-5" />
-              </div>
-              <span>Zakázky & Fáze staveb</span>
-            </h1>
-            {onSwitchView && (
-              <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
-                <button
-                  type="button"
-                  className="px-2.5 py-1 rounded-md font-bold bg-slate-900 text-white dark:bg-blue-600 shadow-xs flex items-center gap-1.5"
-                >
-                  <Kanban className="w-3.5 h-3.5" />
-                  <span>Nástěnka fází</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={onSwitchView}
-                  className="px-2.5 py-1 rounded-md font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
-                  title="Přepnout na tabulkový seznam všech smluv"
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  <span>Seznam smluv</span>
-                </button>
-              </div>
-            )}
-          </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Přehled zakázek řemeslníka: od prvotní poptávky a obhlídky přes rozpočet a smlouvu až po předání díla.
-          </p>
+          <h1 className="text-4xl sm:text-[44px] font-bold leading-[1.05] text-slate-900 dark:text-white">Zakázky</h1>
+          <div className="mt-1 text-slate-600 dark:text-slate-400">Od poptávky po zaplacení. Fázi posunete tlačítkem u zakázky.</div>
         </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsQuickLeadModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs sm:text-sm shadow-xs transition-all cursor-pointer active:scale-95"
-          >
-            <Plus className="w-4 h-4" />
-            <span>+ Nová poptávka</span>
+        <div className="w-full sm:w-auto flex flex-wrap gap-2.5">
+          <button type="button" onClick={() => setIsQuickLeadModalOpen(true)} className={`${primaryButton} flex-1 sm:flex-none`}>
+            <Plus className="w-[18px] h-[18px]" />
+            <span>Nová poptávka</span>
           </button>
-          <button
-            onClick={onNewContract}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer"
-          >
-            <FilePlus className="w-4 h-4" />
-            <span>Vytvořit smlouvu</span>
+          <button type="button" onClick={onNewContract} className={`${outlineButton} flex-1 sm:flex-none`}>
+            Nová smlouva
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Finanční lišta pipeline */}
-      <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">
-            Objem rozpracovaných zakázek v terénu:
-          </span>
-          <span className="text-xl font-black font-mono tabular-nums text-slate-900 dark:text-white">
-            {formatCurrency(totalPipelineValue)}
-          </span>
-          <span className="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
-            {contracts.filter((c) => (c.leadStage || '') !== 'completed').length} aktivních zakázek
-          </span>
-        </div>
-
-        <span className="text-xs text-slate-400 hidden md:inline">
-          Posun zakázky do další fáze provedete šipkou na kartě.
-        </span>
-      </div>
-
-      {/* Kanban sloupce (5 fází) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3.5 items-start overflow-x-auto pb-4">
-        {STAGES.map((stage, sIdx) => {
-          const stageContracts = contractsByStage[stage.id] || [];
-          const stageSum = stageContracts.reduce((s, c) => s + (c.price || 0), 0);
-
-          return (
-            <div
-              key={stage.id}
-              className="bg-slate-50/80 dark:bg-slate-900/60 rounded-xl p-3 border border-slate-200 dark:border-slate-800 min-w-[240px] space-y-3"
-            >
-              {/* Hlavička sloupce */}
-              <div className="p-1 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className={`text-xs font-black uppercase tracking-wider ${stage.color}`}>
-                    {stage.title}
-                  </span>
-                  <span className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                    {stageContracts.length}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-900 dark:text-white tabular-nums pt-0.5">
-                  <span>{formatCurrency(stageSum)}</span>
-                </div>
-              </div>
-
-              {/* Seznam karet v dané fázi */}
-              <div className="space-y-2.5">
-                {stageContracts.length === 0 ? (
-                  <div className="p-4 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 text-center text-slate-400 text-xs py-7">
-                    Žádná zakázka v této fázi
-                  </div>
-                ) : (
-                  stageContracts.map((contract) => {
-                    const whatsappUrl = getWhatsAppShareUrl(contract, 'smlouva');
-                    return (
-                      <div
-                        key={contract.id}
-                        className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs hover:border-slate-400 dark:hover:border-slate-500 transition-all space-y-2.5"
-                      >
-                        <div className="flex items-start justify-between gap-1">
-                          <h4
-                            onClick={() => onOpenContract(contract)}
-                            className="font-bold text-sm text-slate-900 dark:text-white hover:text-amber-600 dark:hover:text-amber-400 cursor-pointer truncate max-w-[170px]"
-                            title={contract.client.name}
-                          >
-                            {contract.client.name}
-                          </h4>
-                          <span className="text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 shrink-0">
-                            #{contract.contractNumber.slice(-4)}
-                          </span>
-                        </div>
-
-                        <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
-                          {contract.workDescription}
-                        </p>
-
-                        <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-white pt-1.5 border-t border-slate-100 dark:border-slate-700">
-                          <span className="font-mono tabular-nums text-sm font-black">{formatCurrency(contract.price)}</span>
-                          {contract.deliveryDate && (
-                            <span className="text-[11px] font-mono text-slate-500">
-                              {formatDateCs(contract.deliveryDate)}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Rychlý kontakt a akce */}
-                        <div className="flex items-center justify-between pt-1 text-slate-500">
-                          <div className="flex items-center gap-1.5">
-                            {contract.client.phone && (
-                              <a
-                                href={`tel:${contract.client.phone}`}
-                                className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
-                                title={`Zavolat: ${contract.client.phone}`}
-                              >
-                                <Phone className="w-3.5 h-3.5" />
-                              </a>
-                            )}
-                            <a
-                              href={whatsappUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-1.5 rounded-md hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-600 transition-colors"
-                              title="Odeslat zprávu na WhatsApp"
-                            >
-                              <MessageSquare className="w-3.5 h-3.5" />
-                            </a>
-                          </div>
-
-                          {/* Šipky pro posun v pipeline */}
-                          <div className="flex items-center gap-1">
-                            {sIdx > 0 && (
-                              <button
-                                type="button"
-                                onClick={() => handleMoveStage(contract, 'backward')}
-                                className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
-                                title="Posunout do předchozí fáze"
-                              >
-                                <ArrowLeft className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                            {sIdx < STAGES.length - 1 && (
-                              <button
-                                type="button"
-                                onClick={() => handleMoveStage(contract, 'forward')}
-                                className="p-1.5 rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-amber-500 hover:text-slate-950 text-slate-700 dark:text-slate-200 font-bold transition-colors cursor-pointer"
-                                title="Posunout do další fáze"
-                              >
-                                <ArrowRight className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Modal pro rychlý lead */}
-      {isQuickLeadModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95">
-            <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900 text-white">
-              <h3 className="font-extrabold text-sm flex items-center gap-2">
-                <Kanban className="w-4 h-4 text-amber-400" />
-                <span>Nová poptávka / Zaměření</span>
-              </h3>
+      {/* Výběr fáze */}
+      <div className="border-b border-slate-900 dark:border-slate-500 overflow-x-auto">
+        <div role="tablist" aria-label="Fáze zakázek" className="flex gap-1 min-w-max">
+          {filters.map((f) => {
+            const active = filter === f.key;
+            return (
               <button
-                onClick={() => setIsQuickLeadModalOpen(false)}
-                className="w-7 h-7 rounded-lg hover:bg-slate-800 flex items-center justify-center transition-colors cursor-pointer text-slate-400 hover:text-white"
+                key={f.key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setFilter(f.key)}
+                className={`min-h-11 px-3.5 inline-flex items-center gap-2 font-semibold cursor-pointer border-b-[3px] -mb-px transition-colors ${
+                  active
+                    ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                    : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
               >
-                <X className="w-4 h-4" />
+                <span>{f.label}</span>
+                <span className="font-display tabular-nums text-[17px]">{counts[f.key]}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <section aria-label="Seznam zakázek" className="space-y-2.5">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <div className="text-slate-600 dark:text-slate-400">
+            <span className="font-display font-semibold tabular-nums text-2xl text-slate-900 dark:text-white">
+              {formatCurrency(shownSum)}
+            </span>{' '}
+            v {shown.length} {shown.length === 1 ? 'zakázce' : 'zakázkách'}
+          </div>
+          {onSwitchView && (
+            <button type="button" onClick={onSwitchView} className={textLink}>
+              Archiv všech dokumentů
+            </button>
+          )}
+        </div>
+
+        <div className={listBox}>
+          {shown.length === 0 && (
+            <div className="px-5 py-5 flex flex-wrap items-center justify-between gap-3">
+              <span className="text-slate-600 dark:text-slate-300">
+                {filter === 'active' ? 'Zatím tu není žádná rozpracovaná zakázka.' : 'V této fázi není žádná zakázka.'}
+              </span>
+              <button type="button" onClick={() => setIsQuickLeadModalOpen(true)} className={smallAction}>
+                <Plus className="w-4 h-4" />
+                <span>Nová poptávka</span>
+              </button>
+            </div>
+          )}
+          {shown.map(({ contract, stage }) => {
+            const total = getContractTotal(contract);
+            const moves = getStageMoves(contract);
+            const phone = contract.client?.phone?.replace(/\s+/g, '');
+            const backLabel = moves.back ? JOB_STAGE_LABELS.find((s) => s.key === moves.back)!.label : '';
+            const term =
+              stage.key === 'quote' && contract.quoteValidUntil
+                ? `nabídka platí do ${formatDateCs(contract.quoteValidUntil)}`
+                : stage.key === 'inquiry'
+                  ? contract.nextStepDate
+                    ? `obhlídka ${formatDateCs(contract.nextStepDate)}`
+                    : ''
+                  : contract.deliveryDate
+                  ? `předání ${formatDateCs(contract.deliveryDate)}`
+                  : '';
+            return (
+              <div key={contract.id} className="px-5 py-[18px] space-y-3">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                  <div className="min-w-0 flex-1 basis-56">
+                    <button
+                      type="button"
+                      onClick={() => onOpenContract(contract)}
+                      className="text-left text-[17px] font-semibold text-slate-900 dark:text-white hover:underline underline-offset-2 cursor-pointer"
+                    >
+                      {contract.workDescription || 'Zakázka bez popisu'}
+                    </button>
+                    <div className="text-slate-600 dark:text-slate-400">
+                      {[contract.client?.name, contract.client?.address, `č. ${contract.contractNumber}`].filter(Boolean).join(', ')}
+                    </div>
+                  </div>
+                  <div className="w-full sm:w-auto flex sm:block items-baseline justify-between gap-3 sm:text-right">
+                    <div className="text-[22px] text-slate-900 dark:text-white font-display font-semibold tabular-nums">
+                      {total > 0 ? formatCurrency(total) : 'bez ceny'}
+                    </div>
+                    {term && <div className="text-slate-600 dark:text-slate-400">{term}</div>}
+                  </div>
+                </div>
+
+                <Metr percent={stage.percent} label={`Fáze zakázky: ${stage.label}`} />
+
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5">
+                  <div className="font-medium text-slate-900 dark:text-slate-100">
+                    <span className="font-semibold">{stage.label}</span>
+                    {stage.next && stage.next !== stage.label ? `: ${stage.next}` : ''}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {phone && (
+                      <a href={`tel:${phone}`} className={smallAction} aria-label={`Zavolat: ${contract.client.name}`}>
+                        <Phone className="w-4 h-4" />
+                        <span className="hidden sm:inline">Zavolat</span>
+                      </a>
+                    )}
+                    <a
+                      href={getWhatsAppShareUrl(contract, 'smlouva')}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={smallAction}
+                      aria-label={`Napsat zprávu: ${contract.client.name}`}
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      <span className="hidden sm:inline">Zpráva</span>
+                    </a>
+                    {moves.back && (
+                      <button
+                        type="button"
+                        onClick={() => handleMove(contract, moves.back!)}
+                        className={`${smallAction} !px-0 w-11`}
+                        aria-label={`Vrátit do fáze ${backLabel}`}
+                        title={`Vrátit do fáze ${backLabel}`}
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                      </button>
+                    )}
+                    {moves.forward && (
+                      <button
+                        type="button"
+                        onClick={() => handleMove(contract, moves.forward!)}
+                        className={`${smallAction} !border-slate-900 dark:!border-slate-400 font-semibold`}
+                      >
+                        <span>{FORWARD_LABEL[moves.forward]}</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {shown.length > 0 && (
+          <p className="text-[13px] text-slate-600 dark:text-slate-400">
+            Celkem {jobs.length} {countWord(jobs.length)}, z toho {counts.paid} zaplacených.
+          </p>
+        )}
+      </section>
+
+      {/* Okno nové poptávky */}
+      {isQuickLeadModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 flex items-end sm:items-center justify-center sm:p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="nova-poptavka-nadpis"
+            className="bg-white dark:bg-slate-900 border border-slate-900 dark:border-slate-600 rounded-t-md sm:rounded-md w-full max-w-md max-h-[92vh] overflow-y-auto shadow-2xl"
+          >
+            <div className="px-5 pt-5 flex items-start justify-between gap-3">
+              <h2 id="nova-poptavka-nadpis" className="text-[28px] font-bold leading-tight text-slate-900 dark:text-white">
+                Nová poptávka
+              </h2>
+              <button
+                type="button"
+                onClick={() => setIsQuickLeadModalOpen(false)}
+                aria-label="Zavřít"
+                className="w-11 h-11 -mr-2 -mt-1.5 inline-flex items-center justify-center rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-slate-900 dark:text-slate-100"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleCreateLeadSubmit} className="p-5 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">
-                  Jméno zákazníka *
+                <label htmlFor="lead-jmeno" className={fieldLabel}>
+                  Jméno zákazníka
                 </label>
                 <input
+                  id="lead-jmeno"
                   type="text"
                   required
+                  autoFocus
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
                   placeholder="např. Jan Novák"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">
-                    Telefon
-                  </label>
-                  <input
-                    type="tel"
-                    value={clientPhone}
-                    onChange={(e) => setClientPhone(e.target.value)}
-                    placeholder="+420 777 123 456"
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">
-                    Odhadovaná cena (Kč)
-                  </label>
-                  <input
-                    type="number"
-                    value={estimatedPrice}
-                    onChange={(e) => setEstimatedPrice(Number(e.target.value))}
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">
-                  Adresa stavby / realizace
-                </label>
-                <input
-                  type="text"
-                  value={clientAddress}
-                  onChange={(e) => setClientAddress(e.target.value)}
-                  placeholder="např. Květinová 14, Brno"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
+                  className={fieldInput}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">
-                  Předmět prací a popis *
+                <label htmlFor="lead-popis" className={fieldLabel}>
+                  Co chce udělat
                 </label>
                 <textarea
+                  id="lead-popis"
                   rows={2}
                   required
                   value={workDescription}
                   onChange={(e) => setWorkDescription(e.target.value)}
-                  placeholder="např. Rekonstrukce koupelny 6m², obklady a dlažba"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
+                  placeholder="např. Rekonstrukce koupelny 6 m², obklady a dlažba"
+                  className={fieldInput}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="lead-telefon" className={fieldLabel}>
+                    Telefon <span className="font-normal text-slate-600 dark:text-slate-400">(nepovinné)</span>
+                  </label>
+                  <input
+                    id="lead-telefon"
+                    type="tel"
+                    value={clientPhone}
+                    onChange={(e) => setClientPhone(e.target.value)}
+                    placeholder="+420 777 123 456"
+                    className={fieldInput}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="lead-cena" className={fieldLabel}>
+                    Odhad v Kč <span className="font-normal text-slate-600 dark:text-slate-400">(nepovinné)</span>
+                  </label>
+                  <input
+                    id="lead-cena"
+                    type="number"
+                    min="0"
+                    inputMode="numeric"
+                    value={estimatedPrice}
+                    onChange={(e) => setEstimatedPrice(e.target.value)}
+                    className={fieldInput}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="lead-adresa" className={fieldLabel}>
+                  Adresa stavby <span className="font-normal text-slate-600 dark:text-slate-400">(nepovinné)</span>
+                </label>
+                <input
+                  id="lead-adresa"
+                  type="text"
+                  value={clientAddress}
+                  onChange={(e) => setClientAddress(e.target.value)}
+                  placeholder="např. Květinová 14, Brno"
+                  className={fieldInput}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">
-                  Termín obhlídky / zaměření
+                <label htmlFor="lead-obhlidka" className={fieldLabel}>
+                  Termín obhlídky <span className="font-normal text-slate-600 dark:text-slate-400">(nepovinné)</span>
                 </label>
                 <input
+                  id="lead-obhlidka"
                   type="date"
                   value={inspectionDate}
                   onChange={(e) => setInspectionDate(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
+                  className={fieldInput}
                 />
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsQuickLeadModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                >
+              <div className="pt-1 flex flex-wrap justify-end gap-2.5">
+                <button type="button" onClick={() => setIsQuickLeadModalOpen(false)} className={outlineButton}>
                   Zrušit
                 </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm shadow-xs transition-colors cursor-pointer"
-                >
-                  Uložit do poptávek
+                <button type="submit" className={primaryButton}>
+                  Uložit poptávku
                 </button>
               </div>
             </form>

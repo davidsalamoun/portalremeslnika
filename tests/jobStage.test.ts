@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getJobStage, isActiveJob } from '../src/utils/jobStage.ts';
+import { getJobStage, isActiveJob, getStageMoves, moveJobStage } from '../src/utils/jobStage.ts';
 
 const c = (over: Record<string, unknown> = {}): any => ({ id: 'c1', docKind: 'contract', price: 10000, status: 'draft', ...over });
 
@@ -41,5 +41,34 @@ test('další krok říká, co udělat', () => {
 test('rozpracovaná je každá zakázka, která není zaplacená', () => {
   assert.equal(isActiveJob(c({ status: 'handover_done' })), true);
   assert.equal(isActiveJob(c({ status: 'paid' })), false);
-  assert.equal(isActiveJob(c({ leadStage: 'completed' })), false);
+  assert.equal(isActiveJob(c({ leadStage: 'completed' })), true);
+  assert.equal(getJobStage(c({ leadStage: 'completed', status: 'handover_done' })).key, 'handover');
+});
+
+test('posun zakázky mezi fázemi tam i zpět', () => {
+  const today = '2026-11-15';
+  let job = c({ leadStage: 'inquiry', price: 0 });
+  const seen: string[] = [];
+  for (let i = 0; i < 5; i++) {
+    const { forward } = getStageMoves(job);
+    job = moveJobStage(job, forward!, today);
+    seen.push(getJobStage(job).key);
+  }
+  assert.deepEqual(seen, ['quote', 'contract', 'realization', 'handover', 'paid']);
+  assert.equal(job.paidDate, today);
+  assert.equal(getStageMoves(job).forward, undefined);
+  job = moveJobStage(job, getStageMoves(job).back!, today);
+  assert.equal(getJobStage(job).key, 'handover');
+  assert.equal('paidDate' in job, false);
+  assert.equal(job.status, 'handover_done');
+});
+
+test('nabídku lze posunout do smlouvy a podepsaný protokol brání návratu před předání', () => {
+  const quote = moveJobStage(c({ docKind: 'quote' }), 'contract', '2026-11-15');
+  assert.equal(getJobStage(quote).key, 'contract');
+  assert.equal(moveJobStage(c({ clientSignature: 'x' }), 'contract', '2026-11-15').status, 'signed');
+  const handed = c({ status: 'handover_done', handoverData: { handoverDate: '2026-11-13', status: 'bez_vad' } });
+  assert.equal(getStageMoves(handed).back, undefined);
+  assert.equal(getStageMoves(handed).forward, 'paid');
+  assert.equal(getStageMoves(c({ status: 'handover_done' })).back, 'realization');
 });

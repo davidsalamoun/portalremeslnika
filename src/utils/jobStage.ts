@@ -38,12 +38,14 @@ const STAGE_PERCENT: Record<JobStageKey, number> = {
 };
 
 function resolveKey(contract: Contract): JobStageKey {
-  if (isContractPaid(contract) || contract.leadStage === 'completed') return 'paid';
-  if (contract.status === 'handover_done' || contract.handoverData) return 'handover';
+  if (isContractPaid(contract)) return 'paid';
+  // Fáze „completed“ ze starší nástěnky znamená předáno; zaplaceno je až podle stavu nebo data úhrady
+  if (contract.status === 'handover_done' || contract.handoverData || contract.leadStage === 'completed') return 'handover';
   if (contract.status === 'in_progress' || contract.leadStage === 'realization') return 'realization';
   if (contract.leadStage === 'inquiry') return 'inquiry';
-  if (contract.docKind === 'quote' || contract.leadStage === 'quote') return 'quote';
-  return 'contract';
+  if (contract.leadStage === 'quote') return 'quote';
+  if (contract.leadStage === 'contract') return 'contract';
+  return contract.docKind === 'quote' ? 'quote' : 'contract';
 }
 
 export function getJobStage(contract: Contract): JobStage {
@@ -68,7 +70,7 @@ export function getJobStage(contract: Contract): JobStage {
       next = 'Po dokončení předat dílo protokolem';
       break;
     case 'handover':
-      next = 'Předáno, čeká na zaplacení';
+      next = 'Čeká na zaplacení';
       break;
     case 'paid':
       next = 'Zaplaceno';
@@ -81,4 +83,36 @@ export function getJobStage(contract: Contract): JobStage {
 /** Rozpracovaná zakázka = cokoli, co ještě není zaplacené. */
 export function isActiveJob(contract: Contract): boolean {
   return getJobStage(contract).key !== 'paid';
+}
+
+const STAGE_ORDER: JobStageKey[] = JOB_STAGE_LABELS.map((s) => s.key);
+
+/** Kam lze zakázku posunout. Zpět před předání nejde, pokud už existuje podepsaný předávací protokol. */
+export function getStageMoves(contract: Contract): { back?: JobStageKey; forward?: JobStageKey } {
+  const index = STAGE_ORDER.indexOf(getJobStage(contract).key);
+  const back = index > 0 && !(STAGE_ORDER[index] === 'handover' && contract.handoverData) ? STAGE_ORDER[index - 1] : undefined;
+  const forward = index < STAGE_ORDER.length - 1 ? STAGE_ORDER[index + 1] : undefined;
+  return { back, forward };
+}
+
+/**
+ * Přesune zakázku do dané fáze. Tvar dat se nemění: nastaví se `leadStage` (pět původních hodnot) a `status`;
+ * zaplacení doplní datum úhrady, návrat ze zaplacených ho odebere.
+ */
+export function moveJobStage(contract: Contract, target: JobStageKey, today: string): Contract {
+  const { paidDate, ...rest } = contract;
+  switch (target) {
+    case 'inquiry':
+      return { ...rest, leadStage: 'inquiry', status: 'draft' };
+    case 'quote':
+      return { ...rest, leadStage: 'quote', status: 'draft' };
+    case 'contract':
+      return { ...rest, leadStage: 'contract', status: contract.clientSignature ? 'signed' : 'draft' };
+    case 'realization':
+      return { ...rest, leadStage: 'realization', status: 'in_progress' };
+    case 'handover':
+      return { ...rest, leadStage: 'completed', status: 'handover_done' };
+    case 'paid':
+      return { ...rest, leadStage: 'completed', status: 'paid', paidDate: paidDate || today };
+  }
 }
