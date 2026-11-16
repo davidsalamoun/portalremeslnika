@@ -52,7 +52,7 @@ Proměnné (případně `STRIPE_SECRET_KEY`) se nastavují v projektu na Vercelu
 ## Vzhled
 
 Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2aA4MkA), zaveden po částech:
-část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; část 2 (hotovo) = přehled, zakázky, faktury, formulář smlouvy s rozpočtem; část 3 = klienti, kalendář, finance, archiv, nastavení a mobilní nabídka „Více“ (hotovo), lišta náhledu dokumentů a lišty jednotlivých dokladů (hotovo); rámy a hlavičky všech oken (hotovo); obsah oken podpis, odeslání, výběr z ceníku, nový dodatek a nový pokladní doklad (hotovo); zbývá obsah oken nástrojů stavby, nákladů, podkladů pro účetní, účtu a kalkulačky a celoobrazovkový podpis zákazníka.
+část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; část 2 (hotovo) = přehled, zakázky, faktury, formulář smlouvy s rozpočtem; část 3 = klienti, kalendář, finance, archiv, nastavení a mobilní nabídka „Více“ (hotovo), lišta náhledu dokumentů a lišty jednotlivých dokladů (hotovo); rámy a hlavičky všech oken (hotovo); obsah oken podpis, odeslání, výběr z ceníku, nový dodatek a nový pokladní doklad (hotovo); u oken nástrojů stavby, nákladů, podkladů pro účetní, účtu a kalkulačky jsou sjednocené písmo, řezy, barvy a výška ovládacích prvků (rozvržení zůstává původní); nepřevedené zůstávají Zkoušky a protokoly, Složka zakázky, fotodokumentace a celoobrazovkový podpis zákazníka.
 
 - **Barvy** jsou v `src/index.css` v bloku `@theme` jako přemapované palety Tailwindu, takže stávající třídy platí dál:
   `slate-*` = grafit a papír (text `slate-900` #1A1D21, pozadí `slate-50` #F4F5F2), `blue-*` = razítková modrá
@@ -90,7 +90,7 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   Tisk a PDF jsou jen v horní liště náhledu, v lištách dokladů se neopakují. Při úpravě lišty se text pod ní nemění –
   ověřit porovnáním části souboru od komentáře papíru dál s původní verzí.
 - **Okna** nad obsahem stavět z `components/Dialog.tsx` (nadpis, křížek, Escape jen pro nejvyšší okno, na mobilu zdola).
-  Malá okna: obsah jako `children` (okraj a posouvání řeší okno). Velká okna: `bare` – obsah si řeší okraje, vlastní
+  Malá okna: obsah jako `children` (okraj a posouvání řeší okno) – obsah pak nemá vlastní okraj. Velká okna: `bare` – jen když má obsah vlastní okraje,
   `flex-1 overflow-y-auto` a patičku; tlačítka do hlavičky přes `actions` (`dialogActionButton`). U oken s rozepsanými
   údaji `closeOnBackdrop={false}`. Nepsat vlastní `fixed inset-0` rám ani tmavou hlavičku; do hlaviček ani patiček
   nepsat odkazy na paragrafy a tvrzení typu „splňuje náležitosti zákona“.

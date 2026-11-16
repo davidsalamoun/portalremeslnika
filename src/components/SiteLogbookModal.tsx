@@ -170,22 +170,22 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
           {/* Summary stats */}
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-lg border border-slate-200 dark:border-slate-800">
-              <div className="text-xl font-black font-mono tabular-nums text-slate-900 dark:text-white">
+              <div className="text-xl font-semibold tabular-nums text-slate-900 dark:text-white">
                 {logs.length}
               </div>
-              <div className="text-[11px] font-mono uppercase text-slate-500 font-bold">Dnů na stavbě</div>
+              <div className="text-[13px] text-slate-500 font-semibold">Dnů na stavbě</div>
             </div>
             <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-lg border border-slate-200 dark:border-slate-800">
-              <div className="text-xl font-black font-mono tabular-nums text-amber-600 dark:text-amber-400">
+              <div className="text-xl font-semibold tabular-nums text-amber-600 dark:text-amber-400">
                 {totalHours} h
               </div>
-              <div className="text-[11px] font-mono uppercase text-slate-500 font-bold">Odpracováno</div>
+              <div className="text-[13px] text-slate-500 font-semibold">Odpracováno</div>
             </div>
             <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-lg border border-slate-200 dark:border-slate-800">
-              <div className="text-xl font-black font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
+              <div className="text-xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
                 {logs.filter((l) => l.photos && l.photos.length > 0).length}
               </div>
-              <div className="text-[11px] font-mono uppercase text-slate-500 font-bold">S fotodokumentací</div>
+              <div className="text-[13px] text-slate-500 font-semibold">S fotodokumentací</div>
             </div>
           </div>
 
@@ -194,9 +194,9 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
             <button
               type="button"
               onClick={() => setIsAdding(true)}
-              className="w-full py-3 px-4 rounded-lg border-2 border-dashed border-amber-500/50 hover:border-amber-500 hover:bg-amber-500/5 text-slate-900 dark:text-amber-400 font-bold text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
+              className="min-h-11 w-full py-3 px-4 rounded-lg border-2 border-dashed border-amber-500/50 hover:border-amber-500 hover:bg-amber-500/5 text-slate-900 dark:text-amber-400 font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
             >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <Plus className="w-4 h-4" />
               <span>+ Zapsat dnešní den na stavbě (počasí, práce, fotky)</span>
             </button>
           )}
@@ -208,14 +208,14 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
               className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-300 dark:border-slate-700 space-y-4 shadow-xs"
             >
               <div className="flex items-center justify-between">
-                <h4 className="font-black text-slate-900 dark:text-white text-sm flex items-center gap-2">
+                <h4 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-amber-500" />
                   Nový denní zápis do stavebního deníku
                 </h4>
                 <button
                   type="button"
                   onClick={() => setIsAdding(false)}
-                  className="text-xs text-slate-500 hover:text-slate-800"
+                  className="min-h-11 min-w-11 inline-flex items-center justify-center text-sm text-slate-500 hover:text-slate-800"
                 >
                   Zrušit
                 </button>
@@ -223,26 +223,26 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     Datum:
                   </label>
                   <input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                    className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
                   />
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                       Počasí:
                     </label>
                     <button
                       type="button"
                       onClick={handleAutoWeather}
-                      className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer inline-flex items-center gap-1"
+                      className="min-h-11 min-w-11 text-[13px] text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer inline-flex items-center gap-1"
                     >
                       <CloudSun className="w-3.5 h-3.5" />
                       <span>Zjistit aktuální</span>
@@ -253,13 +253,13 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
                     value={weather}
                     onChange={(e) => setWeather(e.target.value)}
                     placeholder="Slunečno, 20 °C"
-                    className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                    className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                       Pracovníků:
                     </label>
                     <input
@@ -267,11 +267,11 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
                       min={1}
                       value={workersCount}
                       onChange={(e) => setWorkersCount(parseInt(e.target.value) || '')}
-                      className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                      className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                       Hodin:
                     </label>
                     <input
@@ -279,7 +279,7 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
                       min={1}
                       value={hoursWorked}
                       onChange={(e) => setHoursWorked(parseFloat(e.target.value) || '')}
-                      className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                      className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
                     />
                   </div>
                 </div>
@@ -287,7 +287,7 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
 
               <div>
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                     Popis provedených prací a technologických postupů: *
                   </label>
                   <VoiceDictationButton
@@ -308,7 +308,7 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     Dodaný materiál / stroje:
                   </label>
                   <input
@@ -316,12 +316,12 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
                     value={materialsDelivered}
                     onChange={(e) => setMaterialsDelivered(e.target.value)}
                     placeholder="např. 25 pytlů lepidla C2TE, lešení"
-                    className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                    className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     Překážky, závady nebo zpoždění:
                   </label>
                   <input
@@ -329,7 +329,7 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
                     value={issues}
                     onChange={(e) => setIssues(e.target.value)}
                     placeholder="např. Nezapojená elektřina ze strany investora"
-                    className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                    className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
@@ -337,14 +337,14 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
               {/* Fotografie */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                     <Camera className="w-3.5 h-3.5 text-blue-600" />
                     Fotodokumentace k dnešnímu dni ({photos.length}):
                   </label>
                   <button
                     type="button"
                     onClick={() => photoInputRef.current?.click()}
-                    className="text-xs text-blue-600 dark:text-blue-400 font-semibold cursor-pointer"
+                    className="min-h-11 min-w-11 inline-flex items-center justify-center text-sm text-blue-600 dark:text-blue-400 font-semibold cursor-pointer"
                   >
                     + Přidat foto ze stavby
                   </button>
@@ -380,13 +380,13 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAdding(false)}
-                  className="px-4 py-2 text-xs rounded-lg font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+                  className="min-h-11 inline-flex items-center justify-center px-4 py-2 text-sm rounded-lg font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   Zrušit
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black cursor-pointer shadow-xs transition-colors font-mono"
+                  className="min-h-11 inline-flex items-center justify-center px-5 py-2 text-sm rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold cursor-pointer shadow-xs transition-colors"
                 >
                   Uložit denní záznam
                 </button>
@@ -396,12 +396,12 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
 
           {/* Seznam existujících záznamů stavebního deníku */}
           <div className="space-y-3">
-            <h4 className="font-black text-slate-900 dark:text-white text-sm font-mono uppercase tracking-wide">
+            <h4 className="font-semibold text-slate-900 dark:text-white text-sm">
               Historie zápisů v deníku ({logs.length})
             </h4>
 
             {logs.length === 0 ? (
-              <div className="text-center py-8 text-slate-400 text-xs">
+              <div className="text-center py-8 text-slate-400 text-sm">
                 Zatím nebyl vytvořen žádný denní záznam. Přidejte první zápis tlačítkem výše.
               </div>
             ) : (
@@ -413,16 +413,16 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <span className="font-mono font-bold text-sm text-slate-900 dark:text-white">
+                        <span className=" font-semibold text-sm text-slate-900 dark:text-white">
                           {formatDateCs(log.date)}
                         </span>
                         {log.weather && (
-                          <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono text-slate-700 dark:text-slate-300 flex items-center gap-1 border border-slate-200 dark:border-slate-700">
+                          <span className="text-sm px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-700 dark:text-slate-300 flex items-center gap-1 border border-slate-200 dark:border-slate-700">
                             <CloudSun className="w-3.5 h-3.5 text-amber-500" />
                             {log.weather}
                           </span>
                         )}
-                        <span className="text-xs font-mono text-slate-500 flex items-center gap-1">
+                        <span className="text-sm text-slate-500 flex items-center gap-1">
                           <Users className="w-3.5 h-3.5" />
                           {log.workersCount || 1} prac. · {log.hoursWorked || 8} h
                         </span>
@@ -430,26 +430,26 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
                       <button
                         type="button"
                         onClick={() => handleDeleteLog(log.id)}
-                        className="text-slate-400 hover:text-red-600 p-1 rounded-md"
+                        className="min-h-11 min-w-11 inline-flex items-center justify-center text-slate-400 hover:text-red-600 p-1 rounded-md"
                         title="Smazat záznam"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
 
-                    <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">
+                    <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">
                       {log.workDescription}
                     </p>
 
                     {log.materialsDelivered && (
-                      <div className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                      <div className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
                         <Package className="w-3.5 h-3.5 text-blue-500" />
                         <span>Materiál: {log.materialsDelivered}</span>
                       </div>
                     )}
 
                     {log.issues && (
-                      <div className="text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 p-2 rounded-lg">
+                      <div className="text-sm text-amber-700 dark:text-amber-400 flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 p-2 rounded-lg">
                         <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                         <span>Překážka / záznam: {log.issues}</span>
                       </div>
@@ -476,13 +476,13 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
 
         {/* Footer */}
         <div className="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between">
-          <span className="text-xs text-slate-400">
+          <span className="text-sm text-slate-400">
             Zápisy se ukládají k zakázce.
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="min-h-11 inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             Zavřít
           </button>

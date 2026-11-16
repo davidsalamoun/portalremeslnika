@@ -264,42 +264,42 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div className="p-4 rounded-xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80">
-              <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 block mb-1 uppercase tracking-wider">
+              <span className="text-sm font-semibold text-blue-700 dark:text-blue-300 block mb-1">
                 Ujeto celkem
               </span>
-              <span className="text-2xl font-bold text-blue-950 dark:text-blue-100 block">
+              <span className="text-2xl font-semibold text-blue-950 dark:text-blue-100 block">
                 {totalKm} km
               </span>
-              <span className="text-[11px] text-blue-600/80 dark:text-blue-300/80 mt-0.5 block">
+              <span className="text-[13px] text-blue-600/80 dark:text-blue-300/80 mt-0.5 block">
                 {trips.length} {trips.length === 1 ? 'zaznamenaná jízda' : trips.length < 5 ? 'zaznamenané jízdy' : 'zaznamenaných jízd'}
               </span>
             </div>
 
-            <div className="p-4 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/80">
-              <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 block mb-1 uppercase tracking-wider">
+            <div className="p-4 rounded-xl bg-slate-50/60 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                 Cestovní náhrady / Náklady
               </span>
-              <span className="text-2xl font-bold text-indigo-950 dark:text-indigo-100 block">
+              <span className="text-2xl font-semibold text-slate-950 dark:text-slate-100 block">
                 {formatCurrency(totalCost)}
               </span>
-              <span className="text-[11px] text-indigo-600/80 dark:text-indigo-300/80 mt-0.5 block">
+              <span className="text-[13px] text-slate-600/80 dark:text-slate-300/80 mt-0.5 block">
                 Kalkulováno dle sjednané sazby za km
               </span>
             </div>
 
             <div className="p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 flex flex-col justify-between">
               <div>
-                <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 block mb-1 uppercase tracking-wider">
+                <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 block mb-1">
                   Započíst do výdajů
                 </span>
-                <span className="text-xs text-emerald-800/80 dark:text-emerald-300/80 block">
+                <span className="text-sm text-emerald-800/80 dark:text-emerald-300/80 block">
                   Přenést částku {formatCurrency(totalCost)} přímo do nákladů této zakázky.
                 </span>
               </div>
               <button
                 type="button"
                 onClick={handleSyncToExpenses}
-                className="mt-2.5 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                className="min-h-11 mt-2.5 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-2xs transition-colors cursor-pointer"
               >
                 <TrendingUp className="w-3.5 h-3.5" />
                 <span>Zaúčtovat do ziskovosti</span>
@@ -312,7 +312,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('batch')}
-              className={`pb-2.5 px-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
+              className={`min-h-11 pb-2.5 px-3 text-sm sm:text-sm font-semibold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
                 activeTab === 'batch'
                   ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -325,7 +325,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('single')}
-              className={`pb-2.5 px-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
+              className={`min-h-11 pb-2.5 px-3 text-sm sm:text-sm font-semibold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
                 activeTab === 'single'
                   ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -338,7 +338,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('list')}
-              className={`pb-2.5 px-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
+              className={`min-h-11 pb-2.5 px-3 text-sm sm:text-sm font-semibold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
                 activeTab === 'list'
                   ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -354,11 +354,11 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
             <div className="p-4 sm:p-5 rounded-xl border-2 border-blue-200 dark:border-blue-900/60 bg-blue-50/30 dark:bg-blue-950/20 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                     <Zap className="w-5 h-5 text-amber-500" />
                     <span>Automatické vygenerování jízd pro celou dobu realizace</span>
                   </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
                     Ušetří ruční vypisování desítek jízd – vytvoří cestovní příkazy za každý den stavby.
                   </p>
                 </div>
@@ -366,31 +366,31 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Od data (zahájení)
                   </label>
                   <input
                     type="date"
                     value={batchStartDate}
                     onChange={(e) => setBatchStartDate(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Do data (dokončení)
                   </label>
                   <input
                     type="date"
                     value={batchEndDate}
                     onChange={(e) => setBatchEndDate(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Vzdálenost 1 cesta (km)
                   </label>
                   <input
@@ -400,15 +400,15 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                     value={batchOneWayKm}
                     onChange={(e) => setBatchOneWayKm(e.target.value ? parseFloat(e.target.value) : '')}
                     placeholder="km"
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
                   />
-                  <span className="text-3xs text-slate-400 mt-0.5 block">
+                  <span className="text-[13px] text-slate-400 mt-0.5 block">
                     Tam i zpět denně: {calculatedBatchKm} km
                   </span>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Sazba (Kč/km)
                   </label>
                   <input
@@ -418,7 +418,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                     value={batchRatePerKm}
                     onChange={(e) => setBatchRatePerKm(e.target.value ? parseFloat(e.target.value) : '')}
                     placeholder="Kč/km"
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
                   />
                 </div>
               </div>
@@ -426,16 +426,16 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
               {/* Addresses & Vehicles */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Místo výjezdu ➔ Cíl
                   </label>
-                  <div className="text-xs font-medium text-slate-700 dark:text-slate-300 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <div className="text-sm font-medium text-slate-700 dark:text-slate-300 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                     {contractorAddress} ➔ <strong>{clientAddress}</strong>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Vozidlo & Účel
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -444,14 +444,14 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                       value={batchVehicle}
                       onChange={(e) => setBatchVehicle(e.target.value)}
                       placeholder="Vozidlo"
-                      className="px-2.5 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
+                      className="min-h-11 px-2.5 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
                     />
                     <input
                       type="text"
                       value={batchPurpose}
                       onChange={(e) => setBatchPurpose(e.target.value)}
                       placeholder="Účel"
-                      className="px-2.5 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
+                      className="min-h-11 px-2.5 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
                     />
                   </div>
                 </div>
@@ -459,7 +459,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
 
               {/* Options */}
               <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                <label className="flex items-center gap-2 cursor-pointer font-bold text-xs text-slate-700 dark:text-slate-300 select-none">
+                <label className="flex items-center gap-2 cursor-pointer font-semibold text-sm text-slate-700 dark:text-slate-300 select-none">
                   <input
                     type="checkbox"
                     checked={batchWorkdaysOnly}
@@ -469,9 +469,9 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                   <span>Pouze pracovní dny (vynechat soboty a neděle)</span>
                 </label>
 
-                <div className="text-xs font-black text-blue-700 dark:text-blue-300">
+                <div className="text-sm font-semibold text-blue-700 dark:text-blue-300">
                   {batchDays.length} dnů · celkem {calculatedBatchTotalKm} km ·{' '}
-                  <span className="text-emerald-600 dark:text-emerald-400 font-black">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
                     {formatCurrency(calculatedBatchTotalCost)}
                   </span>
                 </div>
@@ -482,7 +482,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                 type="button"
                 onClick={handleGenerateBatchTrips}
                 disabled={batchDays.length === 0}
-                className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-black text-sm flex items-center justify-center gap-2 shadow-md cursor-pointer active:scale-98 transition-all"
+                className="min-h-11 w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-md cursor-pointer active:scale-98 transition-all"
               >
                 <Zap className="w-5 h-5 text-amber-300" />
                 <span>
@@ -495,7 +495,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
           {/* TAB 2: SINGLE TRIP FORM */}
           {activeTab === 'single' && (
             <div className="p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                 <Plus className="w-4 h-4 text-blue-600" />
                 <span>Zapsat novou jízdu na stavbu</span>
               </h3>
@@ -504,27 +504,27 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                 {/* Datum */}
                 <div className="sm:col-span-3">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Datum jízdy
                   </label>
                   <input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-2.5 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                    className="min-h-11 w-full px-2.5 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                     required
                   />
                 </div>
 
                 {/* Účel */}
                 <div className="sm:col-span-5">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Účel cesty
                   </label>
                   <select
                     value={purpose}
                     onChange={(e) => setPurpose(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                   >
                     {COMMON_PURPOSES.map((p) => (
                       <option key={p} value={p}>
@@ -536,7 +536,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
 
                 {/* Vozidlo */}
                 <div className="sm:col-span-4">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Vozidlo / SPZ
                   </label>
                   <input
@@ -544,7 +544,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                     value={vehicle}
                     onChange={(e) => setVehicle(e.target.value)}
                     placeholder="např. Ford Transit / 1AB 1234"
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                   />
                 </div>
               </div>
@@ -552,7 +552,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
               {/* Trasa Odkud - Kam */}
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                 <div className="sm:col-span-6">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5 text-slate-400" />
                     <span>Místo výjezdu (odkud)</span>
                   </label>
@@ -560,13 +560,13 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                     type="text"
                     value={origin}
                     onChange={(e) => setOrigin(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                     required
                   />
                 </div>
 
                 <div className="sm:col-span-6">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5 text-blue-600" />
                     <span>Cíl cesty (kam / stavba)</span>
                   </label>
@@ -574,7 +574,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                     type="text"
                     value={destination}
                     onChange={(e) => setDestination(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                     required
                   />
                 </div>
@@ -583,7 +583,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
               {/* Km + Sazba + Tlačítko */}
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
                 <div className="sm:col-span-3">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Ujeto km (tam i zpět) *
                   </label>
                   <input
@@ -592,13 +592,13 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                     step="0.5"
                     value={distanceKm}
                     onChange={(e) => setDistanceKm(e.target.value ? parseFloat(e.target.value) : '')}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                     required
                   />
                 </div>
 
                 <div className="sm:col-span-3">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Sazba (Kč/km) *
                   </label>
                   <input
@@ -607,14 +607,14 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                     step="0.5"
                     value={ratePerKm}
                     onChange={(e) => setRatePerKm(e.target.value ? parseFloat(e.target.value) : '')}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                     required
                   />
                 </div>
 
                 <div className="sm:col-span-3">
-                  <div className="text-xs font-semibold text-slate-500 mb-1">Náhrada za jízdu:</div>
-                  <div className="py-2 text-base font-bold text-blue-700 dark:text-blue-300">
+                  <div className="text-sm font-semibold text-slate-500 mb-1">Náhrada za jízdu:</div>
+                  <div className="py-2 text-base font-semibold text-blue-700 dark:text-blue-300">
                     {formatCurrency(
                       Math.round(
                         (typeof distanceKm === 'number' ? distanceKm : 0) *
@@ -627,7 +627,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                 <div className="sm:col-span-3">
                   <button
                     type="submit"
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors shadow-xs cursor-pointer"
+                    className="min-h-11 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors shadow-xs cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Zapsat jízdu</span>
@@ -641,14 +641,14 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
           {/* Tabulka jízd */}
           <div>
             <div className="flex items-center justify-between mb-2.5">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
                 Přehled uskutečněných jízd ({trips.length})
               </h3>
               {trips.length > 0 && (
                 <button
                   type="button"
                   onClick={handlePrint}
-                  className="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 hover:text-blue-600 font-medium cursor-pointer"
+                  className="min-h-11 min-w-11 inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300 hover:text-blue-600 font-medium cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>Vytisknout knihu jízd</span>
@@ -662,14 +662,14 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                 <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
                   Zatím jste nezaznamenali žádnou jízdu k této zakázce.
                 </p>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-sm text-slate-400 mt-1">
                   Po každém výjezdu na stavbu stačí zapsat kilometry výše pro evidenci nákladů.
                 </p>
               </div>
             ) : (
               <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                <table className="w-full text-left text-xs sm:text-sm">
-                  <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold uppercase text-[11px] tracking-wider">
+                <table className="w-full text-left text-sm sm:text-sm">
+                  <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[13px]">
                     <tr>
                       <th className="py-2.5 px-3">Datum</th>
                       <th className="py-2.5 px-3">Trasa</th>
@@ -690,28 +690,28 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                           {formatDateCs(tr.date)}
                         </td>
                         <td className="py-2.5 px-3 text-slate-800 dark:text-slate-200">
-                          <div className="font-medium text-xs sm:text-sm">{tr.destination}</div>
-                          <div className="text-[11px] text-slate-400 truncate max-w-xs">
+                          <div className="font-medium text-sm sm:text-sm">{tr.destination}</div>
+                          <div className="text-[13px] text-slate-400 truncate max-w-xs">
                             z: {tr.origin}
                           </div>
                         </td>
-                        <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 hidden sm:table-cell text-xs">
+                        <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 hidden sm:table-cell text-sm">
                           {tr.purpose}
                         </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                        <td className="py-2.5 px-3 text-right font-semibold text-slate-900 dark:text-white whitespace-nowrap">
                           {tr.distanceKm} km
                         </td>
                         <td className="py-2.5 px-3 text-right text-slate-500 hidden sm:table-cell">
                           {tr.ratePerKm} Kč/km
                         </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-blue-700 dark:text-blue-300 whitespace-nowrap">
+                        <td className="py-2.5 px-3 text-right font-semibold text-blue-700 dark:text-blue-300 whitespace-nowrap">
                           {formatCurrency(tr.totalCost)}
                         </td>
                         <td className="py-2.5 px-3 text-right">
                           <button
                             type="button"
                             onClick={() => handleDeleteTrip(tr.id)}
-                            className="p-1 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
+                            className="min-h-11 min-w-11 inline-flex items-center justify-center p-1 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
                             title="Smazat jízdu"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -720,7 +720,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot className="bg-slate-50 dark:bg-slate-800/80 font-bold border-t border-slate-200 dark:border-slate-700">
+                  <tfoot className="bg-slate-50 dark:bg-slate-800/80 font-semibold border-t border-slate-200 dark:border-slate-700">
                     <tr>
                       <td colSpan={2} className="py-2.5 px-3 text-slate-700 dark:text-slate-300">
                         Celkem kniha jízd:
@@ -744,13 +744,13 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 flex items-center justify-between shrink-0">
-          <div className="text-xs text-slate-500 dark:text-slate-400">
+          <div className="text-sm text-slate-500 dark:text-slate-400">
             Jízdy se ukládají k zakázce a jdou do podkladů pro účetní.
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-semibold text-sm transition-colors cursor-pointer shadow-xs"
+            className="min-h-11 inline-flex items-center justify-center px-4 py-2 rounded-lg bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-semibold text-sm transition-colors cursor-pointer shadow-xs"
           >
             Hotovo
           </button>

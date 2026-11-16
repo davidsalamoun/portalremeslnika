@@ -236,29 +236,29 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
           {/* Summary KPI Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60">
-              <span className="text-3xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 block mb-1">
+              <span className="text-[13px] font-semibold text-amber-700 dark:text-amber-400 block mb-1">
                 Odpracováno
               </span>
-              <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-baseline gap-1 font-mono">
+              <div className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white flex items-baseline gap-1">
                 <span>{totalHours}</span>
-                <span className="text-xs font-semibold text-slate-500 font-sans">hod</span>
+                <span className="text-sm font-semibold text-slate-500 font-sans">hod</span>
               </div>
             </div>
 
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-              <span className="text-3xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+              <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
                 Celkem pro partu
               </span>
-              <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono">
+              <div className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">
                 {formatCurrency(totalCost)}
               </div>
             </div>
 
             <div className="p-3.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/60">
-              <span className="text-3xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 block mb-1">
+              <span className="text-[13px] font-semibold text-emerald-700 dark:text-emerald-400 block mb-1">
                 Vyplaceno zálohou
               </span>
-              <div className="text-xl sm:text-2xl font-black text-emerald-700 dark:text-emerald-300 font-mono">
+              <div className="text-xl sm:text-2xl font-semibold text-emerald-700 dark:text-emerald-300">
                 {formatCurrency(totalPaid)}
               </div>
             </div>
@@ -268,12 +268,12 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                 ? 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-300 dark:border-rose-900/60'
                 : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700'
             }`}>
-              <span className={`text-3xs font-black uppercase tracking-wider block mb-1 ${
+              <span className={`text-[13px] font-semibold block mb-1 ${
                 totalRemaining > 0 ? 'text-rose-700 dark:text-rose-400' : 'text-slate-400'
               }`}>
                 Zbývá doplatit
               </span>
-              <div className={`text-xl sm:text-2xl font-black ${
+              <div className={`text-xl sm:text-2xl font-semibold ${
                 totalRemaining > 0 ? 'text-rose-700 dark:text-rose-300' : 'text-slate-900 dark:text-white'
               }`}>
                 {formatCurrency(totalRemaining)}
@@ -285,7 +285,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
           <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1">
             <button
               onClick={() => setIsAdding(!isAdding)}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
+              className="min-h-11 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold shadow-xs active:scale-95 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>{isAdding ? 'Zavřít formulář' : '+ Zapsat směnu / úkol parťáka'}</span>
@@ -294,7 +294,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={handleSyncToExpenses}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
+                className="min-h-11 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
                 title="Zapsat náklady na partu do celkových výdajů stavby"
               >
                 <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
@@ -306,14 +306,14 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
           {/* Formulář pro přidání směny parťáka */}
           {isAdding && (
             <form onSubmit={handleAddWork} className="p-4 sm:p-5 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border-2 border-amber-300 dark:border-amber-800 space-y-4">
-              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+              <h4 className="font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                 <UserCheck className="w-4 h-4 text-amber-600" />
                 <span>Nová směna nebo úkol pro parťáka</span>
               </h4>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     Jméno parťáka / brigádníka: *
                   </label>
                   <input
@@ -322,18 +322,18 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                     value={workerName}
                     onChange={(e) => setWorkerName(e.target.value)}
                     placeholder="Např. Martin Zedník, Pepa pomocník"
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     Role / profese:
                   </label>
                   <select
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
                   >
                     {COMMON_ROLES.map((r) => (
                       <option key={r} value={r}>
@@ -344,14 +344,14 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     Datum:
                   </label>
                   <input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
@@ -359,8 +359,8 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
               {/* Typ odměny: Hodinovka vs Úkol */}
               <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
                 <div className="flex items-center gap-4">
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Způsob odměny:</span>
-                  <label className="inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer">
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Způsob odměny:</span>
+                  <label className="inline-flex items-center gap-1.5 text-sm font-semibold cursor-pointer">
                     <input
                       type="radio"
                       name="calcType"
@@ -369,7 +369,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                     />
                     <span>Hodinová sazba</span>
                   </label>
-                  <label className="inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer">
+                  <label className="inline-flex items-center gap-1.5 text-sm font-semibold cursor-pointer">
                     <input
                       type="radio"
                       name="calcType"
@@ -383,7 +383,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                 {calcType === 'hours' ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
                     <div>
-                      <label className="text-2xs font-semibold text-slate-500 block mb-1">
+                      <label className="text-[13px] font-semibold text-slate-500 block mb-1">
                         Odpracováno hodin:
                       </label>
                       <input
@@ -392,11 +392,11 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                         step="0.5"
                         value={hoursWorked}
                         onChange={(e) => setHoursWorked(parseFloat(e.target.value) || '')}
-                        className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                        className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-semibold"
                       />
                     </div>
                     <div>
-                      <label className="text-2xs font-semibold text-slate-500 block mb-1">
+                      <label className="text-[13px] font-semibold text-slate-500 block mb-1">
                         Hodinová sazba (Kč/h):
                       </label>
                       <input
@@ -404,19 +404,19 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                         step="10"
                         value={hourlyRate}
                         onChange={(e) => setHourlyRate(parseFloat(e.target.value) || '')}
-                        className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                        className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-semibold"
                       />
                     </div>
                     <div className="col-span-2 sm:col-span-1 flex flex-col justify-end">
-                      <span className="text-2xs font-semibold text-slate-500 block mb-1">Celkem:</span>
-                      <div className="px-3 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 text-sm font-black">
+                      <span className="text-[13px] font-semibold text-slate-500 block mb-1">Celkem:</span>
+                      <div className="px-3 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 text-sm font-semibold">
                         {formatCurrency(Number(hoursWorked || 0) * Number(hourlyRate || 0))}
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div>
-                    <label className="text-2xs font-semibold text-slate-500 block mb-1">
+                    <label className="text-[13px] font-semibold text-slate-500 block mb-1">
                       Pevná odměna za provedený úkol (Kč):
                     </label>
                     <input
@@ -424,7 +424,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                       value={fixedPrice}
                       onChange={(e) => setFixedPrice(parseFloat(e.target.value) || '')}
                       placeholder="Např. 3000"
-                      className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold max-w-xs"
+                      className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-semibold max-w-xs"
                     />
                   </div>
                 )}
@@ -433,7 +433,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
               {/* Popis práce & Vyplacená záloha */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     Popis činnosti na stavbě:
                   </label>
                   <input
@@ -441,19 +441,19 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                     value={taskDescription}
                     onChange={(e) => setTaskDescription(e.target.value)}
                     placeholder="Např. Vynášení suti, penetrace podlah, sekání drážek"
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     Ihned vyplaceno na ruku / zálohou (Kč):
                   </label>
                   <input
                     type="number"
                     value={paidAmount}
                     onChange={(e) => setPaidAmount(parseFloat(e.target.value) || '')}
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-semibold"
                   />
                 </div>
               </div>
@@ -462,13 +462,13 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAdding(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+                  className="min-h-11 inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   Zrušit
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-extrabold shadow-sm cursor-pointer transition-colors"
+                  className="min-h-11 inline-flex items-center justify-center px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold shadow-sm cursor-pointer transition-colors"
                 >
                   Uložit záznam práce
                 </button>
@@ -478,7 +478,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
 
           {/* Seznam zapsaných směn / lidí */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <h4 className="text-sm font-semibold text-slate-500">
               Zapsané směny na zakázce ({subcontractors.length})
             </h4>
 
@@ -488,7 +488,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                 <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                   Zatím nemáte zapsaného žádného parťáka ani brigádníka
                 </p>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                <p className="text-sm text-slate-500 max-w-sm mx-auto">
                   Klikněte na „+ Zapsat směnu / úkol parťáka“ pro rychlou evidenci hodin a vyplacených záloh.
                 </p>
               </div>
@@ -512,34 +512,34 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-extrabold text-slate-900 dark:text-white text-base">
+                          <span className="font-semibold text-slate-900 dark:text-white text-base">
                             {item.workerName}
                           </span>
-                          <span className="text-3xs font-bold px-2 py-0.5 rounded-md uppercase tracking-wider bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                          <span className="text-[13px] font-semibold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                             {item.role || 'Práce'}
                           </span>
-                          <span className="text-xs text-slate-400">
+                          <span className="text-sm text-slate-400">
                             · {formatDateCs(item.date)}
                           </span>
                         </div>
 
                         {item.taskDescription && (
-                          <p className="text-xs text-slate-600 dark:text-slate-300">
+                          <p className="text-sm text-slate-600 dark:text-slate-300">
                             {item.taskDescription}
                           </p>
                         )}
 
-                        <div className="text-xs text-slate-500 flex flex-wrap items-center gap-x-3 gap-y-1 pt-0.5">
+                        <div className="text-sm text-slate-500 flex flex-wrap items-center gap-x-3 gap-y-1 pt-0.5">
                           {item.hoursWorked > 0 && (
-                            <span className="font-medium font-mono">
+                            <span className="font-medium">
                               <strong>{item.hoursWorked} h</strong> × {item.hourlyRate} Kč/h
                             </span>
                           )}
                           <span>
-                            Vyplaceno: <strong className="text-emerald-600 font-mono">{formatCurrency(item.paidAmount || 0)}</strong>
+                            Vyplaceno: <strong className="text-emerald-600">{formatCurrency(item.paidAmount || 0)}</strong>
                           </span>
                           {remaining > 0 && (
-                            <span className="text-rose-600 font-bold font-mono">
+                            <span className="text-rose-600 font-semibold">
                               Zbývá: {formatCurrency(remaining)}
                             </span>
                           )}
@@ -549,13 +549,13 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                       {/* Pravá strana: Akce a celková částka */}
                       <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
                         <div className="text-right">
-                          <div className="text-base font-black text-slate-900 dark:text-white font-mono">
+                          <div className="text-base font-semibold text-slate-900 dark:text-white">
                             {formatCurrency(total)}
                           </div>
                           <button
                             type="button"
                             onClick={() => handleTogglePaid(item.id)}
-                            className={`text-2xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wider cursor-pointer transition-colors ${
+                            className={`min-h-11 inline-flex items-center justify-center text-[13px] font-semibold px-2.5 py-1 rounded-md cursor-pointer transition-colors ${
                               item.isFullyPaid
                                 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                                 : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 hover:bg-emerald-50'
@@ -568,7 +568,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => handleSendWhatsApp(item)}
-                            className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 cursor-pointer transition-all"
+                            className="min-h-11 min-w-11 inline-flex items-center justify-center p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 cursor-pointer transition-all"
                             title="Odeslat parťákovi souhrn na WhatsApp"
                           >
                             <Send className="w-4 h-4 text-emerald-600" />
@@ -576,7 +576,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
 
                           <button
                             onClick={() => handleDelete(item.id)}
-                            className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer transition-colors"
+                            className="min-h-11 min-w-11 inline-flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer transition-colors"
                             title="Smazat záznam"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -593,12 +593,12 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex items-center justify-between">
-          <span className="text-xs text-slate-500 font-medium">
+          <span className="text-sm text-slate-500 font-medium">
             Celkem nákladů na partu: <strong>{formatCurrency(totalCost)}</strong>
           </span>
           <button
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-bold cursor-pointer transition-colors"
+            className="min-h-11 inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-sm font-semibold cursor-pointer transition-colors"
           >
             Hotovo
           </button>

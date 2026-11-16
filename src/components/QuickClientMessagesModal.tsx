@@ -126,7 +126,6 @@ export const QuickClientMessagesModal: React.FC<QuickClientMessagesModalProps> =
       title="Zpráva zákazníkovi"
       subtitle={<>smlouva {contract.contractNumber}</>}
       size="lg"
-      bare
       closeOnBackdrop={false}
       onClose={onClose}
     >
@@ -144,7 +143,7 @@ export const QuickClientMessagesModal: React.FC<QuickClientMessagesModalProps> =
                   triggerHaptic('light');
                   setSelectedTemplateIndex(idx);
                 }}
-                className={`p-3 rounded-xl border text-left flex flex-col items-start gap-1.5 transition-all cursor-pointer ${
+                className={`min-h-11 min-w-11 p-3 rounded-xl border text-left flex flex-col items-start gap-1.5 transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-blue-50 dark:bg-blue-950/80 border-blue-500 dark:border-blue-500 shadow-xs ring-2 ring-blue-200 dark:ring-blue-900'
                     : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
@@ -155,7 +154,7 @@ export const QuickClientMessagesModal: React.FC<QuickClientMessagesModalProps> =
                 }`}>
                   <Icon className="w-4 h-4" />
                 </div>
-                <span className={`text-xs font-bold leading-tight ${
+                <span className={`text-sm font-semibold leading-tight ${
                   isSelected ? 'text-blue-900 dark:text-blue-200' : 'text-slate-800 dark:text-slate-200'
                 }`}>
                   {tpl.title}
@@ -167,47 +166,47 @@ export const QuickClientMessagesModal: React.FC<QuickClientMessagesModalProps> =
 
         {/* Context parameters depending on template */}
         {selectedTemplateIndex === 0 && (
-          <div className="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-xs">
+          <div className="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-sm">
             <span className="font-semibold text-slate-600 dark:text-slate-300">Budu tam za (minut):</span>
             <input
               type="text"
               value={customMinutes}
               onChange={(e) => setCustomMinutes(e.target.value)}
-              className="w-16 px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-center font-bold"
+              className="min-h-11 w-16 px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-center font-semibold"
             />
           </div>
         )}
 
         {selectedTemplateIndex === 1 && (
-          <div className="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-xs">
+          <div className="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-sm">
             <span className="font-semibold text-slate-600 dark:text-slate-300">Pokračujeme:</span>
             <input
               type="text"
               value={resumeDate}
               onChange={(e) => setResumeDate(e.target.value)}
-              className="flex-1 px-2.5 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg font-bold"
+              className="min-h-11 flex-1 px-2.5 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg font-semibold"
             />
           </div>
         )}
 
         {selectedTemplateIndex === 2 && (
-          <div className="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-xs">
+          <div className="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-sm">
             <span className="font-semibold text-slate-600 dark:text-slate-300">Závoz materiálu:</span>
             <input
               type="text"
               value={deliveryDate}
               onChange={(e) => setDeliveryDate(e.target.value)}
-              className="flex-1 px-2.5 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg font-bold"
+              className="min-h-11 flex-1 px-2.5 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg font-semibold"
             />
           </div>
         )}
 
         {/* Text Preview */}
         <div>
-          <label className="block text-2xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+          <label className="block text-[13px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
             Náhled textu pro klienta:
           </label>
-          <div className="p-3.5 bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-sans select-all whitespace-pre-line">
+          <div className="p-3.5 bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-200 dark:border-slate-800 text-sm sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-sans select-all whitespace-pre-line">
             {currentText}
           </div>
         </div>
@@ -217,7 +216,7 @@ export const QuickClientMessagesModal: React.FC<QuickClientMessagesModalProps> =
           <button
             type="button"
             onClick={handleCopy}
-            className="flex items-center justify-center gap-2 py-3 px-3 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-extrabold text-xs transition-colors cursor-pointer active:scale-95"
+            className="min-h-11 flex items-center justify-center gap-2 py-3 px-3 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-sm transition-colors cursor-pointer active:scale-95"
           >
             {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
             <span>{copied ? 'Zkopírováno!' : 'Kopírovat pro SMS'}</span>
@@ -226,7 +225,7 @@ export const QuickClientMessagesModal: React.FC<QuickClientMessagesModalProps> =
           <button
             type="button"
             onClick={handleSendWhatsApp}
-            className="flex items-center justify-center gap-2 py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer active:scale-95"
+            className="min-h-11 flex items-center justify-center gap-2 py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-md transition-all cursor-pointer active:scale-95"
           >
             <Send className="w-4 h-4" />
             <span>Odeslat WhatsApp</span>

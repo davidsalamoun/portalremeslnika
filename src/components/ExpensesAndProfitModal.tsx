@@ -198,13 +198,13 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* Příjmy celkem */}
             <div className="p-3.5 sm:p-4 rounded-xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80">
-              <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 block mb-1 uppercase tracking-wider">
+              <span className="text-sm font-semibold text-blue-700 dark:text-blue-300 block mb-1">
                 Příjmy celkem
               </span>
-              <span className="text-lg sm:text-2xl font-bold text-blue-950 dark:text-blue-100 block">
+              <span className="text-lg sm:text-2xl font-semibold text-blue-950 dark:text-blue-100 block">
                 {formatCurrency(totalIncome)}
               </span>
-              <span className="text-[11px] text-blue-600/80 dark:text-blue-300/80 mt-0.5 block">
+              <span className="text-[13px] text-blue-600/80 dark:text-blue-300/80 mt-0.5 block">
                 Základ {formatCurrency(contract.price)}
                 {totalAmendments !== 0 && (
                   <span> {totalAmendments > 0 ? `+${formatCurrency(totalAmendments)}` : formatCurrency(totalAmendments)}</span>
@@ -214,13 +214,13 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
 
             {/* Skutečné náklady */}
             <div className="p-3.5 sm:p-4 rounded-xl bg-rose-50/60 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/80">
-              <span className="text-xs font-semibold text-rose-700 dark:text-rose-300 block mb-1 uppercase tracking-wider">
+              <span className="text-sm font-semibold text-rose-700 dark:text-rose-300 block mb-1">
                 Skutečné náklady
               </span>
-              <span className="text-lg sm:text-2xl font-bold text-rose-950 dark:text-rose-100 block">
+              <span className="text-lg sm:text-2xl font-semibold text-rose-950 dark:text-rose-100 block">
                 {formatCurrency(totalExpenses)}
               </span>
-              <span className="text-[11px] text-rose-600/80 dark:text-rose-300/80 mt-0.5 block">
+              <span className="text-[13px] text-rose-600/80 dark:text-rose-300/80 mt-0.5 block">
                 {expenses.length} {expenses.length === 1 ? 'zaznamenaný výdaj' : expenses.length < 5 ? 'zaznamenané výdaje' : 'zaznamenaných výdajů'}
               </span>
             </div>
@@ -234,21 +234,21 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
               }`}
             >
               <span
-                className={`text-xs font-semibold block mb-1 uppercase tracking-wider ${
+                className={`text-sm font-semibold block mb-1 ${
                   netProfit >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-700 dark:text-red-300'
                 }`}
               >
                 Čistý zisk zakázky
               </span>
               <span
-                className={`text-lg sm:text-2xl font-bold block ${
+                className={`text-lg sm:text-2xl font-semibold block ${
                   netProfit >= 0 ? 'text-emerald-950 dark:text-emerald-100' : 'text-red-950 dark:text-red-100'
                 }`}
               >
                 {formatCurrency(netProfit)}
               </span>
               <span
-                className={`text-[11px] font-medium mt-0.5 block ${
+                className={`text-[13px] font-medium mt-0.5 block ${
                   netProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                 }`}
               >
@@ -258,14 +258,14 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
 
             {/* Zisková marže */}
             <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
-              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 block mb-1 uppercase tracking-wider">
+              <span className="text-sm font-semibold text-slate-600 dark:text-slate-300 block mb-1">
                 Zisková marže
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white">
+                <span className="text-lg sm:text-2xl font-semibold text-slate-900 dark:text-white">
                   {marginPercent}%
                 </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">
+                <span className="text-sm text-slate-500 dark:text-slate-400">
                   z tržeb
                 </span>
               </div>
@@ -288,7 +288,7 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
           {/* Form: Přidat nový náklad */}
           <div className="p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <Plus className="w-4 h-4 text-emerald-600" />
                 <span>Přidat náklad / výdaj k této zakázce</span>
               </h3>
@@ -298,7 +298,7 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                 {/* Název položky */}
                 <div className="sm:col-span-5">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Název výdaje / materiálu *
                   </label>
                   <input
@@ -306,14 +306,14 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="např. Nákup lepidla a hydroizolace"
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                     required
                   />
                 </div>
 
                 {/* Dodavatel / Obchod */}
                 <div className="sm:col-span-3">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Dodavatel / Prodejna
                   </label>
                   <input
@@ -321,13 +321,13 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
                     value={supplier}
                     onChange={(e) => setSupplier(e.target.value)}
                     placeholder="např. DEK, Hornbach, OBI"
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                   />
                 </div>
 
                 {/* Částka v Kč */}
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Částka (Kč) *
                   </label>
                   <input
@@ -337,21 +337,21 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
                     value={amount}
                     onChange={(e) => setAmount(e.target.value ? parseFloat(e.target.value) : '')}
                     placeholder="Kč"
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                     required
                   />
                 </div>
 
                 {/* Datum */}
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Datum výdaje
                   </label>
                   <input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-2.5 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                    className="min-h-11 w-full px-2.5 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                   />
                 </div>
               </div>
@@ -359,13 +359,13 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
               {/* Kategorie + Foto účtenky */}
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
                 <div className="sm:col-span-4">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Kategorie nákladu
                   </label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                   >
                     {(Object.keys(CATEGORY_META) as ExpenseCategory[]).map((catKey) => (
                       <option key={catKey} value={catKey}>
@@ -376,7 +376,7 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
                 </div>
 
                 <div className="sm:col-span-5">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Fotka účtenky / faktury z nákupu
                   </label>
                   <div className="flex items-center gap-2">
@@ -391,7 +391,7 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
                     />
                     <label
                       htmlFor="expense-receipt-upload"
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 bg-white dark:bg-slate-900 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors shadow-2xs"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 bg-white dark:bg-slate-900 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors shadow-2xs"
                     >
                       <Camera className="w-3.5 h-3.5 text-emerald-600" />
                       <span>{isUploadingPhoto ? 'Zpracovávám...' : receiptPhotoUrl ? 'Změnit fotku' : 'Vyfotit / nahrát účtenku'}</span>
@@ -409,7 +409,7 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
                         <button
                           type="button"
                           onClick={() => setReceiptPhotoUrl(undefined)}
-                          className="text-xs text-red-500 hover:underline"
+                          className="min-h-11 min-w-11 inline-flex items-center justify-center text-sm text-red-500 hover:underline"
                         >
                           Smazat foto
                         </button>
@@ -421,7 +421,7 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
                 <div className="sm:col-span-3 sm:self-end">
                   <button
                     type="submit"
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors shadow-xs cursor-pointer"
+                    className="min-h-11 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors shadow-xs cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Uložit výdaj</span>
@@ -434,7 +434,7 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
           {/* Přehled výdajů podle kategorií */}
           {expenses.length > 0 && (
             <div className="flex flex-wrap items-center gap-2 pt-1">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
                 Rozpad nákladů:
               </span>
               {(Object.keys(CATEGORY_META) as ExpenseCategory[]).map((catKey) => {
@@ -444,10 +444,10 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
                 return (
                   <span
                     key={catKey}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border ${meta.badgeClass}`}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm font-medium border ${meta.badgeClass}`}
                   >
                     <span>{meta.label}:</span>
-                    <strong className="font-mono tabular-nums font-semibold">{formatCurrency(catSum)}</strong>
+                    <strong className=" tabular-nums font-semibold">{formatCurrency(catSum)}</strong>
                   </span>
                 );
               })}
@@ -457,11 +457,11 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
           {/* Tabulka zaznamenaných výdajů */}
           <div>
             <div className="flex items-center justify-between mb-2.5">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
                 Položkový seznam výdajů ({expenses.length})
               </h3>
               {expenses.length > 0 && (
-                <span className="text-xs font-semibold text-slate-500">
+                <span className="text-sm font-semibold text-slate-500">
                   Celkem: <strong>{formatCurrency(totalExpenses)}</strong>
                 </span>
               )}
@@ -473,14 +473,14 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
                 <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
                   K této zakázce zatím nemáte zadané žádné výdaje.
                 </p>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-sm text-slate-400 mt-1">
                   Přidejte nákupy materiálu a nářadí výše, abyste okamžitě viděli svůj reálný čistý zisk.
                 </p>
               </div>
             ) : (
               <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                <table className="w-full text-left text-xs sm:text-sm">
-                  <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold uppercase text-[11px] tracking-wider">
+                <table className="w-full text-left text-sm sm:text-sm">
+                  <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[13px]">
                     <tr>
                       <th className="py-2.5 px-3">Datum</th>
                       <th className="py-2.5 px-3">Položka / Název výdaje</th>
@@ -505,7 +505,7 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
                           <td className="py-2.5 px-3 font-medium text-slate-900 dark:text-white">
                             <div>{exp.title}</div>
                             {exp.notes && (
-                              <div className="text-[11px] text-slate-400 italic">{exp.notes}</div>
+                              <div className="text-[13px] text-slate-400 italic">{exp.notes}</div>
                             )}
                           </td>
                           <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 hidden sm:table-cell">
@@ -513,7 +513,7 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
                           </td>
                           <td className="py-2.5 px-3 hidden md:table-cell">
                             <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border ${meta.badgeClass}`}
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium border ${meta.badgeClass}`}
                             >
                               <span>{meta.label}</span>
                             </span>
@@ -523,24 +523,24 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
                               <button
                                 type="button"
                                 onClick={() => setSelectedReceiptPreview(exp.receiptPhotoUrl || null)}
-                                className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                                className="min-h-11 min-w-11 inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
                                 title="Zobrazit fotku účtenky"
                               >
                                 <Camera className="w-3.5 h-3.5" />
                                 <span>Foto</span>
                               </button>
                             ) : (
-                              <span className="text-slate-300 dark:text-slate-600 text-xs">—</span>
+                              <span className="text-slate-300 dark:text-slate-600 text-sm">—</span>
                             )}
                           </td>
-                          <td className="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                          <td className="py-2.5 px-3 text-right font-semibold text-slate-900 dark:text-white whitespace-nowrap">
                             {formatCurrency(exp.amount)}
                           </td>
                           <td className="py-2.5 px-3 text-right">
                             <button
                               type="button"
                               onClick={() => handleDeleteExpense(exp.id)}
-                              className="p-1 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
+                              className="min-h-11 min-w-11 inline-flex items-center justify-center p-1 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
                               title="Smazat výdaj"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -550,7 +550,7 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
                       );
                     })}
                   </tbody>
-                  <tfoot className="bg-slate-50 dark:bg-slate-800/80 font-bold border-t border-slate-200 dark:border-slate-700">
+                  <tfoot className="bg-slate-50 dark:bg-slate-800/80 font-semibold border-t border-slate-200 dark:border-slate-700">
                     <tr>
                       <td colSpan={2} className="py-2.5 px-3 text-slate-700 dark:text-slate-300">
                         Celkem výdaje:
@@ -570,13 +570,13 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
 
         {/* Modal Footer */}
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 flex items-center justify-between shrink-0">
-          <div className="text-xs text-slate-500 dark:text-slate-400">
+          <div className="text-sm text-slate-500 dark:text-slate-400">
             Výdaje jsou automaticky uloženy k zakázce a promítnou se do finančního radaru OSVČ.
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-semibold text-sm transition-colors cursor-pointer shadow-xs"
+            className="min-h-11 inline-flex items-center justify-center px-4 py-2 rounded-lg bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-semibold text-sm transition-colors cursor-pointer shadow-xs"
           >
             Hotovo
           </button>
