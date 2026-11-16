@@ -1131,7 +1131,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
                       </div>
 
                       {currentContract.contractorSignature ? (
-                        <div className="flex flex-col items-center justify-end h-20 z-10">
+                        <div className="flex flex-col items-center justify-end min-h-20 z-10">
                           <img
                             src={currentContract.contractorSignature}
                             alt="Podpis zhotovitele"
