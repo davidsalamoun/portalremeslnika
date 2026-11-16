@@ -22,6 +22,14 @@ interface PriceListModalProps {
   onToast?: (type: 'success' | 'error' | 'info', text: string) => void;
 }
 
+const fieldLabel = 'block font-semibold text-slate-900 dark:text-slate-100 mb-1.5';
+const fieldInput =
+  'w-full min-h-11 px-3.5 py-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white';
+const smallAction =
+  'min-h-11 px-3 inline-flex items-center justify-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-medium hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors';
+const strongAction =
+  'min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors';
+
 export const PriceListModal: React.FC<PriceListModalProps> = ({
   isOpen,
   onClose,
@@ -39,7 +47,7 @@ export const PriceListModal: React.FC<PriceListModalProps> = ({
   const [newCategory, setNewCategory] = useState('Vlastní práce');
   const [newType, setNewType] = useState<'prace' | 'material' | 'ostatni'>('prace');
   const [newUnit, setNewUnit] = useState('m²');
-  const [newPrice, setNewPrice] = useState<number | ''>(500);
+  const [newPrice, setNewPrice] = useState<number | ''>('');
 
   // Při otevření modalu načteme čerstvý ceník
   useEffect(() => {
@@ -146,107 +154,100 @@ export const PriceListModal: React.FC<PriceListModalProps> = ({
       onClose={onClose}
     >
 
-        {/* Search & Categories Bar */}
-        <div className="p-3.5 sm:p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 space-y-3 shrink-0">
-          {/* Vyhledávací pole + tlačítko přidat novou */}
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <div className="p-4 space-y-3 border-b border-slate-200 dark:border-slate-800 shrink-0">
+          <div className="flex flex-wrap gap-2">
+            <div className="relative flex-1 min-w-[12rem]">
+              <label htmlFor="cenik-vyber-hledat" className="sr-only">
+                Hledat v ceníku
+              </label>
+              <Search className="w-[18px] h-[18px] text-slate-600 dark:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
-                type="text"
+                id="cenik-vyber-hledat"
+                type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Hledat v ceníku (např. obklad, sádrokarton, zásuvka, penetrace)..."
-                className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
+                placeholder="Hledat, např. obklad, zásuvka"
+                className={`${fieldInput} pl-10`}
               />
             </div>
-
-            <button
-              type="button"
-              onClick={() => setIsAddingNew((v) => !v)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-amber-500 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer shrink-0"
-            >
-              <Plus className="w-3.5 h-3.5 text-amber-600" />
+            <button type="button" onClick={() => setIsAddingNew((v) => !v)} aria-expanded={isAddingNew} className={smallAction}>
+              <Plus className="w-4 h-4" />
               <span>{isAddingNew ? 'Zavřít' : 'Nová položka'}</span>
             </button>
           </div>
 
-          {/* Form pro přidání nové položky */}
           {isAddingNew && (
-            <form
-              onSubmit={handleAddNewItem}
-              className="p-3 bg-amber-50/60 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-800 space-y-2 animate-in fade-in"
-            >
-              <div className="text-xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-wider">
-                Vlastní položka do stálého ceníku:
+            <form onSubmit={handleAddNewItem} className="border border-slate-300 dark:border-slate-700 rounded-md p-3 space-y-3">
+              <div className="grid grid-cols-2 sm:grid-cols-12 gap-3">
+                <div className="col-span-2 sm:col-span-5">
+                  <label htmlFor="cenik-vyber-nazev" className={fieldLabel}>
+                    Název
+                  </label>
+                  <input
+                    id="cenik-vyber-nazev"
+                    type="text"
+                    required
+                    autoFocus
+                    placeholder="např. Montáž zárubně"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    className={fieldInput}
+                  />
+                </div>
+                <div className="col-span-2 sm:col-span-3">
+                  <label htmlFor="cenik-vyber-kategorie" className={fieldLabel}>
+                    Kategorie
+                  </label>
+                  <input id="cenik-vyber-kategorie" type="text" value={newCategory} onChange={(e) => setNewCategory(e.target.value)} className={fieldInput} />
+                </div>
+                <div className="sm:col-span-2">
+                  <label htmlFor="cenik-vyber-jednotka" className={fieldLabel}>
+                    Jednotka
+                  </label>
+                  <select id="cenik-vyber-jednotka" value={newUnit} onChange={(e) => setNewUnit(e.target.value)} className={`${fieldInput} cursor-pointer`}>
+                    {['m²', 'hod', 'ks', 'bm', 'kpl', 'den', 'km'].map((u) => (
+                      <option key={u} value={u}>
+                        {u}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                  <label htmlFor="cenik-vyber-cena" className={fieldLabel}>
+                    Cena v Kč
+                  </label>
+                  <input
+                    id="cenik-vyber-cena"
+                    type="number"
+                    min="1"
+                    required
+                    inputMode="numeric"
+                    value={newPrice}
+                    onChange={(e) => setNewPrice(e.target.value ? parseFloat(e.target.value) : '')}
+                    className={`${fieldInput} tabular-nums`}
+                  />
+                </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                <input
-                  type="text"
-                  placeholder="Název (např. Montáž obložkové zárubně)"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  className="sm:col-span-5 px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Kategorie"
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                  className="sm:col-span-3 px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
-                />
-                <select
-                  value={newUnit}
-                  onChange={(e) => setNewUnit(e.target.value)}
-                  className="sm:col-span-2 px-2 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
-                >
-                  <option value="m²">m²</option>
-                  <option value="hod">hod</option>
-                  <option value="ks">ks</option>
-                  <option value="bm">bm</option>
-                  <option value="kpl">kpl</option>
-                  <option value="den">den</option>
-                  <option value="km">km</option>
-                </select>
-                <input
-                  type="number"
-                  placeholder="Cena Kč"
-                  value={newPrice}
-                  onChange={(e) => setNewPrice(e.target.value ? parseFloat(e.target.value) : '')}
-                  className="sm:col-span-2 px-2.5 py-1.5 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
-                  required
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setIsAddingNew(false)}
-                  className="px-2.5 py-1 text-xs text-slate-500 hover:text-slate-800"
-                >
-                  Zrušit
-                </button>
-                <button
-                  type="submit"
-                  className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold shadow-2xs cursor-pointer"
-                >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-slate-600 dark:text-slate-400">Položka se uloží do vašeho ceníku a rovnou vybere.</span>
+                <button type="submit" className={strongAction}>
                   Uložit a vybrat
                 </button>
               </div>
             </form>
           )}
 
-          {/* Kategorie chipy */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex gap-2 overflow-x-auto pb-1">
             {categories.map((cat) => (
               <button
                 key={cat}
                 type="button"
+                aria-pressed={selectedCategory === cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-2.5 py-1 rounded-lg text-xs whitespace-nowrap font-medium transition-all cursor-pointer ${
+                className={`min-h-11 px-3 inline-flex items-center justify-center rounded-md border font-medium whitespace-nowrap cursor-pointer transition-colors ${
                   selectedCategory === cat
-                    ? 'bg-amber-600 text-white font-bold shadow-xs'
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+                    ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
+                    : 'border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 {cat}
@@ -255,101 +256,66 @@ export const PriceListModal: React.FC<PriceListModalProps> = ({
           </div>
         </div>
 
-        {/* List of items */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
           {filteredItems.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
-              <Layers className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              <p className="text-sm font-medium">Nebyly nalezeny žádné položky pro „{search}“.</p>
-              <p className="text-xs mt-1">Zkuste upravit hledání nebo přidejte novou položku tlačítkem výše.</p>
+            <div className="px-5 py-6 text-slate-600 dark:text-slate-400">
+              {search ? `Hledání „${search}“ neodpovídá žádná položka.` : 'V této kategorii není žádná položka.'} Přidat ji můžete tlačítkem Nová položka.
             </div>
           ) : (
             filteredItems.map((it) => {
               const isSelected = selectedIds.has(it.id);
               return (
-                <div
+                <button
                   key={it.id}
+                  type="button"
+                  role="checkbox"
+                  aria-checked={isSelected}
                   onClick={() => toggleSelect(it.id)}
-                  className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                    isSelected
-                      ? 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-400 dark:border-amber-600 shadow-xs'
-                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                  className={`w-full px-5 py-3 flex items-center gap-3.5 text-left cursor-pointer transition-colors ${
+                    isSelected ? 'bg-slate-100 dark:bg-slate-800' : 'hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    {/* Checkbox */}
-                    <div
-                      className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors shrink-0 ${
-                        isSelected
-                          ? 'bg-amber-600 border-amber-600 text-white'
-                          : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800'
-                      }`}
-                    >
-                      {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                    </div>
-
-                    <div>
-                      <div className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white">
-                        {it.title}
-                      </div>
-                      <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
-                        <span className="font-medium text-slate-500 dark:text-slate-400">
-                          {it.category}
-                        </span>
-                        <span>·</span>
-                        <span className="uppercase text-[10px] px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 font-semibold">
-                          {it.type === 'prace' ? 'Práce' : it.type === 'material' ? 'Materiál' : 'Ostatní'}
-                        </span>
-                        {it.description && (
-                          <>
-                            <span>·</span>
-                            <span className="truncate max-w-xs">{it.description}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-right shrink-0">
-                    <div className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
-                      {formatCurrency(it.unitPrice)}
-                    </div>
-                    <div className="text-[11px] text-slate-400">
-                      za {it.unit}
-                    </div>
-                  </div>
-                </div>
+                  <span
+                    className={`w-6 h-6 rounded-sm border-[1.5px] inline-flex items-center justify-center shrink-0 ${
+                      isSelected
+                        ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-slate-900'
+                        : 'border-slate-900 dark:border-slate-400 bg-white dark:bg-slate-950'
+                    }`}
+                  >
+                    {isSelected && <Check className="w-4 h-4" strokeWidth={3} />}
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block font-semibold text-slate-900 dark:text-white">{it.title}</span>
+                    <span className="block text-slate-600 dark:text-slate-400">
+                      {[it.category, it.type === 'prace' ? 'práce' : it.type === 'material' ? 'materiál' : 'ostatní', it.description].filter(Boolean).join(', ')}
+                    </span>
+                  </span>
+                  <span className="text-right shrink-0 whitespace-nowrap">
+                    <span className="font-display font-semibold tabular-nums text-[19px] text-slate-900 dark:text-white">{formatCurrency(it.unitPrice)}</span>
+                    <span className="text-slate-600 dark:text-slate-400"> / {it.unit}</span>
+                  </span>
+                </button>
               );
             })
           )}
         </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 flex items-center justify-between shrink-0">
-          <div className="text-xs text-slate-500 dark:text-slate-400">
-            Vybráno položek: <strong className="text-slate-900 dark:text-white font-bold">{selectedIds.size}</strong>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            >
-              Zavřít
+        <div className="px-5 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+          <span className="text-slate-600 dark:text-slate-400">
+            Vybráno: <span className="font-semibold text-slate-900 dark:text-white tabular-nums">{selectedIds.size}</span>
+          </span>
+          <div className="flex flex-wrap gap-2.5">
+            <button type="button" onClick={onClose} className={strongAction}>
+              Zrušit
             </button>
             <button
               type="button"
               onClick={handleConfirmSelection}
               disabled={selectedIds.size === 0}
-              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer ${
-                selectedIds.size > 0
-                  ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                  : 'bg-slate-200 text-slate-400 dark:bg-slate-800 dark:text-slate-600 cursor-not-allowed'
-              }`}
+              className="min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-500 text-slate-900 font-semibold cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Vložit do rozpočtu ({selectedIds.size})</span>
+              <Plus className="w-[18px] h-[18px]" />
+              <span>Vložit do rozpočtu</span>
             </button>
           </div>
         </div>

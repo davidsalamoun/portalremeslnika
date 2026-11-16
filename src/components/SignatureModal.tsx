@@ -175,24 +175,23 @@ export const SignatureModal: React.FC<SignatureModalProps> = ({
       onClose={onClose}
     >
 
-        {/* Instrukce */}
-        <div className="px-5 pt-3 pb-1 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-          <span>Podepište se prstem, stylusem nebo myší do pole níže:</span>
-          {role === 'contractor' && savedContractorSignature && (
-            <button
-              onClick={handleUseSavedContractorSignature}
-              type="button"
-              className="inline-flex items-center gap-1 text-[#1E3A78] dark:text-blue-400 font-semibold hover:underline cursor-pointer"
-            >
-              <FileCheck2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-              <span>Použít uložený podpis</span>
-            </button>
-          )}
-        </div>
+        <div className="p-5 space-y-3 overflow-y-auto">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+            <span className="text-slate-600 dark:text-slate-400">Podepište se prstem, perem nebo myší.</span>
+            {role === 'contractor' && savedContractorSignature && (
+              <button
+                onClick={handleUseSavedContractorSignature}
+                type="button"
+                className="min-h-11 inline-flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-300 underline underline-offset-2 cursor-pointer"
+              >
+                <FileCheck2 className="w-4 h-4" />
+                <span>Použít uložený podpis</span>
+              </button>
+            )}
+          </div>
 
-        {/* Kreslicí plocha (Canvas) */}
-        <div className="px-5 py-2">
-          <div className="relative border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 rounded-xl bg-slate-50/70 dark:bg-slate-950/80 overflow-hidden transition-colors">
+          {/* Plocha podpisu je vždy bílá, aby byl podpis vidět stejně jako na papíře */}
+          <div className="relative border-[1.5px] border-slate-900 dark:border-slate-400 rounded-md bg-white overflow-hidden">
             <canvas
               ref={canvasRef}
               onMouseDown={startDrawing}
@@ -202,67 +201,60 @@ export const SignatureModal: React.FC<SignatureModalProps> = ({
               onTouchStart={startDrawing}
               onTouchMove={draw}
               onTouchEnd={stopDrawing}
-              className="w-full h-44 sm:h-52 cursor-crosshair touch-none block"
+              aria-label="Plocha pro podpis"
+              className="w-full h-48 sm:h-56 cursor-crosshair touch-none block"
               style={{ touchAction: 'none' }}
             />
-
-            {/* Pomocná linka podpisu */}
-            <div className="pointer-events-none absolute bottom-9 left-8 right-8 border-b border-slate-300 dark:border-slate-700 flex justify-between text-[10px] text-slate-400 pb-0.5">
-              <span>✕ Váš podpis</span>
-              <span>Datum: {new Date().toLocaleDateString('cs-CZ')}</span>
+            <div className="pointer-events-none absolute bottom-9 left-6 right-6 border-b border-slate-400 flex justify-between text-[13px] text-slate-600 pb-0.5">
+              <span>Podpis</span>
+              <span>{new Date().toLocaleDateString('cs-CZ')}</span>
             </div>
-
             {!hasDrawn && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-slate-400 dark:text-slate-600 text-sm select-none">
-                Zde nakreslete podpis
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-slate-500 select-none">
+                Sem se podepište
               </div>
             )}
           </div>
-        </div>
 
-        {/* Možnosti a tlačítka */}
-        <div className="px-5 py-4 bg-slate-50/60 dark:bg-slate-950/40 border-t border-slate-100 dark:border-slate-800 space-y-3">
           {role === 'contractor' && (
-            <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+            <label className="min-h-11 flex items-center gap-3 text-slate-900 dark:text-slate-100 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={saveAsDefault}
                 onChange={(e) => setSaveAsDefault(e.target.checked)}
-                className="w-4 h-4 rounded text-[#1E3A78] focus:ring-blue-500 border-slate-300 dark:border-slate-700"
+                className="w-5 h-5 shrink-0 accent-slate-900 dark:accent-white"
               />
-              <span>Uložit tento podpis jako můj výchozí (pro budoucí smlouvy a protokoly)</span>
+              <span>Uložit jako můj výchozí podpis pro další dokumenty</span>
             </label>
           )}
+        </div>
 
-          <div className="flex items-center justify-between gap-3">
+        <div className="px-5 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+          <button
+            onClick={handleClear}
+            type="button"
+            className="min-h-11 px-3 inline-flex items-center justify-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-medium hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>Smazat</span>
+          </button>
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
-              onClick={handleClear}
+              onClick={onClose}
               type="button"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="min-h-11 px-4 inline-flex items-center justify-center rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Smazat</span>
+              Zrušit
             </button>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={onClose}
-                type="button"
-                className="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-400 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              >
-                Zrušit
-              </button>
-
-              <button
-                onClick={handleConfirm}
-                disabled={!hasDrawn}
-                type="button"
-                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#1E3A78] dark:bg-blue-600 hover:bg-[#162c5c] dark:hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-900/15 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Check className="w-4 h-4" />
-                <span>Vložit podpis do dokumentu</span>
-              </button>
-            </div>
+            <button
+              onClick={handleConfirm}
+              disabled={!hasDrawn}
+              type="button"
+              className="min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-500 text-slate-900 font-semibold cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Check className="w-[18px] h-[18px]" />
+              <span>Vložit podpis</span>
+            </button>
           </div>
         </div>
       </Dialog>

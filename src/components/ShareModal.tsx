@@ -46,6 +46,13 @@ interface ShareModalProps {
   onSignTokenCreated?: (token: string) => void;
 }
 
+const smallAction =
+  'min-h-11 px-3 inline-flex items-center justify-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-medium hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors';
+const outlineAction =
+  'min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors';
+const fieldInput =
+  'w-full min-h-12 px-3.5 py-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white';
+
 export const ShareModal: React.FC<ShareModalProps> = ({
   isOpen,
   onClose,
@@ -312,270 +319,148 @@ Tel.: ${contractorPhone}`;
       onClose={onClose}
     >
 
-        {/* Content body */}
-        <div className="p-4 sm:p-5 space-y-4 overflow-y-auto">
-          {/* Quick Template Switcher Tabs */}
+        <div className="p-5 space-y-4 overflow-y-auto">
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-              Vyberte šablonu zprávy:
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-6 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-xs font-medium">
-              <button
-                type="button"
-                onClick={() => setSelectedTemplate('document')}
-                className={`px-2.5 py-2 rounded-lg text-center transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 cursor-pointer ${
-                  selectedTemplate === 'document'
-                    ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-xs font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <FileText className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">Dokument</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedTemplate('online_sign')}
-                className={`px-2.5 py-2 rounded-lg text-center transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 cursor-pointer ${
-                  selectedTemplate === 'online_sign'
-                    ? 'bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-300 shadow-xs font-bold ring-1 ring-amber-400/40'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <PenTool className="w-3.5 h-3.5 shrink-0 text-amber-600" />
-                <span className="truncate">Online podpis</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedTemplate('start_reminder')}
-                className={`px-2.5 py-2 rounded-lg text-center transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 cursor-pointer ${
-                  selectedTemplate === 'start_reminder'
-                    ? 'bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-300 shadow-xs font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Calendar className="w-3.5 h-3.5 shrink-0 text-amber-500" />
-                <span className="truncate">Nástup</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedTemplate('due_soon')}
-                className={`px-2.5 py-2 rounded-lg text-center transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 cursor-pointer ${
-                  selectedTemplate === 'due_soon'
-                    ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-xs font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Clock className="w-3.5 h-3.5 shrink-0 text-blue-500" />
-                <span className="truncate">Splatnost</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedTemplate('overdue')}
-                className={`px-2.5 py-2 rounded-lg text-center transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 cursor-pointer ${
-                  selectedTemplate === 'overdue'
-                    ? 'bg-white dark:bg-slate-900 text-rose-700 dark:text-rose-300 shadow-xs font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <BellRing className="w-3.5 h-3.5 shrink-0 text-rose-500" />
-                <span className="truncate">Upomínka</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedTemplate('thanks_review')}
-                className={`px-2.5 py-2 rounded-lg text-center transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 cursor-pointer ${
-                  selectedTemplate === 'thanks_review'
-                    ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-300 shadow-xs font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <HeartHandshake className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
-                <span className="truncate">Recenze</span>
-              </button>
+            <div className="font-semibold text-slate-900 dark:text-slate-100 mb-1.5">Co posíláte</div>
+            <div role="group" aria-label="Druh zprávy" className="flex flex-wrap gap-2">
+              {(
+                [
+                  { key: 'document', label: 'Dokument' },
+                  { key: 'online_sign', label: 'Odkaz k podpisu' },
+                  { key: 'start_reminder', label: 'Termín nástupu' },
+                  { key: 'due_soon', label: 'Blíží se splatnost' },
+                  { key: 'overdue', label: 'Upomínka' },
+                  { key: 'thanks_review', label: 'Poděkování' },
+                ] as const
+              ).map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  aria-pressed={selectedTemplate === t.key}
+                  onClick={() => setSelectedTemplate(t.key)}
+                  className={`min-h-11 px-3 inline-flex items-center justify-center rounded-md border font-medium cursor-pointer transition-colors ${
+                    selectedTemplate === t.key
+                      ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
+                      : 'border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Conditional extra card for Online Signing */}
+          {/* Odkaz k online podpisu */}
           {selectedTemplate === 'online_sign' && (
-            <div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center gap-4 text-xs">
+            <div className="border border-slate-300 dark:border-slate-700 rounded-md p-4 flex flex-col sm:flex-row gap-4">
               {qrCodeUrl && (
-                <div className="bg-white p-2 rounded-lg shadow-xs border border-slate-200 shrink-0">
-                  <img src={qrCodeUrl} alt="QR kód pro podpis" className="w-24 h-24" />
-                  <div className="text-[10px] text-center text-slate-500 mt-1 font-mono">
-                    Naskenovat mobilem
-                  </div>
+                <div className="bg-white p-2 border border-slate-900 rounded-md shrink-0 self-center sm:self-start">
+                  <img src={qrCodeUrl} alt="QR kód s odkazem k podpisu" className="w-28 h-28" />
                 </div>
               )}
-              <div className="space-y-2 flex-1 text-center sm:text-left">
-                <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center justify-center sm:justify-start gap-1.5">
-                  <PenTool className="w-4 h-4 text-amber-500" />
-                  <span>Odkaz pro online podpis zákazníkem na dálku</span>
-                </div>
+              <div className="space-y-2.5 flex-1 min-w-0">
                 <p className="text-slate-600 dark:text-slate-400">
-                  Zákazník otevře odkaz na svém telefonu a podepíše smlouvu nebo předávací protokol prstem na displeji.
+                  Zákazník otevře odkaz na svém telefonu a podepíše se prstem. Podpis se sám propíše do dokumentu.
                 </p>
-
-                {/* Živý stav online podpisu */}
                 {contract.clientSignature ? (
-                  <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/60 rounded-xl border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs flex items-center gap-2 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>✓ Smlouva je klientem podepsána! Podpis je propsán ve smlouvě.</span>
+                  <div className="inline-flex items-center gap-1.5 font-semibold px-2.5 py-1 rounded-sm bg-emerald-700 text-white">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>Zákazník už podepsal</span>
                   </div>
                 ) : (
-                  <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 rounded-lg border border-amber-200 dark:border-amber-900/50 text-amber-900 dark:text-amber-200 text-xs flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                      <span>Čeká se na podpis klienta (propsání proběhne automaticky)</span>
-                    </div>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-900 dark:text-slate-100">
+                    <span>Čeká na podpis zákazníka.</span>
                     <button
                       type="button"
                       onClick={handleManualCheckSign}
                       disabled={isCheckingSign}
-                      className="inline-flex items-center gap-1 font-bold underline hover:text-purple-700 cursor-pointer"
+                      className="min-h-11 inline-flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-300 underline underline-offset-2 cursor-pointer"
                     >
-                      <RefreshCw className={`w-3 h-3 ${isCheckingSign ? 'animate-spin' : ''}`} />
-                      <span>Ověřit</span>
+                      <RefreshCw className={`w-4 h-4 ${isCheckingSign ? 'animate-spin' : ''}`} />
+                      <span>{isCheckingSign ? 'Ověřuji…' : 'Ověřit teď'}</span>
                     </button>
                   </div>
                 )}
-
-                <div className="flex flex-wrap items-center gap-2 pt-1 justify-center sm:justify-start">
+                <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => {
                       navigator.clipboard.writeText(signingUrl);
-                      if (onToast) onToast('success', 'Odkaz pro podpis byl zkopírován!');
+                      if (onToast) onToast('success', 'Odkaz k podpisu je zkopírovaný.');
                     }}
-                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    className={smallAction}
                   >
-                    <Copy className="w-3.5 h-3.5" />
+                    <Copy className="w-4 h-4" />
                     <span>Zkopírovat odkaz</span>
                   </button>
-                  <a
-                    href={signingUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-slate-100 text-purple-700 dark:text-purple-300 rounded-lg font-semibold border border-purple-300 dark:border-purple-700 flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Otevřít podpis</span>
+                  <a href={signingUrl} target="_blank" rel="noopener noreferrer" className={smallAction}>
+                    <ExternalLink className="w-4 h-4" />
+                    <span>Otevřít stránku podpisu</span>
                   </a>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Conditional extra controls for Start Reminder */}
+          {/* Termín nástupu */}
           {selectedTemplate === 'start_reminder' && (
-            <div className="p-3 bg-amber-50/70 dark:bg-amber-950/30 rounded-xl border border-amber-200/80 dark:border-amber-900/40 flex flex-wrap items-center gap-3 text-xs">
-              <span className="font-semibold text-amber-900 dark:text-amber-200 flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" />
-                Termín a čas nástupu:
-              </span>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="px-2.5 py-1 rounded-lg border border-amber-300 dark:border-amber-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-medium"
-              />
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="px-2.5 py-1 rounded-lg border border-amber-300 dark:border-amber-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-medium"
-              />
-              <span className="text-[11px] text-amber-700 dark:text-amber-400">
-                Text zprávy se automaticky upraví podle zadaného dne.
-              </span>
+            <div className="grid grid-cols-2 gap-4 max-w-sm">
+              <div>
+                <label htmlFor="odeslat-datum" className="block font-semibold text-slate-900 dark:text-slate-100 mb-1.5">
+                  Den nástupu
+                </label>
+                <input id="odeslat-datum" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={fieldInput} />
+              </div>
+              <div>
+                <label htmlFor="odeslat-cas" className="block font-semibold text-slate-900 dark:text-slate-100 mb-1.5">
+                  Čas
+                </label>
+                <input id="odeslat-cas" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={fieldInput} />
+              </div>
             </div>
           )}
 
-          {/* Conditional notice for Overdue */}
           {selectedTemplate === 'overdue' && (
-            <div className="p-3 bg-rose-50/80 dark:bg-rose-950/30 rounded-xl border border-rose-200/80 dark:border-rose-900/40 flex items-center gap-2 text-xs text-rose-900 dark:text-rose-200">
-              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-              <span>
-                Profesionální a slušná upomínka s přesnou částkou ({formatCurrency(remainingDue > 0 ? remainingDue : totalAdjustedPrice)}), variabilním symbolem a číslem účtu.
-              </span>
-            </div>
+            <p className="text-slate-600 dark:text-slate-400">
+              Upomínka uvádí částku {formatCurrency(remainingDue > 0 ? remainingDue : totalAdjustedPrice)}, variabilní symbol a číslo účtu.
+            </p>
           )}
 
-          {/* Live Editable Text Area */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Náhled zprávy k odeslání (lze upravit):
+            <div className="flex items-baseline justify-between gap-3 mb-1.5">
+              <label htmlFor="odeslat-text" className="font-semibold text-slate-900 dark:text-slate-100">
+                Text zprávy
               </label>
-              <span className="text-[11px] text-slate-400">
-                {editedBody.length} znaků
-              </span>
+              <span className="text-[13px] text-slate-600 dark:text-slate-400 tabular-nums">{editedBody.length} znaků, lze upravit</span>
             </div>
-            <textarea
-              rows={7}
-              value={editedBody}
-              onChange={(e) => setEditedBody(e.target.value)}
-              className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs sm:text-sm font-sans text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 resize-y leading-relaxed"
-            />
+            <textarea id="odeslat-text" rows={7} value={editedBody} onChange={(e) => setEditedBody(e.target.value)} className={`${fieldInput} leading-relaxed`} />
           </div>
+        </div>
 
-          {/* 1-Click Action Buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-            {/* WhatsApp */}
+        <div className="px-5 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+          <button type="button" onClick={handleCopy} className={smallAction}>
+            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            <span>{copied ? 'Zkopírováno' : 'Zkopírovat text'}</span>
+          </button>
+          <div className="flex flex-wrap gap-2.5">
+            <a href={mailtoUrl} onClick={onClose} className={outlineAction}>
+              <Mail className="w-[18px] h-[18px] shrink-0" />
+              <span>E-mail</span>
+            </a>
+            <a href={smsUrl} onClick={onClose} className={outlineAction}>
+              <Smartphone className="w-[18px] h-[18px] shrink-0" />
+              <span>SMS</span>
+            </a>
             <a
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={onClose}
-              className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer group"
+              className="min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-500 text-slate-900 font-semibold cursor-pointer transition-colors"
             >
-              <MessageSquare className="w-4 h-4 shrink-0" />
-              <span>Odeslat na WhatsApp</span>
+              <MessageSquare className="w-[18px] h-[18px] shrink-0" />
+              <span>WhatsApp</span>
             </a>
-
-            {/* SMS */}
-            <a
-              href={smsUrl}
-              onClick={onClose}
-              className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer group"
-            >
-              <Smartphone className="w-4 h-4 shrink-0" />
-              <span>Odeslat jako SMS</span>
-            </a>
-
-            {/* Email */}
-            <a
-              href={mailtoUrl}
-              onClick={onClose}
-              className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer group"
-            >
-              <Mail className="w-4 h-4 shrink-0" />
-              <span>Odeslat E-mailem</span>
-            </a>
-          </div>
-
-          {/* Kopírovat text */}
-          <div className="pt-1 flex items-center justify-between border-t border-slate-200 dark:border-slate-800">
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? 'Zkopírováno!' : 'Zkopírovat text do schránky'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
-            >
-              Zavřít
-            </button>
           </div>
         </div>
       </Dialog>
