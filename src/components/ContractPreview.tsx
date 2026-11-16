@@ -58,6 +58,8 @@ import { ToolRentalModal } from './ToolRentalModal';
 import { DepartureChecklistModal } from './DepartureChecklistModal';
 import { ContractArchiveModal } from './ContractArchiveModal';
 import { ShareModal } from './ShareModal';
+import { getJobStage, moveJobStage, JOB_STAGE_LABELS, JobStageKey } from '../utils/jobStage';
+import { todayIso } from '../utils/invoiceMath';
 import { SignatureModal } from './SignatureModal';
 import { SiteLogbookModal } from './SiteLogbookModal';
 import { ScheduleModal } from './ScheduleModal';
@@ -81,6 +83,16 @@ interface ContractPreviewProps {
   onToast?: (type: 'success' | 'error' | 'info', text: string) => void;
   initialDocType?: DocumentType;
 }
+
+// Prvky lišty nad dokumentem (vzhled „Výkres a metr“)
+const tbButton =
+  'min-h-11 min-w-11 px-3 inline-flex items-center justify-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-medium hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors disabled:opacity-60';
+const tbPrimary =
+  'min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-blue-600 bg-blue-600 hover:bg-blue-700 text-white font-semibold cursor-pointer transition-colors disabled:opacity-75';
+const tbMenu =
+  'absolute top-full mt-1.5 z-50 bg-white dark:bg-slate-900 border border-slate-900 dark:border-slate-600 rounded-md shadow-xl divide-y divide-slate-100 dark:divide-slate-800 text-[15px]';
+const tbMenuItem =
+  'w-full min-h-11 px-3.5 flex items-center gap-2.5 text-left font-medium text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer disabled:opacity-60';
 
 export type DocumentType =
   | 'smlouva'
@@ -375,504 +387,271 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
     window.print();
   };
 
+  const jobStage = getJobStage(currentContract);
+  const hasUnreturnedTools = !!currentContract.toolRentals?.some((t) => !t.isReturned);
+
+  const handleStageChange = (target: JobStageKey) => {
+    const updated = moveJobStage(currentContract, target, todayIso());
+    setCurrentContract(updated);
+    onSaveToHistory(updated);
+    onToast?.('info', `Zakázka je ve fázi ${JOB_STAGE_LABELS.find((x) => x.key === target)?.label}.`);
+  };
+
+  const docTabs: { key: DocumentType; label: string; count?: number }[] = [
+    currentContract.docKind === 'quote' ? { key: 'nabidka', label: 'Cenová nabídka' } : { key: 'smlouva', label: 'Smlouva o dílo' },
+    { key: 'dodatek', label: 'Dodatky', count: currentContract.amendments?.length },
+    { key: 'pokladni_doklad', label: 'Pokladní doklad', count: currentContract.cashReceipts?.length },
+    { key: 'protokol', label: 'Předávací protokol' },
+    { key: 'faktura', label: 'Faktura' },
+    { key: 'zaruka', label: 'Záruční list' },
+  ];
+
+  const siteTools: { label: string; icon: React.ComponentType<{ className?: string }>; open: () => void; note?: string; alert?: boolean }[] = [
+    { label: 'Stavební deník', icon: FileText, open: () => setIsSiteLogModalOpen(true), note: currentContract.siteLogs?.length ? String(currentContract.siteLogs.length) : '' },
+    { label: 'Zkoušky a protokoly', icon: Gauge, open: () => setIsTechnicalProtocolsModalOpen(true), note: currentContract.technicalProtocols?.length ? String(currentContract.technicalProtocols.length) : '' },
+    { label: 'Parťáci a tým', icon: Users, open: () => setIsSubcontractorsModalOpen(true), note: currentContract.subcontractors?.length ? String(currentContract.subcontractors.length) : '' },
+    { label: 'Půjčené nářadí', icon: Wrench, open: () => setIsToolRentalModalOpen(true), note: hasUnreturnedTools ? 'nevráceno' : '', alert: hasUnreturnedTools },
+    { label: 'Odjezd ze stavby', icon: ShieldCheck, open: () => setIsDepartureChecklistModalOpen(true) },
+    { label: 'Kniha jízd', icon: Car, open: () => setIsLogbookModalOpen(true) },
+    { label: 'Nákupní seznam', icon: ShoppingCart, open: () => setIsShoppingListModalOpen(true) },
+    { label: 'Harmonogram', icon: Calendar, open: () => setIsScheduleModalOpen(true) },
+    { label: 'Složka zakázky', icon: FolderArchive, open: () => setIsArchiveModalOpen(true) },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-200/70 dark:bg-slate-950 pb-20 transition-colors">
-      {/* Sticky Top Action Bar */}
-      <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-300 dark:border-slate-800 shadow-sm no-print transition-colors">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onBack}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Zpět</span>
-            </button>
-
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-xs shadow-2xs">
-              <span className="font-mono font-bold text-slate-900 dark:text-white">
-                #{currentContract.contractNumber}
-              </span>
-              <span className="text-slate-300 dark:text-slate-600">·</span>
-              <span className="font-bold text-slate-700 dark:text-slate-200 max-w-[110px] sm:max-w-[200px] truncate">
-                {currentContract.client.name}
-              </span>
-            </div>
-          </div>
-
-          {/* Mobilní přepínač dokumentů (přehledný výběr bez vodorovného rolování) */}
-          <div className="md:hidden w-full sm:w-auto">
-            <select
-              value={activeDocType}
-              onChange={(e) => setActiveDocType(e.target.value as DocumentType)}
-              className="w-full sm:w-auto text-xs font-bold py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white cursor-pointer shadow-2xs"
-            >
-              {currentContract.docKind === 'quote' ? (
-                <option value="nabidka">Cenová nabídka</option>
-              ) : (
-                <option value="smlouva">Smlouva o dílo</option>
-              )}
-              <option value="dodatek">
-                Dodatky {currentContract.amendments?.length ? `(${currentContract.amendments.length})` : ''}
-              </option>
-              <option value="pokladni_doklad">
-                Pokladní doklad {currentContract.cashReceipts?.length ? `(${currentContract.cashReceipts.length})` : ''}
-              </option>
-              <option value="protokol">Předávací protokol</option>
-              <option value="faktura">Konečná faktura</option>
-              {currentContract.advanceAmount ? (
-                <option value="zaloha">Zálohová faktura</option>
-              ) : null}
-              <option value="zaruka">Záruční list</option>
-            </select>
-          </div>
-
-          {/* Desktop/Tablet přepínač dokumentů k zakázce: Smlouva/Nabídka, Dodatky, PPD, Protokol, Faktura, Záruka */}
-          <div className="hidden md:flex items-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 text-xs overflow-x-auto max-w-full">
-            {currentContract.docKind === 'quote' ? (
-              <button
-                onClick={() => setActiveDocType('nabidka')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap ${
-                  activeDocType === 'nabidka'
-                    ? 'bg-slate-900 text-white dark:bg-blue-600 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Tag className="w-3.5 h-3.5" />
-                <span>Cenová nabídka</span>
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 pb-40 sm:pb-16">
+      {/* Horní lišta: zpět, název zakázky, hlavní akce a přepínač dokumentů (zůstává nahoře) */}
+      <div className="sticky top-[57px] lg:top-0 z-30 bg-white dark:bg-slate-900 border-b border-slate-900 dark:border-slate-600 no-print text-[15px] leading-snug">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4">
+          <div className="py-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <button type="button" onClick={onBack} className={`${tbButton} shrink-0`} aria-label="Zpět">
+                <ArrowLeft className="w-[18px] h-[18px]" />
+                <span className="hidden sm:inline">Zpět</span>
               </button>
-            ) : (
-              <button
-                onClick={() => setActiveDocType('smlouva')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap ${
-                  activeDocType === 'smlouva'
-                    ? 'bg-slate-900 text-white dark:bg-blue-600 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <FileText className="w-3.5 h-3.5" />
-                <span>Smlouva o dílo</span>
-              </button>
-            )}
-
-            <button
-              onClick={() => setActiveDocType('dodatek')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap ${
-                activeDocType === 'dodatek'
-                  ? 'bg-slate-900 text-white dark:bg-blue-600 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <FilePlus2 className="w-3.5 h-3.5" />
-              <span>
-                Dodatky
-                {currentContract.amendments && currentContract.amendments.length > 0 && (
-                  <span className="ml-1 px-1.5 py-0.2 rounded text-[10px] bg-amber-500 text-slate-950 font-black">
-                    {currentContract.amendments.length}
-                  </span>
-                )}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveDocType('pokladni_doklad')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap ${
-                activeDocType === 'pokladni_doklad'
-                  ? 'bg-slate-900 text-white dark:bg-blue-600 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Banknote className="w-3.5 h-3.5" />
-              <span>
-                Pokladní doklad
-                {currentContract.cashReceipts && currentContract.cashReceipts.length > 0 && (
-                  <span className="ml-1 px-1.5 py-0.2 rounded text-[10px] bg-emerald-600 text-white font-bold">
-                    {currentContract.cashReceipts.length}
-                  </span>
-                )}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveDocType('protokol')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap ${
-                activeDocType === 'protokol'
-                  ? 'bg-slate-900 text-white dark:bg-blue-600 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <FileCheck2 className="w-3.5 h-3.5" />
-              <span>Předávací protokol</span>
-            </button>
-
-            <button
-              onClick={() => setActiveDocType(activeDocType === 'zaloha' ? 'zaloha' : 'faktura')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap ${
-                activeDocType === 'faktura' || activeDocType === 'zaloha'
-                  ? 'bg-slate-900 text-white dark:bg-blue-600 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Receipt className="w-3.5 h-3.5" />
-              <span>
-                Faktura
-                {currentContract.advanceAmount ? (
-                  <span className="text-[10px] opacity-80 ml-1">
-                    ({activeDocType === 'zaloha' ? 'záloha' : 'konečná'})
-                  </span>
-                ) : null}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveDocType('zaruka')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap ${
-                activeDocType === 'zaruka'
-                  ? 'bg-slate-900 text-white dark:bg-blue-600 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Záruční list</span>
-            </button>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Stav zakázky badge & selector */}
-            <div className="relative inline-flex items-center h-9">
-              <select
-                value={currentContract.status || 'draft'}
-                onChange={(e) => handleStatusChange(e.target.value as ContractStatus)}
-                className={`h-9 text-xs font-bold px-3 rounded-lg border appearance-none pr-7 cursor-pointer transition-colors ${
-                  getStatusMeta(currentContract.status).badgeBg
-                } ${getStatusMeta(currentContract.status).badgeText} ${
-                  getStatusMeta(currentContract.status).badgeBorder
-                }`}
-                title="Změnit stav zakázky"
-              >
-                {ALL_STATUSES.map((st) => (
-                  <option key={st} value={st}>
-                    ● {getStatusMeta(st).label}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] opacity-70">
-                ▼
+              <div className="min-w-0">
+                <div className="font-display font-semibold text-[20px] leading-tight text-slate-900 dark:text-white truncate">
+                  {currentContract.client.name}
+                </div>
+                <div className="text-[13px] text-slate-600 dark:text-slate-400 truncate">
+                  {currentContract.docKind === 'quote' ? `nabídka ${currentContract.quoteNumber || ''}` : `smlouva ${currentContract.contractNumber}`}
+                  {isSaved ? ', uloženo' : ', neuloženo'}
+                </div>
               </div>
             </div>
 
-            {/* Náklady & Ziskovost */}
-            <button
-              onClick={() => setIsExpensesModalOpen(true)}
-              className="h-9 inline-flex items-center gap-1.5 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 shadow-2xs transition-colors cursor-pointer"
-              title="Evidence nákladů na materiál a čistý zisk zakázky"
-            >
-              <TrendingUp className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
-              <span>Náklady a zisk</span>
-            </button>
-
-            {/* 🛠️ Nástroje stavby Dropdown menu (Mistr PRO) */}
-            {isPro && (
-              <div className="relative">
-              <button
-                type="button"
-                onClick={() => setIsSiteToolsMenuOpen(!isSiteToolsMenuOpen)}
-                className={`h-9 inline-flex items-center gap-1.5 px-3 rounded-lg text-xs font-semibold border shadow-xs transition-colors cursor-pointer ${
-                  isSiteToolsMenuOpen
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
-                }`}
-                title="Otevřít nástroje stavby (deník, zkoušky ČSN, parťáci, půjčovna, odjezd)"
-              >
-                <Wrench className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                <span>Nástroje stavby</span>
-                {currentContract.toolRentals?.some((t) => !t.isReturned) && (
-                  <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" title="Nevrácené nářadí z půjčovny" />
-                )}
-                {isSiteToolsMenuOpen ? (
-                  <ChevronUp className="w-3.5 h-3.5" />
-                ) : (
-                  <ChevronDown className="w-3.5 h-3.5 opacity-70" />
-                )}
+            <div className="hidden sm:flex items-center gap-2">
+              {!isSaved && (
+                <button type="button" onClick={() => onSaveToHistory(currentContract)} className={tbButton}>
+                  <Bookmark className="w-[18px] h-[18px]" />
+                  <span>Uložit</span>
+                </button>
+              )}
+              <button type="button" onClick={() => setIsShareModalOpen(true)} className={tbButton}>
+                <Send className="w-[18px] h-[18px]" />
+                <span>Odeslat</span>
               </button>
+              <button type="button" onClick={handleDownloadPdf} disabled={isPdfGenerating} className={tbPrimary}>
+                {isPdfGenerating ? <Loader2 className="w-[18px] h-[18px] animate-spin" /> : <FileDown className="w-[18px] h-[18px]" />}
+                <span>{isPdfGenerating ? pdfStatusText || 'Připravuji…' : 'Uložit PDF'}</span>
+              </button>
+            </div>
 
-              {isSiteToolsMenuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setIsSiteToolsMenuOpen(false)}
-                  />
-                  <div className="absolute left-0 sm:right-auto top-full mt-1.5 w-64 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xl z-50 p-2 space-y-1">
-                    <div className="px-2 py-1 text-3xs font-bold text-slate-400 uppercase tracking-wider">
-                      Stavba & Realizace
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsSiteToolsMenuOpen(false);
-                        setIsSiteLogModalOpen(true);
-                      }}
-                      className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors text-left cursor-pointer"
-                    >
-                      <span className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        <span>Stavební deník</span>
-                      </span>
-                      {currentContract.siteLogs && currentContract.siteLogs.length > 0 && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                          {currentContract.siteLogs.length}
-                        </span>
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsSiteToolsMenuOpen(false);
-                        setIsTechnicalProtocolsModalOpen(true);
-                      }}
-                      className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors text-left cursor-pointer"
-                    >
-                      <span className="flex items-center gap-2">
-                        <Gauge className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                        <span>Zkoušky ČSN (tlakovky)</span>
-                      </span>
-                      {currentContract.technicalProtocols && currentContract.technicalProtocols.length > 0 && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                          {currentContract.technicalProtocols.length}
-                        </span>
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsSiteToolsMenuOpen(false);
-                        setIsSubcontractorsModalOpen(true);
-                      }}
-                      className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors text-left cursor-pointer"
-                    >
-                      <span className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                        <span>Parťáci & tým</span>
-                      </span>
-                      {currentContract.subcontractors && currentContract.subcontractors.length > 0 && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                          {currentContract.subcontractors.length}
-                        </span>
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsSiteToolsMenuOpen(false);
-                        setIsToolRentalModalOpen(true);
-                      }}
-                      className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors text-left cursor-pointer"
-                    >
-                      <span className="flex items-center gap-2">
-                        <Wrench className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-                        <span>Půjčovna nářadí</span>
-                      </span>
-                      {currentContract.toolRentals && currentContract.toolRentals.some((t) => !t.isReturned) && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500 text-white">
-                          Nevráceno
-                        </span>
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsSiteToolsMenuOpen(false);
-                        setIsDepartureChecklistModalOpen(true);
-                      }}
-                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors text-left cursor-pointer"
-                    >
-                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                      <span>Odjezd ze stavby (checklist)</span>
-                    </button>
-
-                    <div className="pt-1 mt-1 border-t border-slate-100 dark:border-slate-800 px-2 py-0.5 text-3xs font-bold text-slate-400 uppercase tracking-wider">
-                      Logistika & Plánování
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsSiteToolsMenuOpen(false);
-                        setIsLogbookModalOpen(true);
-                      }}
-                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors text-left cursor-pointer"
-                    >
-                      <Car className="w-4 h-4 text-blue-600" />
-                      <span>Kniha jízd (cesťák)</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsSiteToolsMenuOpen(false);
-                        setIsShoppingListModalOpen(true);
-                      }}
-                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors text-left cursor-pointer"
-                    >
-                      <ShoppingCart className="w-4 h-4 text-amber-600" />
-                      <span>Nákupní lístek (materiál)</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsSiteToolsMenuOpen(false);
-                        setIsScheduleModalOpen(true);
-                      }}
-                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors text-left cursor-pointer"
-                    >
-                      <Calendar className="w-4 h-4 text-purple-600" />
-                      <span>Harmonogram etap</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsSiteToolsMenuOpen(false);
-                        setIsArchiveModalOpen(true);
-                      }}
-                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors text-left cursor-pointer pt-2 border-t border-slate-100 dark:border-slate-800"
-                    >
-                      <FolderArchive className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      <span>Složka zakázky (digitální šanon)</span>
-                    </button>
-                  </div>
-                </>
-              )}
-              </div>
-            )}
-
-            {/* Kopírovat platební údaje */}
-            <button
-              onClick={handleCopyPaymentInfo}
-              className="h-9 inline-flex items-center gap-1.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 shadow-2xs transition-colors cursor-pointer"
-              title="Zkopírovat číslo účtu, částku a VS do schránky (vhodné pro SMS nebo WhatsApp)"
-            >
-              <Copy className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-              <span className="hidden sm:inline">Kopírovat platbu</span>
-            </button>
-
-            {/* Odeslat klientovi (SMS / WhatsApp / E-mail s automatickými šablonami) */}
-            <button
-              onClick={() => setIsShareModalOpen(true)}
-              className="h-9 inline-flex items-center gap-1.5 px-3.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer"
-              title="Odeslat podklady nebo automatické SMS/zprávy (připomenutí nástupu, upomínka splatnosti)"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>Odeslat</span>
-            </button>
-
-            {/* Hlavní akce: Uložit PDF */}
-            <button
-              onClick={handleDownloadPdf}
-              disabled={isPdfGenerating}
-              className="h-9 inline-flex items-center gap-2 px-3.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-75"
-              title="Stáhnout smlouvu jako PDF"
-            >
-              {isPdfGenerating ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
-              ) : (
-                <FileDown className="w-3.5 h-3.5 text-amber-400" />
-              )}
-              <span>{isPdfGenerating ? (pdfStatusText || 'Generuji…') : 'Uložit PDF'}</span>
-            </button>
-
-            {/* Menu dalších formátů exportu (Word, Tisk) */}
-            <div className="relative inline-block">
+            {/* Další možnosti exportu */}
+            <div className="relative">
               <button
                 type="button"
                 onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
-                className="h-9 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1 text-xs font-bold transition-colors cursor-pointer"
-                title="Další formáty exportu (Word, Tisk)"
+                aria-expanded={isExportMenuOpen}
+                aria-label="Další možnosti"
+                className={tbButton}
               >
-                <Printer className="w-3.5 h-3.5" />
-                <ChevronDown className="w-3 h-3 text-slate-400" />
+                <Printer className="w-[18px] h-[18px]" />
+                <ChevronDown className="w-4 h-4" />
               </button>
-
               {isExportMenuOpen && (
                 <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setIsExportMenuOpen(false)}
-                  />
-                  <div className="absolute right-0 top-full mt-1.5 w-48 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xl z-50 p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-100">
+                  <div className="fixed inset-0 z-40" onClick={() => setIsExportMenuOpen(false)} />
+                  <div className={`${tbMenu} right-0 w-64`}>
                     <button
+                      type="button"
                       onClick={() => {
                         setIsExportMenuOpen(false);
                         handleDownloadDocx();
                       }}
                       disabled={isDocxGenerating}
-                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left cursor-pointer"
+                      className={tbMenuItem}
                     >
-                      <FileText className="w-4 h-4 text-blue-600" />
-                      <span>{isDocxGenerating ? 'Generuji...' : 'Word (.docx)'}</span>
+                      <FileText className="w-[18px] h-[18px] shrink-0" />
+                      <span>{isDocxGenerating ? 'Připravuji Word…' : 'Stáhnout ve Wordu'}</span>
                     </button>
                     <button
+                      type="button"
                       onClick={() => {
                         setIsExportMenuOpen(false);
                         handlePrint();
                       }}
-                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left cursor-pointer"
+                      className={tbMenuItem}
                     >
-                      <Printer className="w-4 h-4 text-slate-500" />
+                      <Printer className="w-[18px] h-[18px] shrink-0" />
                       <span>Vytisknout</span>
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsExportMenuOpen(false);
+                        handleCopyPaymentInfo();
+                      }}
+                      className={tbMenuItem}
+                    >
+                      <Copy className="w-[18px] h-[18px] shrink-0" />
+                      <span>Zkopírovat platební údaje</span>
+                    </button>
+                    {!isSaved && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsExportMenuOpen(false);
+                          onSaveToHistory(currentContract);
+                        }}
+                        className={`${tbMenuItem} sm:hidden`}
+                      >
+                        <Bookmark className="w-[18px] h-[18px] shrink-0" />
+                        <span>Uložit do archivu</span>
+                      </button>
+                    )}
                   </div>
                 </>
               )}
             </div>
+          </div>
 
-            {/* Ověření online podpisu klienta */}
-            {currentContract.clientSignature ? (
-              <span
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold shadow-2xs"
-                title={`Klient podepsal smlouvu (${formatDateCs(currentContract.clientSignatureDate || currentContract.conclusionDate)})`}
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="hidden sm:inline">Podpis klienta</span>
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={handleManualCheckSignature}
-                disabled={isCheckingSignature}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-800 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs transition-colors cursor-pointer"
-                title="Zkontrolovat, zda klient již podepsal přes online odkaz na mobilu"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 text-blue-600 ${isCheckingSignature ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">{isCheckingSignature ? 'Ověřuji...' : 'Ověřit online podpis'}</span>
-              </button>
-            )}
-
-            <button
-              onClick={() => onSaveToHistory(currentContract)}
-              disabled={isSaved}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer border ${
-                isSaved
-                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 cursor-default'
-                  : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 shadow-xs'
-              }`}
-              title="Uložit aktuální stav dokumentu do historie"
+          {/* Přepínač dokumentů: na mobilu výběr, jinak záložky */}
+          <div className="md:hidden pb-2">
+            <label htmlFor="nahled-dokument" className="sr-only">
+              Dokument
+            </label>
+            <select
+              id="nahled-dokument"
+              value={activeDocType}
+              onChange={(e) => setActiveDocType(e.target.value as DocumentType)}
+              className="w-full min-h-11 px-3 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-semibold cursor-pointer"
             >
-              {isSaved ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Bookmark className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">{isSaved ? 'Uloženo' : 'Uložit'}</span>
-            </button>
+              {docTabs.map((t) => (
+                <option key={t.key} value={t.key}>
+                  {t.label}
+                  {t.count ? ` (${t.count})` : ''}
+                </option>
+              ))}
+              {currentContract.advanceAmount ? <option value="zaloha">Zálohová faktura</option> : null}
+            </select>
+          </div>
+          <div role="tablist" aria-label="Dokumenty zakázky" className="hidden md:flex gap-1 overflow-x-auto -mb-px">
+            {docTabs.map((t) => {
+              const active = activeDocType === t.key || (t.key === 'faktura' && activeDocType === 'zaloha');
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setActiveDocType(t.key === 'faktura' && activeDocType === 'zaloha' ? 'zaloha' : t.key)}
+                  className={`min-h-11 px-3.5 inline-flex items-center gap-2 font-semibold whitespace-nowrap cursor-pointer border-b-[3px] transition-colors ${
+                    active
+                      ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                      : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <span>
+                    {t.label}
+                    {t.key === 'faktura' && currentContract.advanceAmount ? (activeDocType === 'zaloha' ? ' (zálohová)' : ' (konečná)') : ''}
+                  </span>
+                  {!!t.count && <span className="font-display tabular-nums text-[17px]">{t.count}</span>}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
 
+      {/* Zakázka: fáze, podpis, náklady a nástroje (neposouvá se s lištou) */}
+      <div className="no-print max-w-6xl mx-auto px-3 sm:px-4 pt-4 flex flex-wrap items-center gap-2 text-[15px] leading-snug">
+        <label htmlFor="nahled-faze" className="text-slate-600 dark:text-slate-400">
+          Fáze
+        </label>
+        <select
+          id="nahled-faze"
+          value={jobStage.key}
+          onChange={(e) => handleStageChange(e.target.value as JobStageKey)}
+          className="min-h-11 px-3 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-semibold cursor-pointer"
+        >
+          {JOB_STAGE_LABELS.map((st, idx) => (
+            <option key={st.key} value={st.key} disabled={!!currentContract.handoverData && idx < 4}>
+              {st.label}
+            </option>
+          ))}
+        </select>
+
+        {currentContract.clientSignature ? (
+          <span className="min-h-11 px-3 inline-flex items-center gap-1.5 rounded-md border-[1.5px] border-blue-600 text-blue-600 dark:border-blue-300 dark:text-blue-300 font-semibold">
+            <Check className="w-4 h-4" />
+            <span>Podepsáno {formatDateCs(currentContract.clientSignatureDate || currentContract.conclusionDate)}</span>
+          </span>
+        ) : (
+          <button type="button" onClick={handleManualCheckSignature} disabled={isCheckingSignature} className={tbButton}>
+            <RefreshCw className={`w-[18px] h-[18px] ${isCheckingSignature ? 'animate-spin' : ''}`} />
+            <span>{isCheckingSignature ? 'Ověřuji…' : 'Ověřit online podpis'}</span>
+          </button>
+        )}
+
+        <button type="button" onClick={() => setIsExpensesModalOpen(true)} className={tbButton}>
+          <TrendingUp className="w-[18px] h-[18px]" />
+          <span>Náklady a zisk</span>
+        </button>
+
+        {isPro && (
+          <div className="relative">
+            <button type="button" onClick={() => setIsSiteToolsMenuOpen(!isSiteToolsMenuOpen)} aria-expanded={isSiteToolsMenuOpen} className={tbButton}>
+              <Wrench className="w-[18px] h-[18px]" />
+              <span>Nástroje stavby</span>
+              {hasUnreturnedTools && <span className="w-2 h-2 rounded-full bg-rose-600 shrink-0" title="Nevrácené nářadí" />}
+              {isSiteToolsMenuOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+            {isSiteToolsMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setIsSiteToolsMenuOpen(false)} />
+                <div className={`${tbMenu} left-0 w-72 max-w-[calc(100vw-1.5rem)]`}>
+                  {siteTools.map((tool) => {
+                    const Icon = tool.icon;
+                    return (
+                      <button
+                        key={tool.label}
+                        type="button"
+                        onClick={() => {
+                          setIsSiteToolsMenuOpen(false);
+                          tool.open();
+                        }}
+                        className={tbMenuItem}
+                      >
+                        <Icon className="w-[18px] h-[18px] shrink-0" />
+                        <span className="flex-1">{tool.label}</span>
+                        {tool.note && (
+                          <span className={tool.alert ? 'font-semibold text-rose-700 dark:text-rose-400' : 'text-slate-600 dark:text-slate-400 tabular-nums'}>
+                            {tool.note}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Contract Preview Page Wrapper */}
-      <div className="max-w-[850px] mx-auto px-2 sm:px-4 pt-6 sm:pt-8">
+      <div className="max-w-[850px] mx-auto px-2 sm:px-4 pt-5 sm:pt-6 overflow-x-auto">
         {activeDocType === 'nabidka' ? (
           <PriceQuoteView
             contract={currentContract}
@@ -933,21 +712,6 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
           />
         ) : (
           <>
-            {/* A4 Document Status Ribbon */}
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400 no-print px-1">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 font-mono font-bold text-[11px] px-2.5 py-0.5 rounded bg-slate-900 text-amber-400 dark:bg-white dark:text-slate-900 shadow-2xs">
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400 dark:text-slate-900" />
-                  § 2586 NOZ · PRÁVNĚ ZÁVAZNÉ DÍLO
-                </span>
-                <span className="font-mono text-[11px] text-slate-500">Formát A4 (210 × 297 mm)</span>
-              </div>
-              <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                <span>Připraveno k tisku, podpisu a PDF archivaci</span>
-              </div>
-            </div>
-
             {/* The Paper Sheet */}
             <div
               ref={paperRef}
@@ -1598,31 +1362,32 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
         />
       )}
 
-      {/* Plovoucí mobilní lišta rychlých akcí při scrollování */}
-      <div className="sm:hidden fixed bottom-3 left-3 right-3 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl border border-slate-300 dark:border-slate-800 shadow-xl p-2 flex items-center justify-between gap-2 max-w-md mx-auto no-print">
+      {/* Spodní lišta hlavních akcí na mobilu */}
+      <div className="sm:hidden fixed bottom-[75px] left-0 right-0 z-30 bg-white dark:bg-slate-900 border-t border-slate-900 dark:border-slate-600 p-1.5 grid grid-cols-3 gap-2 no-print text-[15px]">
         <button
+          type="button"
           onClick={() => setSignatureModalRole(currentContract.contractorSignature ? 'client' : 'contractor')}
-          className="flex-1 h-10 px-3 rounded-lg bg-amber-500 active:bg-amber-600 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+          className="min-h-11 px-2 rounded-md border-[1.5px] border-slate-900 bg-amber-400 active:bg-amber-500 text-slate-900 font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer"
         >
-          <PenTool className="w-3.5 h-3.5" />
+          <PenTool className="w-[18px] h-[18px] shrink-0" />
           <span>Podepsat</span>
         </button>
-
         <button
+          type="button"
           onClick={() => setIsShareModalOpen(true)}
-          className="flex-1 h-10 px-3 rounded-lg bg-emerald-600 active:bg-emerald-700 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+          className="min-h-11 px-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer"
         >
-          <Send className="w-3.5 h-3.5" />
+          <Send className="w-[18px] h-[18px] shrink-0" />
           <span>Odeslat</span>
         </button>
-
         <button
+          type="button"
           onClick={handleDownloadPdf}
           disabled={isPdfGenerating}
-          className="flex-1 h-10 px-2 rounded-lg bg-slate-900 active:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-75"
+          className="min-h-11 px-2 rounded-md border-[1.5px] border-blue-600 bg-blue-600 active:bg-blue-700 text-white font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-75"
         >
-          {isPdfGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400 shrink-0" /> : <FileDown className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
-          <span className="truncate">Uložit PDF</span>
+          {isPdfGenerating ? <Loader2 className="w-[18px] h-[18px] animate-spin shrink-0" /> : <FileDown className="w-[18px] h-[18px] shrink-0" />}
+          <span>PDF</span>
         </button>
       </div>
     </div>
