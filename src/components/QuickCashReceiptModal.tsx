@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { getContractTotal, getAmendmentsTotal } from '../utils/invoiceMath';
 import { Dialog } from './Dialog';
 import {
   X,
@@ -37,12 +38,15 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
   const nextNumber = `PPD-${new Date().getFullYear()}-${String(existingReceipts.length + 1).padStart(3, '0')}`;
 
   const totalPaidSoFar = existingReceipts.reduce((sum, r) => sum + (r.amount || 0), 0);
-  const remaining = Math.max(0, contract.price - totalPaidSoFar);
+  const jobTotal = getContractTotal(contract);
+  const amendmentsTotal = getAmendmentsTotal(contract);
+  const agreedAdvance = contract.advanceAmount && contract.advanceAmount > 0 ? contract.advanceAmount : 0;
+  const remaining = Math.max(0, jobTotal - totalPaidSoFar);
 
-  const defaultType = contract.advanceAmount && totalPaidSoFar === 0 ? 'zaloha' : 'doplatek';
+  const defaultType = agreedAdvance > 0 && totalPaidSoFar === 0 ? 'zaloha' : 'doplatek';
   const defaultAmount = defaultType === 'zaloha'
-    ? (contract.advanceAmount || Math.round(contract.price * 0.4))
-    : (remaining > 0 ? remaining : contract.price);
+    ? agreedAdvance
+    : (remaining > 0 ? remaining : jobTotal);
 
   const [amount, setAmount] = useState<number | ''>(defaultAmount);
   const [paymentFor, setPaymentFor] = useState<'zaloha' | 'doplatek' | 'plna_castka' | 'viceprace' | 'jine'>(defaultType);
@@ -161,7 +165,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
 
     // If payment covers the whole contract price, optionally update contract status
     const newTotalPaid = updatedReceipts.reduce((sum, r) => sum + (r.amount || 0), 0);
-    const isFullyPaid = newTotalPaid >= contract.price;
+    const isFullyPaid = newTotalPaid >= jobTotal;
 
     const updatedContract: Contract = {
       ...contract,
@@ -269,7 +273,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                 <div>
                   <span className="text-slate-500 font-medium block">Cena zakázky celkem:</span>
                   <span className="font-semibold text-slate-900 dark:text-white text-sm">
-                    {formatCurrency(contract.price)}
+                    {formatCurrency(jobTotal)}
                   </span>
                 </div>
                 <div className="text-right">
@@ -286,16 +290,17 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                   Rychlá volba částky:
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {agreedAdvance > 0 && (
                   <button
                     type="button"
                     onClick={() =>
                       handleSelectPreset(
                         'zaloha',
-                        contract.advanceAmount || Math.round(contract.price * 0.4),
+                        agreedAdvance,
                         `Záloha na materiál a zahájení prací ke smlouvě #${contract.contractNumber}`
                       )
                     }
-                    className={`min-h-11 min-w-11 inline-flex items-center justify-center p-2.5 rounded-xl border text-left font-semibold text-sm cursor-pointer active:scale-95 transition-all ${
+                    className={`min-h-11 p-2.5 rounded-xl border text-left font-semibold text-sm cursor-pointer active:scale-95 transition-all ${
                       paymentFor === 'zaloha'
                         ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
                         : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-300'
@@ -303,20 +308,21 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                   >
                     <div className="text-[13px] text-slate-400">Záloha</div>
                     <div className="text-sm font-semibold">
-                      {formatCurrency(contract.advanceAmount || Math.round(contract.price * 0.4))}
+                      {formatCurrency(agreedAdvance)}
                     </div>
                   </button>
+                  )}
 
                   <button
                     type="button"
                     onClick={() =>
                       handleSelectPreset(
                         'doplatek',
-                        remaining > 0 ? remaining : contract.price,
+                        remaining > 0 ? remaining : jobTotal,
                         `Doplatek ceny díla ke smlouvě #${contract.contractNumber}`
                       )
                     }
-                    className={`min-h-11 min-w-11 inline-flex items-center justify-center p-2.5 rounded-xl border text-left font-semibold text-sm cursor-pointer active:scale-95 transition-all ${
+                    className={`min-h-11 p-2.5 rounded-xl border text-left font-semibold text-sm cursor-pointer active:scale-95 transition-all ${
                       paymentFor === 'doplatek'
                         ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
                         : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-300'
@@ -324,28 +330,30 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                   >
                     <div className="text-[13px] text-slate-400">Doplatek</div>
                     <div className="text-sm font-semibold">
-                      {formatCurrency(remaining > 0 ? remaining : contract.price)}
+                      {formatCurrency(remaining > 0 ? remaining : jobTotal)}
                     </div>
                   </button>
 
+                  {amendmentsTotal > 0 && (
                   <button
                     type="button"
                     onClick={() =>
                       handleSelectPreset(
                         'viceprace',
-                        5000,
+                        amendmentsTotal,
                         `Úhrada víceprací a doplňkového materiálu ke smlouvě #${contract.contractNumber}`
                       )
                     }
-                    className={`min-h-11 min-w-11 inline-flex items-center justify-center p-2.5 rounded-xl border text-left font-semibold text-sm cursor-pointer active:scale-95 transition-all col-span-2 sm:col-span-1 ${
+                    className={`min-h-11 p-2.5 rounded-xl border text-left font-semibold text-sm cursor-pointer active:scale-95 transition-all col-span-2 sm:col-span-1 ${
                       paymentFor === 'viceprace'
                         ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
                         : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     <div className="text-[13px] text-slate-400">Vícepráce</div>
-                    <div className="text-sm font-semibold">5 000 Kč</div>
+                    <div className="text-sm font-semibold">{formatCurrency(amendmentsTotal)}</div>
                   </button>
+                  )}
                 </div>
               </div>
 
@@ -370,7 +378,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
 
                   {/* 1-klik rychlé předvolby částky */}
                   <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                    {remaining > 0 && remaining !== contract.price && (
+                    {remaining > 0 && remaining !== jobTotal && (
                       <button
                         type="button"
                         onClick={() => {
@@ -383,40 +391,40 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                         Celý doplatek: {formatCurrency(remaining)}
                       </button>
                     )}
-                    {contract.advanceAmount && (
+                    {agreedAdvance > 0 && (
                       <button
                         type="button"
                         onClick={() => {
-                          setAmount(contract.advanceAmount!);
+                          setAmount(agreedAdvance);
                           triggerHaptic('selection');
                         }}
                         className="min-h-11 inline-flex items-center justify-center px-2 py-1 rounded-lg text-sm font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                         title="Vyplnit dohodnutou zálohu"
                       >
-                        Záloha: {formatCurrency(contract.advanceAmount)}
+                        Záloha: {formatCurrency(agreedAdvance)}
                       </button>
                     )}
                     <button
                       type="button"
                       onClick={() => {
-                        setAmount(Math.round(contract.price * 0.5));
+                        setAmount(Math.round(jobTotal * 0.5));
                         triggerHaptic('selection');
                       }}
                       className="min-h-11 inline-flex items-center justify-center px-2 py-1 rounded-lg text-sm font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                       title="Vyplnit polovinu ceny zakázky"
                     >
-                      50 % ({formatCurrency(Math.round(contract.price * 0.5))})
+                      50 % ({formatCurrency(Math.round(jobTotal * 0.5))})
                     </button>
                     <button
                       type="button"
                       onClick={() => {
-                        setAmount(contract.price);
+                        setAmount(jobTotal);
                         triggerHaptic('selection');
                       }}
                       className="min-h-11 inline-flex items-center justify-center px-2 py-1 rounded-lg text-sm font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                       title="Vyplnit celkovou cenu zakázky"
                     >
-                      100 % ({formatCurrency(contract.price)})
+                      100 % ({formatCurrency(jobTotal)})
                     </button>
                   </div>
                 </div>
@@ -506,7 +514,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setActiveSigner('contractor')}
-                      className="min-h-11 min-w-11 inline-flex items-center justify-center p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 text-left text-sm font-semibold cursor-pointer"
+                      className="min-h-11 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 text-left text-sm font-semibold cursor-pointer"
                     >
                       <span className="text-[13px] text-slate-400 block">Příjemce (Řemeslník)</span>
                       <span className="text-slate-800 dark:text-slate-200">
@@ -517,7 +525,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setActiveSigner('client')}
-                      className="min-h-11 min-w-11 inline-flex items-center justify-center p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 text-left text-sm font-semibold cursor-pointer"
+                      className="min-h-11 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 text-left text-sm font-semibold cursor-pointer"
                     >
                       <span className="text-[13px] text-slate-400 block">Plátce (Zákazník)</span>
                       <span className="text-slate-800 dark:text-slate-200">

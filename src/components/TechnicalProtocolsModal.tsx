@@ -321,9 +321,9 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                   setSelectedProtocolId(p.id);
                   setIsCreatingNew(false);
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                className={`min-h-11 inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
                   !isCreatingNew && selectedProtocolId === p.id
-                    ? 'bg-teal-600 text-white shadow-xs'
+                    ? 'bg-slate-600 text-white shadow-xs'
                     : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                 }`}
               >
@@ -338,7 +338,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
               triggerHaptic('selection');
               setIsCreatingNew(true);
             }}
-            className="px-3.5 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="min-h-11 px-3.5 py-1.5 rounded-xl bg-slate-600 hover:bg-slate-700 text-white font-semibold text-sm flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             <Plus className="w-4 h-4" />
             <span>+ Vystavit nový protokol</span>
@@ -352,7 +352,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
             <form onSubmit={handleCreateProtocol} className="space-y-4">
               {/* Preset buttons */}
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">
+                <label className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-2">
                   Zvolte typ technické zkoušky:
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -361,25 +361,25 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                       key={preset.type}
                       type="button"
                       onClick={() => handleApplyPreset(idx)}
-                      className={`p-3 rounded-xl border text-left font-bold text-xs transition-all cursor-pointer ${
+                      className={`min-h-11 p-3 rounded-xl border text-left font-semibold text-sm transition-all cursor-pointer ${
                         selectedPresetIdx === idx
-                          ? 'border-teal-500 bg-teal-50 dark:bg-teal-950/60 text-teal-900 dark:text-teal-200 ring-2 ring-teal-500/30'
-                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-300 hover:border-teal-300'
+                          ? 'border-slate-500 bg-slate-50 dark:bg-slate-950/60 text-slate-900 dark:text-slate-200 ring-2 ring-slate-500/30'
+                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-300 hover:border-slate-300'
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
                         {preset.type === 'water_pressure' ? (
-                          <Droplets className="w-4 h-4 text-cyan-500" />
+                          <Droplets className="w-4 h-4 text-slate-500" />
                         ) : preset.type === 'heating_pressure' || preset.type === 'floor_heating_test' ? (
                           <Flame className="w-4 h-4 text-amber-500" />
                         ) : (
-                          <ShieldCheck className="w-4 h-4 text-teal-500" />
+                          <ShieldCheck className="w-4 h-4 text-slate-500" />
                         )}
-                        <span className="font-extrabold text-slate-900 dark:text-white truncate">
+                        <span className="font-semibold text-slate-900 dark:text-white truncate">
                           {preset.title.replace('Protokol o ', '')}
                         </span>
                       </div>
-                      <span className="text-3xs text-slate-400 font-medium block">
+                      <span className="text-[13px] text-slate-400 font-medium block">
                         {preset.standard}
                       </span>
                     </button>
@@ -390,66 +390,66 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
               {/* Number, Date, Standard */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     Číslo protokolu *
                   </label>
                   <input
                     type="text"
                     value={protocolNumber}
                     onChange={(e) => setProtocolNumber(e.target.value)}
-                    className="w-full text-xs font-mono font-bold px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700"
+                    className="min-h-11 w-full text-sm font-semibold px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     Datum provedení zkoušky *
                   </label>
                   <input
                     type="date"
                     value={testDate}
                     onChange={(e) => setTestDate(e.target.value)}
-                    className="w-full text-xs font-bold px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700"
+                    className="min-h-11 w-full text-sm font-semibold px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     ČSN norma
                   </label>
                   <input
                     type="text"
                     value={standard}
                     onChange={(e) => setStandard(e.target.value)}
-                    className="w-full text-xs font-medium px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700"
+                    className="min-h-11 w-full text-sm font-medium px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700"
                   />
                 </div>
               </div>
 
               {/* Pressures and parameters */}
-              <div className="p-4 rounded-xl bg-teal-50/50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-900/60 space-y-3">
-                <span className="text-xs font-extrabold text-teal-900 dark:text-teal-200 uppercase tracking-wider block">
+              <div className="p-4 rounded-xl bg-slate-50/50 dark:bg-slate-950/30 border border-slate-200 dark:border-slate-900/60 space-y-3">
+                <span className="text-sm font-semibold text-slate-900 dark:text-slate-200 block">
                   Parametry zkoušky a naměřené hodnoty:
                 </span>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
-                    <label className="text-2xs font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                    <label className="text-[13px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">
                       Materiál potrubí
                     </label>
                     <input
                       type="text"
                       value={pipeMaterial}
                       onChange={(e) => setPipeMaterial(e.target.value)}
-                      className="w-full text-xs font-bold px-2.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
+                      className="min-h-11 w-full text-sm font-semibold px-2.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
                       placeholder="PPR, Alpex..."
                     />
                   </div>
 
                   <div>
-                    <label className="text-2xs font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                    <label className="text-[13px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">
                       Zkušební přetlak (bar) *
                     </label>
                     <input
@@ -457,26 +457,26 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                       step="0.1"
                       value={testPressure}
                       onChange={(e) => setTestPressure(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                      className="w-full text-xs font-black px-2.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-teal-700 dark:text-teal-300"
+                      className="min-h-11 w-full text-sm font-semibold px-2.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="text-2xs font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                    <label className="text-[13px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">
                       Doba trvání (minut) *
                     </label>
                     <input
                       type="number"
                       value={durationMinutes}
                       onChange={(e) => setDurationMinutes(e.target.value === '' ? '' : parseInt(e.target.value, 10))}
-                      className="w-full text-xs font-bold px-2.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
+                      className="min-h-11 w-full text-sm font-semibold px-2.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="text-2xs font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                    <label className="text-[13px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">
                       Pokles tlaku (bar) *
                     </label>
                     <input
@@ -484,7 +484,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                       step="0.01"
                       value={pressureDrop}
                       onChange={(e) => setPressureDrop(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                      className="w-full text-xs font-black px-2.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
+                      className="min-h-11 w-full text-sm font-semibold px-2.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
                       required
                     />
                   </div>
@@ -493,13 +493,13 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                 {/* Result toggle */}
                 <div className="flex items-center justify-between pt-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                       Celkový výsledek zkoušky:
                     </span>
                     <button
                       type="button"
                       onClick={() => setResult('vyhovuje')}
-                      className={`px-3 py-1 rounded-xl text-xs font-extrabold cursor-pointer transition-all ${
+                      className={`min-h-11 inline-flex items-center justify-center px-3 py-1 rounded-xl text-sm font-semibold cursor-pointer transition-all ${
                         result === 'vyhovuje'
                           ? 'bg-emerald-600 text-white shadow-xs'
                           : 'bg-white dark:bg-slate-800 text-slate-600'
@@ -510,7 +510,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                     <button
                       type="button"
                       onClick={() => setResult('nevyhovuje')}
-                      className={`px-3 py-1 rounded-xl text-xs font-extrabold cursor-pointer transition-all ${
+                      className={`min-h-11 inline-flex items-center justify-center px-3 py-1 rounded-xl text-sm font-semibold cursor-pointer transition-all ${
                         result === 'nevyhovuje'
                           ? 'bg-rose-600 text-white shadow-xs'
                           : 'bg-white dark:bg-slate-800 text-slate-600'
@@ -520,7 +520,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                     </button>
                   </div>
 
-                  <span className="text-3xs text-slate-500 font-semibold">
+                  <span className="text-[13px] text-slate-500 font-semibold">
                     Dle ČSN nesmí dojít k orosení ani zjevnému poklesu
                   </span>
                 </div>
@@ -528,26 +528,26 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
 
               {/* Notes */}
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                   Zkušební protokol – podrobnosti a průběh zkoušky:
                 </label>
                 <textarea
                   rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full text-xs font-medium p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 outline-hidden"
+                  className="w-full text-sm font-medium p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 outline-hidden"
                 />
               </div>
 
               {/* Signatures */}
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-400 block">
+                <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 block">
                   Podpisy na mobilu (volitelné):
                 </span>
 
                 {activeSigner ? (
                   <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold">
+                    <div className="flex items-center justify-between text-sm font-semibold">
                       <span>Podpis: {activeSigner === 'contractor' ? 'Zkušební technik' : 'Objednatel / TDI'}</span>
                       <button
                         type="button"
@@ -558,7 +558,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                             ctx?.clearRect(0, 0, canvas.width, canvas.height);
                           }
                         }}
-                        className="text-2xs text-rose-600 hover:underline flex items-center gap-1"
+                        className="min-h-11 min-w-11 text-[13px] text-rose-600 hover:underline flex items-center gap-1"
                       >
                         <RotateCcw className="w-3 h-3" /> Vymazat
                       </button>
@@ -580,36 +580,36 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                       <button
                         type="button"
                         onClick={() => setActiveSigner(null)}
-                        className="px-3 py-1 rounded-lg text-xs font-bold bg-slate-200 text-slate-700"
+                        className="min-h-11 inline-flex items-center justify-center px-3 py-1 rounded-lg text-sm font-semibold bg-slate-200 text-slate-700"
                       >
                         Zrušit
                       </button>
                       <button
                         type="button"
                         onClick={saveSignature}
-                        className="px-3 py-1 rounded-lg text-xs font-bold bg-teal-600 text-white"
+                        className="min-h-11 inline-flex items-center justify-center px-3 py-1 rounded-lg text-sm font-semibold bg-slate-600 text-white"
                       >
                         Uložit podpis
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
                     <button
                       type="button"
                       onClick={() => setActiveSigner('contractor')}
-                      className="p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-left font-bold cursor-pointer"
+                      className="min-h-11 p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-left font-semibold cursor-pointer"
                     >
-                      <span className="text-3xs text-slate-400 block">Zkoušku provedl (Technik)</span>
+                      <span className="text-[13px] text-slate-400 block">Zkoušku provedl (Technik)</span>
                       <span>{contractorSignature ? '✓ Podepsáno' : '+ Podepsat prstem'}</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setActiveSigner('client')}
-                      className="p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-left font-bold cursor-pointer"
+                      className="min-h-11 p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-left font-semibold cursor-pointer"
                     >
-                      <span className="text-3xs text-slate-400 block">Za objednatele / TDI</span>
+                      <span className="text-[13px] text-slate-400 block">Za objednatele / TDI</span>
                       <span>{clientSignature ? '✓ Podepsáno' : '+ Podepsat prstem'}</span>
                     </button>
                   </div>
@@ -621,13 +621,13 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                 <button
                   type="button"
                   onClick={() => setIsCreatingNew(false)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+                  className="min-h-11 inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100"
                 >
                   Zrušit
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-black text-xs sm:text-sm flex items-center gap-2 shadow-md cursor-pointer active:scale-95 transition-all"
+                  className="min-h-11 px-5 py-2.5 rounded-xl bg-slate-600 hover:bg-slate-700 text-white font-semibold text-sm sm:text-sm flex items-center gap-2 shadow-md cursor-pointer active:scale-95 transition-all"
                 >
                   <Check className="w-4 h-4 stroke-[3]" />
                   <span>Vystavit a uložit protokol ({protocolNumber})</span>
@@ -754,7 +754,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                   <button
                     type="button"
                     onClick={() => handleShareWhatsApp(selectedProtocol)}
-                    className="min-h-[42px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    className="min-h-[42px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
                     <Share2 className="w-4 h-4" />
                     <span>Sdílet protokol (WhatsApp)</span>
@@ -763,7 +763,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                   <button
                     type="button"
                     onClick={() => window.print()}
-                    className="min-h-[42px] px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-extrabold text-xs flex items-center gap-1.5 cursor-pointer"
+                    className="min-h-[42px] px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm flex items-center gap-1.5 cursor-pointer"
                   >
                     <Printer className="w-4 h-4" />
                     <span>Tisk protokolu</span>
@@ -773,7 +773,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                 <button
                   type="button"
                   onClick={() => handleDeleteProtocol(selectedProtocol.id)}
-                  className="min-h-[42px] px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                  className="min-h-[42px] px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-sm font-semibold flex items-center gap-1 cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>Smazat</span>
@@ -783,21 +783,21 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
           ) : (
             <div className="p-8 text-center text-slate-400">
               <Gauge className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              <p className="font-bold text-sm">Žádný technický protokol zatím nebyl vystaven.</p>
-              <p className="text-xs mt-1">Klikněte na „Vystavit nový protokol“ pro tlakovou zkoušku vody nebo topení.</p>
+              <p className="font-semibold text-sm">Žádný technický protokol zatím nebyl vystaven.</p>
+              <p className="text-sm mt-1">Klikněte na „Vystavit nový protokol“ pro tlakovou zkoušku vody nebo topení.</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 flex items-center justify-between shrink-0">
-          <div className="text-2xs text-slate-500 font-medium">
-            Protokoly splňují náležitosti pro kolaudaci a předání stavby dle norem ČSN.
+          <div className="text-[13px] text-slate-500 font-medium">
+            Protokoly se ukládají k zakázce a jdou do její složky.
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-800 dark:text-slate-200 font-bold text-xs"
+            className="min-h-11 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-800 dark:text-slate-200 font-semibold text-sm"
           >
             Zavřít
           </button>
