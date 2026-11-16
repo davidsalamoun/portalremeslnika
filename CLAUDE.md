@@ -228,7 +228,8 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
 - Předání díla (`handoverData`) se ukládá podpisem předávacího protokolu; čte ho záruční list, faktura i složka zakázky.
 - Pod náhledem dokumentů je upozornění, že vzory nenahrazují právní poradenství (jen na obrazovce, třída `no-print`).
 - Export PDF (`exportPdf.ts`) vykresluje papír vždy v šířce A4 (794 px) v okně širokém 1280 px, takže PDF z mobilu
-  je stejné jako z počítače. Vynechává prvky s třídou `no-print`; tlačítko „Uložit PDF“ ukládá právě zobrazený dokument.
+  je stejné jako z počítače. Doklad, který přesahuje jednu stranu nejvýš o 10 %, se nepatrně zmenší na jednu stranu
+  (`MAX_SHRINK_TO_FIT`). Vynechává prvky s třídou `no-print`; tlačítko „Uložit PDF“ ukládá právě zobrazený dokument.
 
 ## AI
 

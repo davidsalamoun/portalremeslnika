@@ -6,6 +6,8 @@ import { generateContractFilename } from './exportNames';
 /** Šířka papíru A4 v pixelech obrazovky (210 mm při 96 dpi) a šířka okna, ve kterém se kopie stránky vykreslí. */
 const PDF_PAPER_WIDTH = 794;
 const PDF_WINDOW_WIDTH = 1280;
+/** O kolik smí doklad přesáhnout jednu stranu, aby se místo dělení zmenšil na jednu stranu. */
+const MAX_SHRINK_TO_FIT = 1.1;
 
 /**
  * Vygeneruje a stáhne PDF soubor z HTML elementu smlouvy s podporou vícestránkového dělení
@@ -49,7 +51,12 @@ export async function exportContractToPdf(
     // pokud by kvůli němu vyšla poslední strana skoro prázdná (jen patička), zkusí se menší okraj.
     let topMarginMm = 0;
     let slices: PageSlice[] = [];
-    for (const marginMm of [12, 8, 4, 0]) {
+    // Drobný přesah (do 10 % výšky strany) se nedělí na druhou stranu s osamocenou patičkou – doklad se
+    // nepatrně zmenší, aby se vešel na jednu stranu
+    const overflow = canvas.height / pageHeightPx;
+    const fit = overflow > 1.02 && overflow <= MAX_SHRINK_TO_FIT ? 1 / overflow : 1;
+    if (fit < 1) slices = [{ start: 0, end: canvas.height }];
+    for (const marginMm of fit < 1 ? [] : [12, 8, 4, 0]) {
       topMarginMm = marginMm;
       slices = computePageSlices(canvas, pageHeightPx, Math.round(marginMm * pxPerMm));
       const last = slices[slices.length - 1];
@@ -70,10 +77,10 @@ export async function exportContractToPdf(
       pdf.addImage(
         pageCanvas.toDataURL('image/jpeg', 0.95),
         'JPEG',
-        0,
+        (pdfWidth * (1 - fit)) / 2,
         index === 0 ? 0 : topMarginMm,
-        pdfWidth,
-        pageCanvas.height / pxPerMm,
+        pdfWidth * fit,
+        (pageCanvas.height / pxPerMm) * fit,
         undefined,
         'FAST'
       );
