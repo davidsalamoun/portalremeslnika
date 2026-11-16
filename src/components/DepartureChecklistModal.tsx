@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Dialog } from './Dialog';
 import {
   ShieldCheck,
   X,
@@ -99,31 +100,14 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl w-full max-w-xl shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
-        {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900 text-white">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-black">
-              <ShieldCheck className="w-5 h-5 stroke-[2.5]" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono uppercase font-black text-amber-400">Předopouštěcí protokol</span>
-                <span className="text-[11px] font-mono text-slate-400">· {timeStr}</span>
-              </div>
-              <h3 className="font-black text-base text-white tracking-tight">
-                Kontrola před odjezdem ze stavby
-              </h3>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Dialog
+      title="Odjezd ze stavby"
+      subtitle="Kontrola před odjezdem."
+      size="xl"
+      bare
+      closeOnBackdrop={false}
+      onClose={onClose}
+    >
 
         {/* Content Body */}
         <div className="p-5 sm:p-6 space-y-4">
@@ -331,7 +315,6 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </Dialog>
   );
 };

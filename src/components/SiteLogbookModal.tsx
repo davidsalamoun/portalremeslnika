@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { Dialog, dialogActionButton } from './Dialog';
 import {
   X,
   Plus,
@@ -154,39 +155,15 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
   const totalHours = logs.reduce((sum, l) => sum + (l.hoursWorked || 0), 0);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto">
-        {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900 text-white">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-black">
-              <FileText className="w-5 h-5 stroke-[2.5]" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono uppercase font-black text-amber-400">§ 157 stavební zákon</span>
-                <span className="text-[11px] font-mono text-slate-400">· SOD #{contract.contractNumber}</span>
-              </div>
-              <h3 className="font-black text-base text-white tracking-tight">Digitální stavební deník</h3>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePrint}
-              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs flex items-center gap-1.5 cursor-pointer border border-slate-700 font-mono font-bold"
-              title="Tisk stavebního deníku"
-            >
-              <Printer className="w-4 h-4 text-amber-400" />
-              <span className="hidden sm:inline">Tisknout deník</span>
-            </button>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+    <Dialog
+      title="Stavební deník"
+      subtitle={<>smlouva {contract.contractNumber}</>}
+      size="2xl"
+      actions={<button type="button" onClick={handlePrint} className={dialogActionButton}><Printer className="w-4 h-4" /><span className="hidden sm:inline">Tisk</span></button>}
+      bare
+      closeOnBackdrop={false}
+      onClose={onClose}
+    >
 
         {/* Content body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
@@ -500,7 +477,7 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
         {/* Footer */}
         <div className="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between">
           <span className="text-xs text-slate-400">
-            Deník splňuje náležitosti podle stavebního zákona
+            Zápisy se ukládají k zakázce.
           </span>
           <button
             type="button"
@@ -510,7 +487,6 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
             Zavřít
           </button>
         </div>
-      </div>
-    </div>
+      </Dialog>
   );
 };

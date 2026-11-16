@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { Dialog } from './Dialog';
 import {
   X,
   Search,
@@ -136,30 +137,14 @@ export const PriceListModal: React.FC<PriceListModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-3xl w-full my-6 flex flex-col max-h-[90vh] overflow-hidden text-slate-800 dark:text-slate-100">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 bg-slate-900 text-white shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-800 text-amber-400 border border-slate-700 flex items-center justify-center shrink-0 font-bold">
-              <Layers className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
-                <span>Ceník řemeslníka – Rychlý výběr</span>
-              </h2>
-              <p className="text-xs text-slate-300">
-                Zaškrtněte položky prací a materiálů pro okamžité vložení do rozpočtu na 1 klik
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Dialog
+      title="Vybrat z ceníku"
+      subtitle="Zaškrtněte položky, které chcete vložit do rozpočtu."
+      size="2xl"
+      bare
+      closeOnBackdrop={false}
+      onClose={onClose}
+    >
 
         {/* Search & Categories Bar */}
         <div className="p-3.5 sm:p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 space-y-3 shrink-0">
@@ -368,7 +353,6 @@ export const PriceListModal: React.FC<PriceListModalProps> = ({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </Dialog>
   );
 };

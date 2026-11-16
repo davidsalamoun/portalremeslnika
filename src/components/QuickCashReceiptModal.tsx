@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { Dialog } from './Dialog';
 import {
   X,
   Banknote,
@@ -197,36 +198,14 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 rounded-xl max-w-xl w-full shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        {/* Header - Industrial Cash Receipt */}
-        <div className="p-4 sm:p-5 border-b border-slate-800 bg-slate-950 text-white flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/40 text-amber-400 flex items-center justify-center shrink-0">
-              <Banknote className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-400 text-slate-950">
-                  Pokladna
-                </span>
-                <span className="text-xs text-slate-400 font-mono">
-                  #{contract.contractNumber}
-                </span>
-              </div>
-              <h2 className="text-base sm:text-lg font-black text-white mt-0.5">
-                Příjmový pokladní doklad (PPD)
-              </h2>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 text-xs font-mono font-bold text-slate-400 hover:text-white cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
-          >
-            <X className="w-4 h-4" />
-            <span className="hidden sm:inline">ESC</span>
-          </button>
-        </div>
+    <Dialog
+      title="Příjem hotovosti"
+      subtitle={<>smlouva {contract.contractNumber}</>}
+      size="xl"
+      bare
+      closeOnBackdrop={false}
+      onClose={onClose}
+    >
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
@@ -573,7 +552,6 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
             </button>
           </div>
         )}
-      </div>
-    </div>
+      </Dialog>
   );
 };
