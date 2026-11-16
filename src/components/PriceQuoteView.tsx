@@ -306,19 +306,21 @@ export const PriceQuoteView: React.FC<PriceQuoteViewProps> = ({
         </div>
 
         {/* Footer with sign-off and stamp */}
-        <div className="pt-6 border-t border-slate-300 flex items-end justify-between relative">
+        <div className="pt-6 border-t border-slate-300 flex items-end justify-between gap-4 relative">
           <div className="text-xs text-slate-500">
             V {contract.executionPlace || contract.contractor.defaultPlace || 'místě plnění'} dne{' '}
             {formatDateCs(issueDate)}
           </div>
 
-          <div className="text-right relative">
-            <div className="absolute -top-12 -left-28 sm:-left-36 opacity-85 pointer-events-none">
+          <div className="flex flex-wrap items-end justify-end gap-x-5 gap-y-2">
+            <div className="max-w-full opacity-85 pointer-events-none">
               <CraftsmanStamp contractor={contract.contractor} size="sm" />
             </div>
-            <div className="text-xs text-slate-500 uppercase font-bold mb-1">Vypracoval:</div>
-            <div className="font-bold text-sm text-slate-900">{contract.contractor.name}</div>
-            <div className="text-xs text-slate-600 font-mono">IČO: {contract.contractor.ico}</div>
+            <div className="text-right">
+              <div className="text-xs text-slate-500 uppercase font-bold mb-1">Vypracoval:</div>
+              <div className="font-bold text-sm text-slate-900">{contract.contractor.name}</div>
+              <div className="text-xs text-slate-600 font-mono">IČO: {contract.contractor.ico}</div>
+            </div>
           </div>
         </div>
       </div>

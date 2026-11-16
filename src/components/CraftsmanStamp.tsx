@@ -7,53 +7,68 @@ interface CraftsmanStampProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-export const CraftsmanStamp: React.FC<CraftsmanStampProps> = ({
-  contractor,
-  className = '',
-  size = 'md',
-}) => {
+// Obyčejné firemní razítko: jméno, adresa, telefon a pod linkou IČO (u plátce i DIČ).
+// Barvy a písmo jsou zadané přímo, protože razítko leží na papíře dokumentu, kde se vzhled aplikace nepoužívá.
+const INK = '#1B3F8B';
+const SIZES = {
+  sm: { width: 172, name: 14, text: 9.5, ico: 12, padding: '6px 10px 5px' },
+  md: { width: 220, name: 17, text: 11, ico: 14, padding: '9px 14px 8px' },
+  lg: { width: 260, name: 20, text: 12.5, ico: 16, padding: '10px 18px 9px' },
+};
+
+export const CraftsmanStamp: React.FC<CraftsmanStampProps> = ({ contractor, className = '', size = 'md' }) => {
   if (!contractor || !contractor.name || !contractor.ico) {
     return null;
   }
-
-  const sizeClasses = {
-    sm: 'w-36 h-24 text-[9px]',
-    md: 'w-48 h-32 text-[10px]',
-    lg: 'w-56 h-36 text-[11px]',
-  }[size];
+  const s = SIZES[size];
 
   return (
     <div
-      className={`relative select-none pointer-events-none transform -rotate-2 ${className}`}
-      title={`Úřední otisk razítka: ${contractor.name}`}
+      className={`relative select-none pointer-events-none ${className}`}
+      style={{ transform: 'rotate(-1.5deg)', maxWidth: '100%' }}
+      title={`Razítko: ${contractor.name}`}
     >
       <div
-        className={`${sizeClasses} rounded-[48px] border-2 border-blue-900/80 p-2 flex flex-col items-center justify-between text-center font-sans tracking-tight text-blue-900/90 bg-blue-50/25 shadow-2xs backdrop-blur-[0.5px]`}
         style={{
-          boxShadow: 'inset 0 0 0 1px rgba(30, 58, 138, 0.4)',
+          width: s.width,
+          maxWidth: '100%',
+          boxSizing: 'border-box',
+          border: `2px solid ${INK}`,
+          borderRadius: 3,
+          padding: s.padding,
+          color: INK,
+          opacity: 0.92,
+          textAlign: 'center',
+          fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+          lineHeight: 1.3,
         }}
       >
-        {/* Horní oblouk / Hlavička razítka */}
-        <div className="w-full flex items-center justify-center border-b border-blue-900/30 pb-0.5">
-          <span className="font-extrabold uppercase tracking-widest text-[8px] text-blue-950 opacity-90">
-            • ŽIVNOSTENSKÉ OPRÁVNĚNÍ •
-          </span>
+        <div
+          style={{
+            fontFamily: "'Barlow Semi Condensed', 'IBM Plex Sans', sans-serif",
+            fontWeight: 700,
+            fontSize: s.name,
+            lineHeight: 1.1,
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {contractor.name}
         </div>
-
-        {/* Střed razítka: Jméno a sídlo */}
-        <div className="my-auto px-1 py-0.5 leading-tight">
-          <div className="font-black uppercase tracking-tight text-blue-950 text-xs sm:text-[13px] line-clamp-1">
-            {contractor.name}
-          </div>
-          <div className="text-[9px] text-blue-900/80 line-clamp-1 mt-0.5">
-            {contractor.address}
-          </div>
-        </div>
-
-        {/* Spodní řádek: IČO a DIČ */}
-        <div className="w-full border-t border-blue-900/30 pt-0.5 flex items-center justify-center gap-1 font-mono font-bold text-[9px] text-blue-950">
-          <span>IČO: {contractor.ico}</span>
-          {contractor.dic && <span>· DIČ: {contractor.dic}</span>}
+        {contractor.address && <div style={{ fontSize: s.text, marginTop: 2 }}>{contractor.address}</div>}
+        {contractor.phone && <div style={{ fontSize: s.text }}>tel. {contractor.phone}</div>}
+        <div
+          style={{
+            fontFamily: "'Barlow Semi Condensed', 'IBM Plex Sans', sans-serif",
+            fontWeight: 600,
+            fontSize: s.ico,
+            letterSpacing: '0.03em',
+            borderTop: `1.5px solid ${INK}`,
+            marginTop: 4,
+            paddingTop: 3,
+          }}
+        >
+          IČO {contractor.ico}
+          {contractor.dic ? ` · DIČ ${contractor.dic}` : ''}
         </div>
       </div>
     </div>

@@ -381,10 +381,10 @@ export const CashReceiptView: React.FC<CashReceiptViewProps> = ({
                   <div className="text-[11px] font-bold text-slate-600 mb-1 uppercase">
                     Přijal / Vystavil (podpis příjemce):
                   </div>
+                  <div className="flex justify-center mb-1.5 opacity-85 pointer-events-none">
+                    <CraftsmanStamp contractor={contract.contractor} size="sm" />
+                  </div>
                   <div className="h-24 border border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center p-2 bg-slate-50 relative overflow-hidden">
-                    <div className="absolute -top-3 -right-2 opacity-80 pointer-events-none">
-                      <CraftsmanStamp contractor={contract.contractor} size="sm" />
-                    </div>
                     {selectedReceipt.contractorSignature ? (
                       <div className="flex flex-col items-center z-10">
                         <img

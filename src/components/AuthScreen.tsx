@@ -128,11 +128,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ initialMode = 'login', o
         </div>
 
         <div className="hidden sm:flex flex-col gap-2 max-w-md">
-          <Metr percent={100} animate onDark label="Cesta zakázky od poptávky po zaplacení" className="h-[18px]" />
-          <div className="flex justify-between text-sm text-blue-100">
+          <Metr step={5} done animate onDark label="Cesta zakázky od poptávky po zaplacení" />
+          <div className="grid grid-cols-6 text-[13px] text-blue-100">
             <span>Poptávka</span>
+            <span>Nabídka</span>
             <span>Smlouva</span>
             <span>Realizace</span>
+            <span>Předáno</span>
             <span>Zaplaceno</span>
           </div>
         </div>

@@ -234,7 +234,7 @@ export const LeadsPipelinePage: React.FC<LeadsPipelinePageProps> = ({
                   </div>
                 </div>
 
-                <Metr percent={stage.percent} label={`Fáze zakázky: ${stage.label}`} />
+                <Metr step={stage.index} done={stage.key === 'paid'} label={`Fáze zakázky: ${stage.label}`} />
 
                 <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5">
                   <div className="font-medium text-slate-900 dark:text-slate-100">

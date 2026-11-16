@@ -440,8 +440,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     </div>
                   </div>
 
-                  <Metr percent={stage.percent} label={`Fáze zakázky: ${stage.label}`} />
-                  <div className="hidden sm:flex justify-between gap-2 text-[13px] text-slate-600 dark:text-slate-400">
+                  <Metr step={stage.index} done={stage.key === 'paid'} label={`Fáze zakázky: ${stage.label}`} />
+                  <div className="hidden sm:grid grid-cols-6 text-[13px] text-slate-600 dark:text-slate-400">
                     {JOB_STAGE_LABELS.map((s) => (
                       <span key={s.key} className={s.key === stage.key ? 'font-semibold text-slate-900 dark:text-white' : ''}>
                         {s.label}

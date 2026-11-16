@@ -380,7 +380,7 @@ export const HandoverProtocolView: React.FC<HandoverProtocolViewProps> = ({
               <div className="flex flex-col items-center relative">
                 <p className="font-bold text-xs text-black mb-2">Dílo předal (Zhotovitel):</p>
                 <div className="relative flex flex-col items-center justify-end min-h-16 mb-2 w-full">
-                  <div className="absolute -top-6 -right-2 sm:-right-6 opacity-85 pointer-events-none">
+                  <div className="mb-1.5 max-w-full opacity-85 pointer-events-none">
                     <CraftsmanStamp contractor={contract.contractor} size="sm" />
                   </div>
                   {contract.contractorSignature ? (

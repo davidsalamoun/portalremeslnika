@@ -219,6 +219,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       defaultPlace: cleanedPlace,
       signature: signature || undefined,
       aresVerified: isAresVerified({ ico, name, address, aresVerified }) ? aresVerified : undefined,
+      expenseFlatRate: initialProfile?.expenseFlatRate,
       subscriptionPlan: initialProfile?.subscriptionPlan,
       subscriptionExpiresAt: initialProfile?.subscriptionExpiresAt,
       trialStartedAt: initialProfile?.trialStartedAt,

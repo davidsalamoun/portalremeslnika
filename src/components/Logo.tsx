@@ -25,43 +25,58 @@ export const Logo: React.FC<{ size?: number; className?: string }> = ({ size = 3
 );
 
 /**
- * „Metr“ – pruh s dílky jako na svinovacím metru. Žlutá část ukazuje, jak daleko je zakázka.
- * @param percent 0–100
- * @param animate výplň jednou plynule vyjede z nuly
+ * „Metr“ – pruh rozdělený na úseky, jeden na fázi zakázky. Hotové fáze jsou žluté, aktuální má dole tmavý pruh.
+ * @param animate úseky se jednou postupně vybarví
  * @param onDark varianta na tmavém / modrém podkladu
  */
-export const Metr: React.FC<{ percent: number; label: string; animate?: boolean; onDark?: boolean; className?: string }> = ({
-  percent,
-  label,
-  animate = false,
-  onDark = false,
-  className = '',
-}) => {
-  const clamped = Math.max(0, Math.min(100, percent));
-  const tick = (alpha: number, light: boolean) =>
-    `repeating-linear-gradient(90deg, ${light ? `rgba(255,255,255,${alpha})` : `rgba(26,29,33,${alpha})`} 0 1px, transparent 1px 12px)`;
+export const Metr: React.FC<{
+  /** Pořadí aktuální fáze od nuly (0 = první úsek) */
+  step: number;
+  /** Počet úseků; výchozí je šest fází zakázky */
+  steps?: number;
+  /** Vše hotovo: všechny úseky žluté, žádný není označen jako aktuální */
+  done?: boolean;
+  label: string;
+  animate?: boolean;
+  onDark?: boolean;
+  className?: string;
+}> = ({ step, steps = 6, done = false, label, animate = false, onDark = false, className = '' }) => {
+  const line = onDark ? '#FFFFFF' : '#1A1D21';
+  // Tři krátké rysky uvnitř úseku (čtvrtiny); na hranicích úseků je jen dělicí čára
+  const ticks = (color: string) => ({
+    backgroundImage: [1, 2, 3].map(() => `linear-gradient(${color}, ${color})`).join(', '),
+    backgroundSize: '1px 6px',
+    backgroundPosition: '25% 100%, 50% 100%, 75% 100%',
+    backgroundRepeat: 'no-repeat',
+  });
   return (
     <div
       role="img"
       aria-label={label}
-      className={`relative h-4 rounded-sm overflow-hidden ${className}`}
+      className={`grid h-[18px] rounded-sm overflow-hidden ${className}`}
       style={{
-        border: `1px solid ${onDark ? '#FFFFFF' : '#1A1D21'}`,
+        gridTemplateColumns: `repeat(${steps}, minmax(0, 1fr))`,
+        border: `1px solid ${line}`,
         backgroundColor: onDark ? 'transparent' : '#FFFFFF',
-        backgroundImage: tick(onDark ? 0.7 : 0.5, onDark),
       }}
     >
-      <div
-        className={animate ? 'animate-metr' : undefined}
-        style={{
-          position: 'absolute',
-          inset: '0 auto 0 0',
-          width: `${clamped}%`,
-          backgroundColor: '#F5C400',
-          backgroundImage: tick(0.75, false),
-          borderRight: clamped > 0 && clamped < 100 ? '2px solid #1A1D21' : undefined,
-        }}
-      />
+      {Array.from({ length: steps }, (_, i) => {
+        const filled = done || i <= step;
+        const current = !done && i === step;
+        return (
+          <div
+            key={i}
+            className={animate && filled ? 'animate-metr' : undefined}
+            style={{
+              borderRight: i < steps - 1 ? `1.5px solid ${line}` : undefined,
+              backgroundColor: filled ? '#F5C400' : undefined,
+              boxShadow: current ? 'inset 0 -4px 0 #1A1D21' : undefined,
+              animationDelay: animate ? `${0.3 + i * 0.55}s` : undefined,
+              ...ticks(filled ? 'rgba(26,29,33,0.4)' : onDark ? 'rgba(255,255,255,0.55)' : 'rgba(26,29,33,0.22)'),
+            }}
+          />
+        );
+      })}
     </div>
   );
 };

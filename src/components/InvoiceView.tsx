@@ -30,7 +30,10 @@ import { exportContractToPdf } from '../utils/lazyExports';
 import { getWhatsAppShareUrl, getMailtoShareUrl } from '../utils/shareUtils';
 import { triggerHaptic } from '../utils/haptics';
 import { CraftsmanStamp } from './CraftsmanStamp';
-import { getAdvanceInvoiceDates, getFinalInvoiceDates } from '../utils/invoiceMath';
+import { getAdvanceInvoiceDates, getFinalInvoiceDates, getVatBreakdown, getVatRate, VatRate } from '../utils/invoiceMath';
+
+const formatHalere = (amount: number) =>
+  `${new Intl.NumberFormat('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount)} Kč`;
 
 interface InvoiceViewProps {
   contract: Contract;
@@ -39,6 +42,7 @@ interface InvoiceViewProps {
   onOpenAmendments?: () => void;
   onOpenCashReceipt?: (type: 'zaloha' | 'doplatek') => void;
   onChangeInvoiceType?: (type: 'final' | 'advance') => void;
+  onUpdateContract?: (updated: Contract) => void;
 }
 
 export const InvoiceView: React.FC<InvoiceViewProps> = ({
@@ -48,6 +52,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
   onOpenAmendments,
   onOpenCashReceipt,
   onChangeInvoiceType,
+  onUpdateContract,
 }) => {
   const invoicePaperRef = useRef<HTMLDivElement>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
@@ -69,6 +74,15 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
 
   // The actual payable amount on this specific document
   const rawAmount = isAdvance ? advanceAmount : finalBalanceToPay;
+
+  // Plátce DPH: konečná faktura rozepisuje základ, sazbu a daň (ceny jsou včetně DPH)
+  const isVatPayer = !!contract.contractor.dic;
+  const vatRate = getVatRate(contract);
+  const vat = getVatBreakdown(rawAmount, vatRate);
+  const setVatRate = (rate: VatRate) => {
+    if (rate === vatRate || !onUpdateContract) return;
+    onUpdateContract({ ...contract, vatRate: rate });
+  };
 
   const invoiceNumber = isAdvance
     ? `ZAL-${contract.invoiceNumber || '2026001'}`
@@ -164,6 +178,23 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
               </button>
               <button type="button" aria-pressed={isAdvance} onClick={() => onChangeInvoiceType('advance')} className={docChip(isAdvance)}>
                 Zálohová
+              </button>
+            </div>
+          )}
+          {isVatPayer && !isAdvance && onUpdateContract && (
+            <div role="group" aria-label="Sazba DPH" className="flex items-center gap-2">
+              <span className={docBarNote}>Sazba DPH</span>
+              <button type="button" aria-pressed={vatRate === 21} onClick={() => setVatRate(21)} className={docChip(vatRate === 21)}>
+                21 %
+              </button>
+              <button
+                type="button"
+                aria-pressed={vatRate === 12}
+                onClick={() => setVatRate(12)}
+                className={docChip(vatRate === 12)}
+                title="Stavební a montážní práce na dokončené stavbě pro bydlení"
+              >
+                12 %
               </button>
             </div>
           )}
@@ -438,6 +469,30 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
           </table>
         </div>
 
+        {/* Rozpis DPH (jen konečná faktura plátce) */}
+        {isVatPayer && !isAdvance && (
+          <div className="mb-8 ml-auto w-full sm:w-2/3 overflow-hidden rounded-xl border border-slate-200">
+            <table className="w-full text-xs">
+              <thead className="bg-slate-100 text-slate-700 uppercase font-bold text-[10px] border-b border-slate-200">
+                <tr>
+                  <th className="py-2 px-3 text-left">Sazba DPH</th>
+                  <th className="py-2 px-3 text-right">Základ daně</th>
+                  <th className="py-2 px-3 text-right">DPH</th>
+                  <th className="py-2 px-3 text-right">Celkem s DPH</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="py-2.5 px-3 font-medium">{vat.rate} %</td>
+                  <td className="py-2.5 px-3 text-right font-medium">{formatHalere(vat.base)}</td>
+                  <td className="py-2.5 px-3 text-right font-medium">{formatHalere(vat.vat)}</td>
+                  <td className="py-2.5 px-3 text-right font-bold text-slate-900">{formatHalere(vat.gross)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+
         {/* Spodní blok: Rekapitulace + QR Platba + Podpis */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t-2 border-slate-900 items-end">
           {/* QR Platba */}
@@ -466,7 +521,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
           </div>
 
           {/* Celkem k úhradě & Razítko */}
-          <div className="space-y-4 text-right">
+          <div className="space-y-2 text-right">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
                 {isAdvance ? 'ZÁLOHA K ÚHRADĚ:' : 'DOPLATEK K ÚHRADĚ:'}
@@ -479,11 +534,11 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
               </p>
             </div>
 
-            <div className="pt-6 relative">
-              <div className="absolute -top-10 right-2 opacity-85 pointer-events-none">
+            <div className="relative flex flex-wrap items-end justify-end gap-x-3 gap-y-2">
+              <div className="max-w-full opacity-85 pointer-events-none">
                 <CraftsmanStamp contractor={contract.contractor} size="sm" />
               </div>
-              <div className="border-t-2 border-dotted border-slate-400 w-48 ml-auto pt-1.5 text-center relative z-10">
+              <div className="border-t-2 border-dotted border-slate-400 w-36 pt-1.5 text-center relative z-10">
                 <span className="text-xs font-bold text-slate-900 block">
                   {contract.contractor.name}
                 </span>

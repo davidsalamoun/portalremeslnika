@@ -5,6 +5,14 @@ import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
 import { AccountantExportModal } from './AccountantExportModal';
 import { isProUser } from '../utils/subscription';
 import { getContractTotal, isInvoiceable } from '../utils/invoiceMath';
+import {
+  VAT_LIMIT,
+  VAT_LIMIT_IMMEDIATE,
+  FLAT_TAX_BAND_LIMITS,
+  ExpenseFlatRate,
+  getVatRegistration,
+  getFlatTaxBand,
+} from '../utils/taxLimits';
 
 interface FinancialRadarPageProps {
   contracts: Contract[];
@@ -12,11 +20,14 @@ interface FinancialRadarPageProps {
   onOpenContract: (contract: Contract) => void;
   onToast?: (type: 'success' | 'error' | 'info', text: string) => void;
   onOpenPaywall?: (reason?: string) => void;
+  onUpdateContractor?: (updated: ContractorProfile) => void;
 }
 
-// Hranice obratu, které řemeslník sleduje (orientačně; rozhodná pravidla ověřuje účetní)
-const VAT_LIMIT = 2000000;
-const TURNOVER_MARKS = [1000000, 1500000, 2000000];
+const FLAT_RATE_OPTIONS: { rate: ExpenseFlatRate; label: string }[] = [
+  { rate: 80, label: '80 % – řemeslná živnost' },
+  { rate: 60, label: '60 % – jiná živnost' },
+  { rate: 40, label: '40 % – ostatní' },
+];
 const MONTH_NAMES = ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'];
 const MONTH_FULL = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec'];
 
@@ -41,6 +52,7 @@ export const FinancialRadarPage: React.FC<FinancialRadarPageProps> = ({
   onOpenContract,
   onToast,
   onOpenPaywall,
+  onUpdateContractor,
 }) => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
@@ -99,6 +111,26 @@ export const FinancialRadarPage: React.FC<FinancialRadarPageProps> = ({
   const limitPercent = Math.min(100, (totals.revenue / VAT_LIMIT) * 100);
   const overLimit = totals.revenue >= VAT_LIMIT;
   const nearLimit = !overLimit && totals.revenue >= VAT_LIMIT * 0.75;
+  const isVatPayer = !!contractor?.dic;
+  const vatState = getVatRegistration(totals.revenue);
+  const flatRate = contractor?.expenseFlatRate;
+  const flatBand = flatRate ? getFlatTaxBand(totals.revenue, flatRate) : null;
+  // Pásma se stejnou hranicí se spojí do jednoho řádku (u paušálu 80 % mají všechna tři 2 mil. Kč)
+  const flatBands = flatRate
+    ? FLAT_TAX_BAND_LIMITS[flatRate].reduce<{ from: number; label: string; limit: number; current: boolean }[]>((rows, limit, index) => {
+        const last = rows[rows.length - 1];
+        const current = flatBand === index + 1;
+        if (last && last.limit === limit) {
+          last.label = `${last.from}.–${index + 1}. pásmo`;
+          last.current = last.current || current;
+        } else rows.push({ from: index + 1, label: `${index + 1}. pásmo`, limit, current });
+        return rows;
+      }, [])
+    : [];
+  const handleFlatRate = (rate: ExpenseFlatRate) => {
+    if (!contractor || !onUpdateContractor || rate === flatRate) return;
+    onUpdateContractor({ ...contractor, expenseFlatRate: rate });
+  };
   const maxMonthly = Math.max(...totals.monthly, 1);
   const bestMonth = totals.monthly.indexOf(Math.max(...totals.monthly));
   const shownMonth = activeMonth ?? (totals.revenue > 0 ? bestMonth : null);
@@ -109,7 +141,7 @@ export const FinancialRadarPage: React.FC<FinancialRadarPageProps> = ({
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-4xl sm:text-[44px] font-bold leading-[1.05] text-slate-900 dark:text-white">Finance</h1>
-          <div className="mt-1 text-slate-600 dark:text-slate-400">Obrat, zisk a hranice pro DPH podle uzavřených smluv.</div>
+          <div className="mt-1 text-slate-600 dark:text-slate-400">Obrat, zisk a hranice pro DPH a paušální daň podle uzavřených smluv.</div>
         </div>
         <div className="w-full sm:w-auto flex flex-wrap gap-2.5 no-print">
           <button type="button" onClick={handleOpenAccountantBundle} className={`${outlineButton} flex-1 sm:flex-none`}>
@@ -185,23 +217,94 @@ export const FinancialRadarPage: React.FC<FinancialRadarPageProps> = ({
                 </div>
               </div>
 
-              <ul className="border-t border-slate-100 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
-                {TURNOVER_MARKS.map((mark) => {
-                  const passed = totals.revenue > mark;
-                  return (
-                    <li key={mark} className="px-5 py-3 flex items-baseline justify-between gap-4">
-                      <span className="text-slate-600 dark:text-slate-400 tabular-nums">Hranice {formatCurrency(mark)}</span>
-                      <span className={passed ? 'font-semibold text-rose-700 dark:text-rose-400' : 'font-semibold text-slate-900 dark:text-white tabular-nums'}>
-                        {passed ? 'překročena' : `zbývá ${formatCurrency(mark - totals.revenue)}`}
+              {isVatPayer ? (
+                <p className="px-5 py-3.5 border-t border-slate-100 dark:border-slate-800">
+                  <span className="font-semibold text-slate-900 dark:text-white">Jste plátce DPH.</span>{' '}
+                  <span className="text-slate-600 dark:text-slate-400">
+                    Hranice pro registraci se vás už netýkají a paušální daň plátce DPH využít nemůže.
+                  </span>
+                </p>
+              ) : (
+                <div className="border-t border-slate-100 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
+                  <div className="px-5 py-3.5 space-y-1">
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                      <h3 className="text-[17px] font-semibold text-slate-900 dark:text-white">Registrace k DPH</h3>
+                      <span className={vatState === 'below' ? 'font-semibold text-slate-900 dark:text-white tabular-nums' : 'font-semibold text-rose-700 dark:text-rose-400'}>
+                        {vatState === 'below'
+                          ? `zbývá ${formatCurrency(VAT_LIMIT - totals.revenue)}`
+                          : vatState === 'next_year'
+                            ? `plátce od 1. 1. ${selectedYear + 1}`
+                            : 'plátce od následujícího dne'}
                       </span>
-                    </li>
-                  );
-                })}
-              </ul>
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      {vatState === 'below' &&
+                        `Když obrat v kalendářním roce překročí ${formatCurrency(VAT_LIMIT)}, stáváte se plátcem od 1. ledna následujícího roku. Přihláška se podává do 10 pracovních dnů od překročení.`}
+                      {vatState === 'next_year' &&
+                        `Obrat překročil ${formatCurrency(VAT_LIMIT)}: plátcem se stáváte od 1. ledna ${selectedYear + 1} a přihlášku je potřeba podat do 10 pracovních dnů od překročení. Do hranice ${formatCurrency(VAT_LIMIT_IMMEDIATE)} zbývá ${formatCurrency(VAT_LIMIT_IMMEDIATE - totals.revenue)} – po ní byste byli plátcem hned následující den.`}
+                      {vatState === 'immediate' &&
+                        `Obrat překročil ${formatCurrency(VAT_LIMIT_IMMEDIATE)}: plátcem se stáváte hned dnem následujícím po překročení. Přihláška se podává do 10 pracovních dnů.`}
+                    </p>
+                  </div>
+
+                  <div className="px-5 py-3.5 space-y-2.5">
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                      <h3 className="text-[17px] font-semibold text-slate-900 dark:text-white">Paušální daň</h3>
+                      {flatRate && (
+                        <span className={flatBand ? 'font-semibold text-slate-900 dark:text-white' : 'font-semibold text-rose-700 dark:text-rose-400'}>
+                          {flatBand ? `vychází ${flatBand}. pásmo` : 'nad hranicí režimu'}
+                        </span>
+                      )}
+                    </div>
+                    <div className="no-print">
+                      <div id="finance-pausal" className="text-slate-900 dark:text-slate-100 font-medium mb-1.5">
+                        Jaký výdajový paušál platí pro vaši činnost?
+                      </div>
+                      <div role="group" aria-labelledby="finance-pausal" className="flex flex-wrap gap-2">
+                        {FLAT_RATE_OPTIONS.map((option) => (
+                          <button
+                            key={option.rate}
+                            type="button"
+                            aria-pressed={flatRate === option.rate}
+                            onClick={() => handleFlatRate(option.rate)}
+                            className={chip(flatRate === option.rate)}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {flatRate ? (
+                      <>
+                        <ul className="space-y-0.5 tabular-nums">
+                          {flatBands.map((band) => (
+                            <li
+                              key={band.label}
+                              className={band.current ? 'font-semibold text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}
+                            >
+                              {band.label} do {formatCurrency(band.limit)}
+                              {band.current ? ' – sem spadá váš obrat' : ''}
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="text-slate-600 dark:text-slate-400">
+                          {flatBand
+                            ? 'Platí, když tento paušál jde uplatnit aspoň na 75 % vašich příjmů. Vyšší pásmo si můžete zvolit i dobrovolně. Výši měsíční platby na daný rok zveřejňuje Finanční správa.'
+                            : `Nad ${formatCurrency(VAT_LIMIT)} příjmů za rok paušální režim využít nejde.`}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-slate-600 dark:text-slate-400">
+                        Podle odpovědi ukážeme, do kterého pásma paušální daně se s obratem vejdete. Řemeslné živnosti mají paušál 80 %.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
               <p className="px-5 py-3.5 border-t border-slate-100 dark:border-slate-800 text-[13px] text-slate-600 dark:text-slate-400">
-                Údaje jsou orientační: obrat se tu počítá z cen smluv podle data jejich uzavření, ne podle skutečných plateb.
-                Na hranicích 1, 1,5 a 2 mil. Kč závisí pásma paušální daně a registrace k DPH; které pro vás platí a od kdy,
-                si ověřte u účetní.
+                Údaje jsou orientační: obrat se tu počítá z cen smluv podle data jejich uzavření, ne podle skutečných plateb,
+                a nezahrnuje příjmy mimo aplikaci. Pravidla odpovídají stavu pro roky 2025 a 2026; než se podle nich rozhodnete,
+                ověřte si je u účetní.
               </p>
             </div>
           </section>
