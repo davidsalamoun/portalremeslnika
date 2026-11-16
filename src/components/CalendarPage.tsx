@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { getSiteAddress } from '../utils/siteAddress';
 import { ChevronLeft, ChevronRight, Plus, Trash2, Check, Phone, MapPin, FileText } from 'lucide-react';
 import { Contract, CalendarEvent, CalendarEventType, Client } from '../types/contract';
 import { formatDateCs } from '../utils/numberToWordsCs';
@@ -97,7 +98,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
           type: 'predani',
           contractId: c.id,
           clientName: c.client.name,
-          location: c.client.address,
+          location: getSiteAddress(c),
           note: `Termín předání dle smlouvy č. ${c.contractNumber}`,
           createdAt: c.createdAt,
           done: stageKey === 'handover' || stageKey === 'paid',
@@ -115,7 +116,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
             type: 'realizace',
             contractId: c.id,
             clientName: c.client.name,
-            location: c.client.address,
+            location: getSiteAddress(c),
             note: `Zakázka: ${c.client.name}, smlouva č. ${c.contractNumber}`,
             createdAt: c.createdAt,
             done: m.status === 'completed',
@@ -133,7 +134,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
           type: 'zaruka',
           contractId: c.id,
           clientName: c.client.name,
-          location: c.executionPlace || c.client.address,
+          location: getSiteAddress(c),
           note: `Záruční prohlídka po ${insp.inspectionYear}. roce, smlouva č. ${c.contractNumber}`,
           createdAt: c.createdAt,
           done: insp.status === 'completed',

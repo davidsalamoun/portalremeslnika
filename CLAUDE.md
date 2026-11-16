@@ -84,6 +84,9 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   `expenseFlatRate` v profilu, na který se ptá přímo tato stránka). Při změně zákona upravit tam i texty; vždy
   ponechat větu, že údaje jsou orientační a ověřují se u účetní. Částky měsíčních plateb paušální daně neuvádět. Graf: jedna řada, hodnota
   měsíce po najetí nebo fokusu, skrytá tabulka pro čtečky.
+- **Adresa stavby:** nepovinné `contract.siteAddress` (formulář smlouvy, tlačítko „Adresa stavby“ v náhledu zakázky).
+  Kde aplikace potřebuje místo práce (navigace, počasí, kalendář, kniha jízd, zprávy zákazníkovi), bere ho přes
+  `getSiteAddress`, ne přímo z `client.address`. Do textu dokladů se adresa stavby nepropisuje.
 - **Archiv** (`HistoryPage.tsx`): seznam všech dokumentů s hledáním; fáze se tu jen zobrazuje, mění se v Zakázkách.
 - **Nastavení** (`SettingsPage.tsx`): údaje zhotovitele, podpis, razítko, ceník a záloha. Potvrzení (smazání položky,
   obnova ceníku, obnova ze zálohy) jdou přes `Dialog`, ne přes `window.confirm`.
@@ -105,7 +108,7 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   oddělenými linkou, velká čísla písmem `font-display`, vedlejší akce jako tlačítka s obrysem, žádné dlaždice se statistikami.
 - **Počasí** (`utils/weather.ts`, `components/JobWeather.tsx`): u zakázky ve fázi Smlouva a Realizace se ukáže řádek jen
   tehdy, když předpověď pro obec stavby hlásí do tří dnů chladno, srážky nebo silný vítr. Obec se bere z adresy
-  zákazníka a dohledává u Open-Meteo; když se nenajde, nezobrazí se nic (nikdy nedosazovat jiné místo). Texty jsou
+  stavby (`getSiteAddress`) a dohledává u Open-Meteo; když se nenajde, nezobrazí se nic (nikdy nedosazovat jiné místo). Texty jsou
   doporučení – neodkazovat v nich na normy (ČSN, BOZP) ani nepsat „zákaz“.
 - **Navigace:** `Navbar.tsx` = boční nabídka od šířky `lg`, pod ní úzká horní lišta; `BottomNav.tsx` = spodní lišta
   pod `lg`. Kořen aplikace má `lg:pl-60`.
@@ -160,6 +163,7 @@ src/
     invoiceReminder.ts        texty upomínek k fakturám
     taxLimits.ts              hranice obratu pro DPH a pásma paušální daně
     jobStage.ts               fáze zakázky pro metr a posun mezi fázemi
+    siteAddress.ts            adresa stavby zakázky (`contract.siteAddress`, jinak adresa klienta)
     ares.ts                   dohledání firmy podle IČO v ARES
     weather.ts                počasí na stavbě: obec z adresy, předpověď Open-Meteo, rizika pro venkovní práce
     exportDocx.ts, exportPdf.ts   export dokumentů (velké knihovny – importovat jen přes lazyExports.ts)

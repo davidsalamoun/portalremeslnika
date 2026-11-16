@@ -103,6 +103,7 @@ export interface ContractFormData {
   advanceAmount?: number | '';           // Volitelná záloha v Kč
   conclusionDate?: string;               // YYYY-MM-DD (dnešní datum)
   executionPlace?: string;               // Místo uzavření
+  siteAddress?: string;                  // Adresa stavby, když se liší od adresy klienta
   items?: BudgetItem[];                  // Položky rozpočtu
 }
 
@@ -123,6 +124,7 @@ export interface Contract {
   deliveryDate: string;
   conclusionDate: string;
   executionPlace: string;
+  siteAddress?: string;                  // Adresa stavby, když se liší od adresy klienta (jinak platí adresa klienta)
   hasVat: boolean;
   vatRate?: 21 | 12;                     // Sazba DPH u plátce; chybí = 21 % (12 % stavební práce na dokončené stavbě pro bydlení)
   status?: ContractStatus;               // Stav workflow zakázky

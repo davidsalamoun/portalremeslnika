@@ -74,6 +74,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     price: '',
     deliveryDate: '',
     advanceAmount: '',
+    siteAddress: '',
   });
 
   const [rawPriceInput, setRawPriceInput] = useState<string>('');
@@ -341,6 +342,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
       deliveryDate: formData.deliveryDate,
       conclusionDate: today,
       executionPlace: cleanPlaceName(contractor.defaultPlace) || 'místě plnění',
+      siteAddress: formData.siteAddress?.trim() || undefined,
       hasVat: !!contractor.dic,
       status: 'draft',
       contractorSignature: contractor.signature,
@@ -564,6 +566,24 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                   {errors.workDescription}
                 </p>
               )}
+            </div>
+
+            <div>
+              <label htmlFor="site-address" className={fieldLabel}>
+                Adresa stavby <span className="font-normal text-slate-600 dark:text-slate-400">(nepovinné)</span>
+              </label>
+              <input
+                id="site-address"
+                type="text"
+                autoComplete="off"
+                value={formData.siteAddress || ''}
+                onChange={(e) => setFormData((prev) => ({ ...prev, siteAddress: e.target.value }))}
+                placeholder="např. Na Výsluní 12, Říčany"
+                className={`${fieldBase} ${fieldOk}`}
+              />
+              <p className={hintText}>
+                Vyplňte, jen když se pracuje jinde, než klient bydlí. Použije se pro navigaci, počasí, kalendář a knihu jízd; text smlouvy se nemění.
+              </p>
             </div>
 
             <BudgetItemsEditor

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { getSiteAddress } from '../utils/siteAddress';
 import {
   Camera,
   MessageSquare,
@@ -401,7 +402,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             )}
             {shownJobs.map(({ contract, stage }) => {
               const clientPhone = contract.client?.phone?.replace(/\s+/g, '');
-              const clientAddress = contract.client?.address;
+              const clientAddress = getSiteAddress(contract);
               const total = getContractTotal(contract);
               const onSite = stage.key === 'contract' || stage.key === 'realization' || stage.key === 'handover';
               const isToolsOpen = activeToolsContractId === contract.id;
