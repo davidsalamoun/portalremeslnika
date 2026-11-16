@@ -161,10 +161,10 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
           {/* Progress bar */}
           <div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Celkový postup stavby
               </span>
-              <span className="font-mono font-bold text-sm text-slate-900 dark:text-white">
+              <span className=" font-semibold text-sm text-slate-900 dark:text-white">
                 {totalProgress} %
               </span>
             </div>
@@ -179,7 +179,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
           {/* Vizuální časová osa etap */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
+              <h4 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2">
                 <Layers className="w-4 h-4 text-amber-500" />
                 Etapy realizace ({milestones.length})
               </h4>
@@ -193,14 +193,14 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3">
-                      <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-bold text-xs flex items-center justify-center shrink-0">
+                      <div className="w-7 h-7 rounded-lg bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-semibold text-sm flex items-center justify-center shrink-0">
                         {idx + 1}
                       </div>
                       <div>
-                        <div className="font-bold text-sm text-slate-900 dark:text-white">
+                        <div className="font-semibold text-sm text-slate-900 dark:text-white">
                           {m.title}
                         </div>
-                        <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                        <div className="text-sm text-slate-500 flex items-center gap-2 mt-0.5">
                           <Calendar className="w-3.5 h-3.5 text-slate-400" />
                           <span>
                             {formatDateCs(m.startDate)} – {formatDateCs(m.endDate)}
@@ -217,7 +217,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                           const progress = val === 'completed' ? 100 : val === 'planned' ? 0 : 50;
                           handleUpdateStatus(m.id, val, progress);
                         }}
-                        className={`text-xs font-semibold px-2.5 py-1 rounded-lg border cursor-pointer ${
+                        className={`min-h-11 text-sm font-semibold px-2.5 py-1 rounded-lg border cursor-pointer ${
                           m.status === 'completed'
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                             : m.status === 'in_progress'
@@ -236,7 +236,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                       <button
                         type="button"
                         onClick={() => handleDeleteMilestone(m.id)}
-                        className="text-slate-400 hover:text-red-600 p-1 rounded-md"
+                        className="min-h-11 min-w-11 inline-flex items-center justify-center text-slate-400 hover:text-red-600 p-1 rounded-md"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -245,7 +245,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
 
                   {/* Progress bar per milestone */}
                   <div className="space-y-1">
-                    <div className="flex justify-between text-[11px] text-slate-500">
+                    <div className="flex justify-between text-[13px] text-slate-500">
                       <span>Dokončeno:</span>
                       <span className="font-semibold">{m.progressPercent} %</span>
                     </div>
@@ -261,14 +261,14 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                           val === 100 ? 'completed' : val > 0 ? 'in_progress' : 'planned';
                         handleUpdateStatus(m.id, stat, val);
                       }}
-                      className="w-full accent-indigo-600 cursor-pointer"
+                      className="w-full accent-slate-600 cursor-pointer"
                     />
                   </div>
 
                   {/* Navázaná platba / záloha */}
                   {m.paymentMilestone && (
-                    <div className="flex items-center gap-1.5 text-xs text-indigo-700 dark:text-indigo-300 bg-indigo-50/70 dark:bg-indigo-950/40 p-2 rounded-lg">
-                      <DollarSign className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                    <div className="flex items-center gap-1.5 text-sm text-slate-700 dark:text-slate-300 bg-slate-50/70 dark:bg-slate-950/40 p-2 rounded-lg">
+                      <DollarSign className="w-3.5 h-3.5 text-slate-600 shrink-0" />
                       <span>Platba: {m.paymentMilestone}</span>
                     </div>
                   )}
@@ -279,49 +279,49 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
 
           {/* Přidání nové etapy */}
           <div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
-            <h5 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            <h5 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
               Přidat novou etapu do harmonogramu:
             </h5>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-slate-500 block mb-1">Název etapy:</label>
+                <label className="text-sm text-slate-500 block mb-1">Název etapy:</label>
                 <input
                   type="text"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="např. Montáž sádrokartonů a tmelení"
-                  className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-slate-500 block mb-1">Navázaná záloha / platba:</label>
+                <label className="text-sm text-slate-500 block mb-1">Navázaná záloha / platba:</label>
                 <input
                   type="text"
                   value={newPayment}
                   onChange={(e) => setNewPayment(e.target.value)}
                   placeholder="např. Záloha 25 000 Kč po dokončení"
-                  className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-slate-500 block mb-1">Datum zahájení:</label>
+                <label className="text-sm text-slate-500 block mb-1">Datum zahájení:</label>
                 <input
                   type="date"
                   value={newStart}
                   onChange={(e) => setNewStart(e.target.value)}
-                  className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-slate-500 block mb-1">Datum dokončení:</label>
+                <label className="text-sm text-slate-500 block mb-1">Datum dokončení:</label>
                 <input
                   type="date"
                   value={newEnd}
                   onChange={(e) => setNewEnd(e.target.value)}
-                  className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
                 />
               </div>
             </div>
@@ -330,7 +330,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
               <button
                 type="button"
                 onClick={handleAddMilestone}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-1.5 cursor-pointer"
+                className="min-h-11 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-xl text-sm font-semibold shadow-xs flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Přidat etapu</span>
@@ -341,13 +341,13 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
 
         {/* Footer */}
         <div className="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between">
-          <span className="text-xs text-slate-500">
+          <span className="text-sm text-slate-500">
             Termíny etap jsou synchronizovány s termínem dokončení smlouvy
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="min-h-11 inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             Zavřít
           </button>

@@ -216,20 +216,20 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                 <Check className="w-8 h-8 stroke-[3]" />
               </div>
               <div>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white">
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
                   PPD vystaven a zaevidován!
                 </h3>
                 <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">
                   Číslo dokladu: <strong className="text-slate-900 dark:text-white">{createdReceipt.receiptNumber}</strong>
                 </p>
                 <div className="mt-3 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/80 inline-block text-left min-w-[280px]">
-                  <p className="text-xs text-emerald-800 dark:text-emerald-300 font-bold uppercase tracking-wider">
+                  <p className="text-sm text-emerald-800 dark:text-emerald-300 font-semibold">
                     Přijatá částka
                   </p>
-                  <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400">
+                  <p className="text-2xl font-semibold text-emerald-700 dark:text-emerald-400">
                     {formatCurrency(createdReceipt.amount)}
                   </p>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-medium">
+                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 font-medium">
                     {createdReceipt.purposeDescription}
                   </p>
                 </div>
@@ -240,7 +240,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                 <button
                   type="button"
                   onClick={() => handleShareWhatsApp(createdReceipt)}
-                  className="min-h-[46px] px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
+                  className="min-h-[46px] px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
                 >
                   <Share2 className="w-4 h-4" />
                   <span>Odeslat potvrzení (WhatsApp)</span>
@@ -253,7 +253,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                       onClose();
                       onOpenFullReceiptView(contract);
                     }}
-                    className="min-h-[46px] px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-extrabold text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                    className="min-h-[46px] px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
                   >
                     <FileText className="w-4 h-4" />
                     <span>Zobrazit / Tisk PPD</span>
@@ -265,16 +265,16 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
             /* Creation Form */
             <div className="space-y-4">
               {/* Context bar */}
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-sm">
                 <div>
                   <span className="text-slate-500 font-medium block">Cena zakázky celkem:</span>
-                  <span className="font-extrabold text-slate-900 dark:text-white text-sm">
+                  <span className="font-semibold text-slate-900 dark:text-white text-sm">
                     {formatCurrency(contract.price)}
                   </span>
                 </div>
                 <div className="text-right">
                   <span className="text-slate-500 font-medium block">Dosud zaplaceno v hotovosti:</span>
-                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-sm">
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400 text-sm">
                     {formatCurrency(totalPaidSoFar)}
                   </span>
                 </div>
@@ -282,7 +282,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
 
               {/* Fast 1-tap Amount presets */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label className="text-sm font-semibold text-slate-600 dark:text-slate-400">
                   Rychlá volba částky:
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -295,14 +295,14 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                         `Záloha na materiál a zahájení prací ke smlouvě #${contract.contractNumber}`
                       )
                     }
-                    className={`p-2.5 rounded-xl border text-left font-extrabold text-xs cursor-pointer active:scale-95 transition-all ${
+                    className={`min-h-11 min-w-11 inline-flex items-center justify-center p-2.5 rounded-xl border text-left font-semibold text-sm cursor-pointer active:scale-95 transition-all ${
                       paymentFor === 'zaloha'
                         ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
                         : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <div className="text-2xs text-slate-400 uppercase">Záloha</div>
-                    <div className="text-sm font-black">
+                    <div className="text-[13px] text-slate-400">Záloha</div>
+                    <div className="text-sm font-semibold">
                       {formatCurrency(contract.advanceAmount || Math.round(contract.price * 0.4))}
                     </div>
                   </button>
@@ -316,14 +316,14 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                         `Doplatek ceny díla ke smlouvě #${contract.contractNumber}`
                       )
                     }
-                    className={`p-2.5 rounded-xl border text-left font-extrabold text-xs cursor-pointer active:scale-95 transition-all ${
+                    className={`min-h-11 min-w-11 inline-flex items-center justify-center p-2.5 rounded-xl border text-left font-semibold text-sm cursor-pointer active:scale-95 transition-all ${
                       paymentFor === 'doplatek'
                         ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
                         : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <div className="text-2xs text-slate-400 uppercase">Doplatek</div>
-                    <div className="text-sm font-black">
+                    <div className="text-[13px] text-slate-400">Doplatek</div>
+                    <div className="text-sm font-semibold">
                       {formatCurrency(remaining > 0 ? remaining : contract.price)}
                     </div>
                   </button>
@@ -337,14 +337,14 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                         `Úhrada víceprací a doplňkového materiálu ke smlouvě #${contract.contractNumber}`
                       )
                     }
-                    className={`p-2.5 rounded-xl border text-left font-extrabold text-xs cursor-pointer active:scale-95 transition-all col-span-2 sm:col-span-1 ${
+                    className={`min-h-11 min-w-11 inline-flex items-center justify-center p-2.5 rounded-xl border text-left font-semibold text-sm cursor-pointer active:scale-95 transition-all col-span-2 sm:col-span-1 ${
                       paymentFor === 'viceprace'
                         ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
                         : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <div className="text-2xs text-slate-400 uppercase">Vícepráce</div>
-                    <div className="text-sm font-black">5 000 Kč</div>
+                    <div className="text-[13px] text-slate-400">Vícepráce</div>
+                    <div className="text-sm font-semibold">5 000 Kč</div>
                   </button>
                 </div>
               </div>
@@ -352,7 +352,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
               {/* Amount input & Date */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     Přijatá částka (Kč) *
                   </label>
                   <div className="relative">
@@ -360,10 +360,10 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                       type="number"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                      className="w-full text-xl font-black px-3.5 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-hidden font-mono"
+                      className="min-h-11 w-full text-xl font-semibold px-3.5 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-hidden"
                       placeholder="0"
                     />
-                    <span className="absolute right-3.5 top-3.5 text-sm font-bold text-slate-400">
+                    <span className="absolute right-3.5 top-3.5 text-sm font-semibold text-slate-400">
                       Kč
                     </span>
                   </div>
@@ -377,7 +377,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                           setAmount(remaining);
                           triggerHaptic('selection');
                         }}
-                        className="px-2 py-1 rounded-lg text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer"
+                        className="min-h-11 inline-flex items-center justify-center px-2 py-1 rounded-lg text-sm font-semibold bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer"
                         title="Vyplnit přesný zbývající doplatek do plné ceny"
                       >
                         Celý doplatek: {formatCurrency(remaining)}
@@ -390,7 +390,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                           setAmount(contract.advanceAmount!);
                           triggerHaptic('selection');
                         }}
-                        className="px-2 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                        className="min-h-11 inline-flex items-center justify-center px-2 py-1 rounded-lg text-sm font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                         title="Vyplnit dohodnutou zálohu"
                       >
                         Záloha: {formatCurrency(contract.advanceAmount)}
@@ -402,7 +402,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                         setAmount(Math.round(contract.price * 0.5));
                         triggerHaptic('selection');
                       }}
-                      className="px-2 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                      className="min-h-11 inline-flex items-center justify-center px-2 py-1 rounded-lg text-sm font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                       title="Vyplnit polovinu ceny zakázky"
                     >
                       50 % ({formatCurrency(Math.round(contract.price * 0.5))})
@@ -413,7 +413,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                         setAmount(contract.price);
                         triggerHaptic('selection');
                       }}
-                      className="px-2 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                      className="min-h-11 inline-flex items-center justify-center px-2 py-1 rounded-lg text-sm font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                       title="Vyplnit celkovou cenu zakázky"
                     >
                       100 % ({formatCurrency(contract.price)})
@@ -422,51 +422,51 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     Datum převzetí hotovosti
                   </label>
                   <input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full text-sm font-bold px-3.5 py-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white outline-hidden"
+                    className="min-h-11 w-full text-sm font-semibold px-3.5 py-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white outline-hidden"
                   />
                 </div>
               </div>
 
               {/* Purpose */}
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                   Účel platby
                 </label>
                 <input
                   type="text"
                   value={purpose}
                   onChange={(e) => setPurpose(e.target.value)}
-                  className="w-full text-xs font-medium px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white outline-hidden"
+                  className="min-h-11 w-full text-sm font-medium px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white outline-hidden"
                 />
               </div>
 
               {/* Direct Touch Signature on Screen */}
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                  <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
                     <PenTool className="w-3.5 h-3.5 text-emerald-600" />
                     Podpisy na mobilu (volitelné)
                   </span>
-                  <span className="text-2xs text-slate-400 font-medium">
+                  <span className="text-[13px] text-slate-400 font-medium">
                     Dotykem prstem na displeji
                   </span>
                 </div>
 
                 {activeSigner ? (
                   <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold">
+                    <div className="flex items-center justify-between text-sm font-semibold">
                       <span>Podpis: {activeSigner === 'client' ? 'Zákazník (Plátce)' : 'Řemeslník (Příjemce)'}</span>
                       <button
                         type="button"
                         onClick={handleClearSignature}
-                        className="text-2xs text-rose-600 hover:underline flex items-center gap-1 cursor-pointer"
+                        className="min-h-11 min-w-11 text-[13px] text-rose-600 hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         <RotateCcw className="w-3 h-3" /> Vymazat
                       </button>
@@ -488,14 +488,14 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setActiveSigner(null)}
-                        className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 bg-white border border-slate-300 cursor-pointer"
+                        className="min-h-11 inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-600 bg-white border border-slate-300 cursor-pointer"
                       >
                         Zrušit
                       </button>
                       <button
                         type="button"
                         onClick={saveCanvasSignature}
-                        className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
+                        className="min-h-11 inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
                       >
                         Uložit podpis
                       </button>
@@ -506,9 +506,9 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setActiveSigner('contractor')}
-                      className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 text-left text-xs font-bold cursor-pointer"
+                      className="min-h-11 min-w-11 inline-flex items-center justify-center p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 text-left text-sm font-semibold cursor-pointer"
                     >
-                      <span className="text-2xs text-slate-400 block">Příjemce (Řemeslník)</span>
+                      <span className="text-[13px] text-slate-400 block">Příjemce (Řemeslník)</span>
                       <span className="text-slate-800 dark:text-slate-200">
                         {contractorSignature ? '✓ Podepsáno' : '+ Podepsat prstem'}
                       </span>
@@ -517,9 +517,9 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setActiveSigner('client')}
-                      className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 text-left text-xs font-bold cursor-pointer"
+                      className="min-h-11 min-w-11 inline-flex items-center justify-center p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 text-left text-sm font-semibold cursor-pointer"
                     >
-                      <span className="text-2xs text-slate-400 block">Plátce (Zákazník)</span>
+                      <span className="text-[13px] text-slate-400 block">Plátce (Zákazník)</span>
                       <span className="text-slate-800 dark:text-slate-200">
                         {clientSignature ? '✓ Podepsáno' : '+ Podepsat prstem'}
                       </span>
@@ -537,7 +537,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+              className="min-h-[44px] px-4 py-2 rounded-xl text-sm sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
             >
               Zrušit
             </button>
@@ -545,7 +545,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
             <button
               type="button"
               onClick={handleCreateReceipt}
-              className="min-h-[44px] px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm flex items-center gap-2 shadow-md cursor-pointer active:scale-95 transition-all"
+              className="min-h-[44px] px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm sm:text-sm flex items-center gap-2 shadow-md cursor-pointer active:scale-95 transition-all"
             >
               <Check className="w-4 h-4 stroke-[3]" />
               <span>Vystavit a uložit PPD ({nextNumber})</span>

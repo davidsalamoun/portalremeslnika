@@ -256,11 +256,11 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
           <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
             <div className="flex items-center gap-2">
               <Store className="w-4 h-4 text-amber-600" />
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Stavebniny:</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Stavebniny:</span>
               <select
                 value={selectedSupplier}
                 onChange={(e) => setSelectedSupplier(e.target.value)}
-                className="text-xs font-bold px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white"
+                className="min-h-11 text-sm font-semibold px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white"
               >
                 {POPULAR_SUPPLIERS.map((s) => (
                   <option key={s} value={s}>
@@ -270,12 +270,12 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
               </select>
             </div>
 
-            <div className="flex items-center gap-3 text-xs">
-              <span className="font-extrabold text-slate-900 dark:text-white">
+            <div className="flex items-center gap-3 text-sm">
+              <span className="font-semibold text-slate-900 dark:text-white">
                 {boughtCount} / {items.length} nakoupeno
               </span>
               {totalCost > 0 && (
-                <span className="font-bold text-amber-600 dark:text-amber-400">
+                <span className="font-semibold text-amber-600 dark:text-amber-400">
                   Odhad: {formatCurrency(totalCost)}
                 </span>
               )}
@@ -285,7 +285,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
           {/* Quick-add presets when list is sparse */}
           {items.length === 0 && (
             <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 space-y-2">
-              <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold text-xs">
+              <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-semibold text-sm">
                 <Package className="w-4 h-4" />
                 <span>Základní balíčky materiálu pro vybraná řemesla:</span>
               </div>
@@ -295,7 +295,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
                     key={p.name}
                     type="button"
                     onClick={() => handleApplyPreset(idx)}
-                    className="p-2.5 text-left rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800/80 hover:border-amber-500 text-xs font-extrabold text-slate-900 dark:text-white shadow-2xs cursor-pointer active:scale-95 transition-all"
+                    className="min-h-11 min-w-11 inline-flex items-center justify-center p-2.5 text-left rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800/80 hover:border-amber-500 text-sm font-semibold text-slate-900 dark:text-white shadow-2xs cursor-pointer active:scale-95 transition-all"
                   >
                     + {p.name}
                   </button>
@@ -315,7 +315,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
                 placeholder="Přidat materiál (např. Flexi lepidlo C2TES1)..."
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                className="flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-hidden"
+                className="min-h-11 flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-hidden"
               />
               <div className="flex items-center gap-2">
                 <input
@@ -325,12 +325,12 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
                   placeholder="Množství"
                   value={newQuantity}
                   onChange={(e) => setNewQuantity(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                  className="w-20 px-2 py-2.5 rounded-xl text-sm font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-center focus:ring-2 focus:ring-amber-500 outline-hidden"
+                  className="min-h-11 w-20 px-2 py-2.5 rounded-xl text-sm font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-center focus:ring-2 focus:ring-amber-500 outline-hidden"
                 />
                 <select
                   value={newUnit}
                   onChange={(e) => setNewUnit(e.target.value)}
-                  className="w-20 px-2 py-2.5 rounded-xl text-sm font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white outline-hidden"
+                  className="min-h-11 w-20 px-2 py-2.5 rounded-xl text-sm font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white outline-hidden"
                 >
                   <option value="ks">ks</option>
                   <option value="pyt">pyt</option>
@@ -346,12 +346,12 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
                   placeholder="Kč/odhad"
                   value={newPrice}
                   onChange={(e) => setNewPrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                  className="w-24 px-2 py-2.5 rounded-xl text-sm font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-right focus:ring-2 focus:ring-amber-500 outline-hidden"
+                  className="min-h-11 w-24 px-2 py-2.5 rounded-xl text-sm font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-right focus:ring-2 focus:ring-amber-500 outline-hidden"
                 />
                 <button
                   type="submit"
                   disabled={!newName.trim()}
-                  className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-extrabold text-sm flex items-center justify-center gap-1 shadow-sm cursor-pointer active:scale-95 transition-all"
+                  className="min-h-11 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-semibold text-sm flex items-center justify-center gap-1 shadow-sm cursor-pointer active:scale-95 transition-all"
                 >
                   <Plus className="w-4 h-4" />
                   <span className="hidden sm:inline">Přidat</span>
@@ -361,11 +361,11 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
           </form>
 
           {/* Checklist header & Filter */}
-          <div className="flex items-center justify-between text-xs pt-1">
-            <span className="font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-between text-sm pt-1">
+            <span className="font-semibold text-slate-500 dark:text-slate-400">
               Položky k nákupu ({displayedItems.length})
             </span>
-            <label className="flex items-center gap-1.5 cursor-pointer font-bold text-slate-700 dark:text-slate-300 select-none">
+            <label className="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-700 dark:text-slate-300 select-none">
               <input
                 type="checkbox"
                 checked={filterPendingOnly}
@@ -380,8 +380,8 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
           {displayedItems.length === 0 ? (
             <div className="p-8 text-center rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-slate-500">
               <ShoppingCart className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              <p className="text-sm font-bold">Žádný materiál na seznamu.</p>
-              <p className="text-xs">Zadejte materiál výše nebo klikněte na balíček řemesla.</p>
+              <p className="text-sm font-semibold">Žádný materiál na seznamu.</p>
+              <p className="text-sm">Zadejte materiál výše nebo klikněte na balíček řemesla.</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -407,7 +407,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
                     </div>
                     <div className="min-w-0">
                       <p
-                        className={`text-sm font-extrabold truncate ${
+                        className={`text-sm font-semibold truncate ${
                           item.isBought
                             ? 'line-through text-slate-400 dark:text-slate-500'
                             : 'text-slate-900 dark:text-white'
@@ -415,7 +415,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
                       >
                         {item.name}
                       </p>
-                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 font-mono">
+                      <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
                         {item.quantity} {item.unit}
                         {item.estimatedPrice ? ` · cca ${formatCurrency(item.estimatedPrice)}` : ''}
                       </p>
@@ -424,14 +424,14 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
 
                   <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                     {item.isBought && (
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                      <span className="text-[13px] font-semibold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                         V KOŠÍKU ✓
                       </span>
                     )}
                     <button
                       type="button"
                       onClick={() => handleDeleteItem(item.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg cursor-pointer"
+                      className="min-h-11 min-w-11 inline-flex items-center justify-center p-1.5 text-slate-400 hover:text-rose-600 rounded-lg cursor-pointer"
                       title="Smazat položku"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -449,7 +449,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
             <button
               type="button"
               onClick={handleShareWhatsApp}
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
+              className="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm sm:text-sm flex items-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
               title="Odeslat nákupní seznam kolegům nebo závozu do WhatsAppu"
             >
               <Share2 className="w-4 h-4" />
@@ -459,7 +459,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
             <button
               type="button"
               onClick={handlePrint}
-              className="min-h-[44px] px-3 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-extrabold text-xs flex items-center gap-1.5 cursor-pointer"
+              className="min-h-[44px] px-3 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm flex items-center gap-1.5 cursor-pointer"
               title="Vytisknout papírový lístek do stavebnin"
             >
               <Printer className="w-4 h-4" />
@@ -472,7 +472,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
               <button
                 type="button"
                 onClick={handleSyncToExpenses}
-                className="min-h-[44px] px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95 transition-all"
+                className="min-h-[44px] px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm sm:text-sm flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95 transition-all"
                 title="Zapsat nakoupené položky do výdajů zakázky"
               >
                 <DollarSign className="w-4 h-4" />
@@ -483,7 +483,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 font-extrabold text-xs sm:text-sm text-slate-800 dark:text-slate-200 cursor-pointer"
+              className="min-h-[44px] px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 font-semibold text-sm sm:text-sm text-slate-800 dark:text-slate-200 cursor-pointer"
             >
               Hotovo
             </button>

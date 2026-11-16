@@ -362,17 +362,17 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
           {/* Period Selector Bar */}
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                 <Filter className="w-3.5 h-3.5 text-blue-600" />
                 Zvolte účetní období:
               </span>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-500">Rok:</span>
+                <span className="text-sm font-semibold text-slate-500">Rok:</span>
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-                  className="text-xs font-bold px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
+                  className="min-h-11 text-sm font-semibold px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
                 >
                   {[currentYear, currentYear - 1, currentYear - 2].map((y) => (
                     <option key={y} value={y}>
@@ -400,7 +400,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
                     triggerHaptic('selection');
                     setPeriod(p.id as PeriodType);
                   }}
-                  className={`p-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer text-center ${
+                  className={`min-h-11 min-w-11 inline-flex items-center justify-center p-2 rounded-xl text-sm font-semibold transition-all cursor-pointer text-center ${
                     period === p.id
                       ? 'bg-blue-600 text-white shadow-xs'
                       : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-400'
@@ -415,49 +415,49 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
           {/* Big KPI Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-              <span className="text-2xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+              <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
                 Faktury (Příjmy)
               </span>
-              <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-mono block">
+              <span className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white block">
                 {formatCurrency(filteredData.sumInvoices)}
               </span>
-              <span className="text-3xs font-semibold text-slate-500 mt-0.5 block">
+              <span className="text-[13px] font-semibold text-slate-500 mt-0.5 block">
                 {filteredData.invoices.length} vystavených faktur
               </span>
             </div>
 
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-              <span className="text-2xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+              <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
                 PPD v hotovosti
               </span>
-              <span className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono block">
+              <span className="text-lg sm:text-xl font-semibold text-emerald-600 dark:text-emerald-400 block">
                 {formatCurrency(filteredData.sumCashReceipts)}
               </span>
-              <span className="text-3xs font-semibold text-slate-500 mt-0.5 block">
+              <span className="text-[13px] font-semibold text-slate-500 mt-0.5 block">
                 {filteredData.cashReceipts.length} pokladních dokladů
               </span>
             </div>
 
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-              <span className="text-2xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+              <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
                 Výdaje & Materiál
               </span>
-              <span className="text-lg sm:text-xl font-black text-rose-600 dark:text-rose-400 font-mono block">
+              <span className="text-lg sm:text-xl font-semibold text-rose-600 dark:text-rose-400 block">
                 {formatCurrency(filteredData.sumExpenses)}
               </span>
-              <span className="text-3xs font-semibold text-slate-500 mt-0.5 block">
+              <span className="text-[13px] font-semibold text-slate-500 mt-0.5 block">
                 {filteredData.expenses.length} nákupních účtenek
               </span>
             </div>
 
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-              <span className="text-2xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+              <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
                 Kniha jízd (PHM)
               </span>
-              <span className="text-lg sm:text-xl font-black text-amber-600 dark:text-amber-400 font-mono block">
+              <span className="text-lg sm:text-xl font-semibold text-amber-600 dark:text-amber-400 block">
                 {formatCurrency(filteredData.sumTrips)}
               </span>
-              <span className="text-3xs font-semibold text-slate-500 mt-0.5 block">
+              <span className="text-[13px] font-semibold text-slate-500 mt-0.5 block">
                 {filteredData.sumTripsKm} km ujeto na stavby
               </span>
             </div>
@@ -468,7 +468,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('summary')}
-              className={`pb-2 px-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
+              className={`min-h-11 pb-2 px-3 text-sm sm:text-sm font-semibold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
                 activeTab === 'summary'
                   ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -481,7 +481,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('invoices')}
-              className={`pb-2 px-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
+              className={`min-h-11 pb-2 px-3 text-sm sm:text-sm font-semibold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
                 activeTab === 'invoices'
                   ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -494,7 +494,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('receipts')}
-              className={`pb-2 px-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
+              className={`min-h-11 pb-2 px-3 text-sm sm:text-sm font-semibold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
                 activeTab === 'receipts'
                   ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -507,7 +507,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('expenses')}
-              className={`pb-2 px-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
+              className={`min-h-11 pb-2 px-3 text-sm sm:text-sm font-semibold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
                 activeTab === 'expenses'
                   ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -520,7 +520,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('trips')}
-              className={`pb-2 px-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
+              className={`min-h-11 pb-2 px-3 text-sm sm:text-sm font-semibold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
                 activeTab === 'trips'
                   ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -536,41 +536,41 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
             <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
-                  <h3 className="font-black text-base">Předávací protokol pro účetnictví</h3>
-                  <p className="text-xs text-slate-500">
+                  <h3 className="font-semibold text-base">Předávací protokol pro účetnictví</h3>
+                  <p className="text-sm text-slate-500">
                     Podklad pro přiznání k DPH, daň z příjmů a kontrolní hlášení
                   </p>
                 </div>
-                <div className="text-xs font-semibold text-slate-500 text-right">
+                <div className="text-sm font-semibold text-slate-500 text-right">
                   Vygenerováno: {formatDateCs(new Date().toISOString().split('T')[0])}
                 </div>
               </div>
 
-              <div className="space-y-2 text-xs">
+              <div className="space-y-2 text-sm">
                 <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-semibold text-slate-600 dark:text-slate-400">1. Celkové vystavené faktury za dílo:</span>
-                  <span className="font-black text-slate-900 dark:text-white">{formatCurrency(filteredData.sumInvoices)}</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">{formatCurrency(filteredData.sumInvoices)}</span>
                 </div>
                 <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-semibold text-slate-600 dark:text-slate-400">2. Z toho přijato v hotovosti (PPD):</span>
-                  <span className="font-black text-emerald-600 dark:text-emerald-400">{formatCurrency(filteredData.sumCashReceipts)}</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(filteredData.sumCashReceipts)}</span>
                 </div>
                 <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-semibold text-slate-600 dark:text-slate-400">3. Skutečné nákupy materiálu a subdodávky:</span>
-                  <span className="font-black text-rose-600 dark:text-rose-400">- {formatCurrency(filteredData.sumExpenses)}</span>
+                  <span className="font-semibold text-rose-600 dark:text-rose-400">- {formatCurrency(filteredData.sumExpenses)}</span>
                 </div>
                 <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-semibold text-slate-600 dark:text-slate-400">4. Cestovní náhrady dle Knihy jízd ({filteredData.sumTripsKm} km):</span>
-                  <span className="font-black text-rose-600 dark:text-rose-400">- {formatCurrency(filteredData.sumTrips)}</span>
+                  <span className="font-semibold text-rose-600 dark:text-rose-400">- {formatCurrency(filteredData.sumTrips)}</span>
                 </div>
                 <div className="flex justify-between py-2.5 bg-slate-50 dark:bg-slate-800/60 px-3 rounded-xl">
-                  <span className="font-black text-sm text-slate-900 dark:text-white">Odhadovaný čistý zisk za období:</span>
-                  <span className="font-black text-base text-blue-700 dark:text-blue-400">{formatCurrency(filteredData.netProfit)}</span>
+                  <span className="font-semibold text-sm text-slate-900 dark:text-white">Odhadovaný čistý zisk za období:</span>
+                  <span className="font-semibold text-base text-blue-700 dark:text-blue-400">{formatCurrency(filteredData.netProfit)}</span>
                 </div>
               </div>
 
               {/* Handover signatures for accountant */}
-              <div className="pt-4 grid grid-cols-2 gap-6 border-t border-slate-100 dark:border-slate-800 text-2xs text-slate-500">
+              <div className="pt-4 grid grid-cols-2 gap-6 border-t border-slate-100 dark:border-slate-800 text-[13px] text-slate-500">
                 <div className="space-y-8">
                   <span>Předal zhotovitel: <strong>{contractor?.name || 'Živnostník'}</strong></span>
                   <div className="border-b border-slate-300 dark:border-slate-700"></div>
@@ -589,8 +589,8 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
           {/* TAB 2: INVOICES TABLE */}
           {activeTab === 'invoices' && (
             <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-100 dark:bg-slate-800 uppercase text-3xs font-black text-slate-600 dark:text-slate-300">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-100 dark:bg-slate-800 text-[13px] font-semibold text-slate-600 dark:text-slate-300">
                   <tr>
                     <th className="p-2.5">Číslo</th>
                     <th className="p-2.5">Vystaveno</th>
@@ -609,13 +609,13 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
                   ) : (
                     filteredData.invoices.map((inv) => (
                       <tr key={inv.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                        <td className="p-2.5 font-bold font-mono text-blue-600">{inv.number}</td>
+                        <td className="p-2.5 font-semibold text-blue-600">{inv.number}</td>
                         <td className="p-2.5">{formatDateCs(inv.issueDate)}</td>
                         <td className="p-2.5 font-medium">{inv.clientName}</td>
-                        <td className="p-2.5 text-right font-black">{formatCurrency(inv.amount)}</td>
+                        <td className="p-2.5 text-right font-semibold">{formatCurrency(inv.amount)}</td>
                         <td className="p-2.5 text-center">
                           <span
-                            className={`px-2 py-0.5 rounded-md text-3xs font-extrabold uppercase tracking-wider ${
+                            className={`px-2 py-0.5 rounded-md text-[13px] font-semibold ${
                               inv.isPaid
                                 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                                 : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
@@ -635,8 +635,8 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
           {/* TAB 3: CASH RECEIPTS */}
           {activeTab === 'receipts' && (
             <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-100 dark:bg-slate-800 uppercase text-3xs font-black text-slate-600 dark:text-slate-300">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-100 dark:bg-slate-800 text-[13px] font-semibold text-slate-600 dark:text-slate-300">
                   <tr>
                     <th className="p-2.5">Číslo PPD</th>
                     <th className="p-2.5">Datum</th>
@@ -655,11 +655,11 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
                   ) : (
                     filteredData.cashReceipts.map((r) => (
                       <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                        <td className="p-2.5 font-bold font-mono text-emerald-600">{r.receiptNumber}</td>
+                        <td className="p-2.5 font-semibold text-emerald-600">{r.receiptNumber}</td>
                         <td className="p-2.5">{formatDateCs(r.issueDate)}</td>
                         <td className="p-2.5 font-medium">{r.receivedFrom}</td>
                         <td className="p-2.5 text-slate-500 truncate max-w-xs">{r.purposeDescription}</td>
-                        <td className="p-2.5 text-right font-black text-emerald-600">{formatCurrency(r.amount)}</td>
+                        <td className="p-2.5 text-right font-semibold text-emerald-600">{formatCurrency(r.amount)}</td>
                       </tr>
                     ))
                   )}
@@ -671,8 +671,8 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
           {/* TAB 4: EXPENSES */}
           {activeTab === 'expenses' && (
             <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-100 dark:bg-slate-800 uppercase text-3xs font-black text-slate-600 dark:text-slate-300">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-100 dark:bg-slate-800 text-[13px] font-semibold text-slate-600 dark:text-slate-300">
                   <tr>
                     <th className="p-2.5">Datum</th>
                     <th className="p-2.5">Dodavatel</th>
@@ -692,10 +692,10 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
                     filteredData.expenses.map((e) => (
                       <tr key={e.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                         <td className="p-2.5">{formatDateCs(e.date)}</td>
-                        <td className="p-2.5 font-bold">{e.supplier || 'Neznámý'}</td>
+                        <td className="p-2.5 font-semibold">{e.supplier || 'Neznámý'}</td>
                         <td className="p-2.5 text-slate-700 dark:text-slate-300 truncate max-w-xs">{e.title}</td>
-                        <td className="p-2.5 text-3xs uppercase font-extrabold text-slate-500">{e.category}</td>
-                        <td className="p-2.5 text-right font-black text-rose-600">{formatCurrency(e.amount)}</td>
+                        <td className="p-2.5 text-[13px] font-semibold text-slate-500">{e.category}</td>
+                        <td className="p-2.5 text-right font-semibold text-rose-600">{formatCurrency(e.amount)}</td>
                       </tr>
                     ))
                   )}
@@ -707,8 +707,8 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
           {/* TAB 5: TRIPS */}
           {activeTab === 'trips' && (
             <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-100 dark:bg-slate-800 uppercase text-3xs font-black text-slate-600 dark:text-slate-300">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-100 dark:bg-slate-800 text-[13px] font-semibold text-slate-600 dark:text-slate-300">
                   <tr>
                     <th className="p-2.5">Datum</th>
                     <th className="p-2.5">Trasa</th>
@@ -729,9 +729,9 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
                       <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                         <td className="p-2.5">{formatDateCs(t.date)}</td>
                         <td className="p-2.5 font-medium">{t.origin} ➔ {t.destination}</td>
-                        <td className="p-2.5 text-right font-bold">{t.distanceKm} km</td>
+                        <td className="p-2.5 text-right font-semibold">{t.distanceKm} km</td>
                         <td className="p-2.5 text-right text-slate-500">{t.ratePerKm} Kč</td>
-                        <td className="p-2.5 text-right font-black text-amber-700 dark:text-amber-400">{formatCurrency(t.totalCost)}</td>
+                        <td className="p-2.5 text-right font-semibold text-amber-700 dark:text-amber-400">{formatCurrency(t.totalCost)}</td>
                       </tr>
                     ))
                   )}
@@ -747,7 +747,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
             <button
               type="button"
               onClick={handleExportCsv}
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
+              className="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm sm:text-sm flex items-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
               title="Exportovat tabulku do CSV (Pohoda / Excel)"
             >
               <FileSpreadsheet className="w-4 h-4" />
@@ -757,7 +757,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
             <button
               type="button"
               onClick={handlePrint}
-              className="min-h-[44px] px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-extrabold text-xs sm:text-sm flex items-center gap-2 cursor-pointer active:scale-95 transition-all"
+              className="min-h-[44px] px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm sm:text-sm flex items-center gap-2 cursor-pointer active:scale-95 transition-all"
               title="Vytisknout předávací protokol pro účetní"
             >
               <Printer className="w-4 h-4" />
@@ -769,7 +769,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
             <button
               type="button"
               onClick={handleSendEmail}
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
+              className="min-h-[44px] px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm sm:text-sm flex items-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
               title="Odeslat souhrn účetní e-mailem"
             >
               <Mail className="w-4 h-4" />
@@ -779,7 +779,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-800 dark:text-slate-200 font-extrabold text-xs sm:text-sm cursor-pointer"
+              className="min-h-[44px] px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-800 dark:text-slate-200 font-semibold text-sm sm:text-sm cursor-pointer"
             >
               Zavřít
             </button>

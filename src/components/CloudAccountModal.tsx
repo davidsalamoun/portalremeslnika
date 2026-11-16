@@ -102,33 +102,32 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
       title="Účet"
       subtitle="Přihlášení, synchronizace a vaše data."
       size="lg"
-      bare
       closeOnBackdrop={false}
       onClose={onClose}
     >
 
         {/* Content body */}
-        <div className="p-5 space-y-5">
+        <div className="space-y-5">
           {view === 'account' && (
           <div className="space-y-4">
             <div className="flex items-center gap-3.5 p-3.5 bg-blue-50/70 dark:bg-blue-950/40 rounded-xl border border-blue-200/80 dark:border-blue-800/60">
-              <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg">
+              <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold text-lg">
                 {currentUser.email?.charAt(0).toUpperCase() || 'U'}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-bold text-slate-900 dark:text-white truncate">
+                <div className="font-semibold text-slate-900 dark:text-white truncate">
                   {currentUser.displayName || 'Řemeslník'}
                 </div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                <div className="text-sm text-slate-500 dark:text-slate-400 truncate">
                   {currentUser.email}
                 </div>
                 {status.phase === 'error' ? (
-                  <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-amber-600 dark:text-amber-400 font-semibold">
+                  <div className="flex items-center gap-1.5 mt-0.5 text-[13px] text-amber-600 dark:text-amber-400 font-semibold">
                     <CloudOff className="w-3.5 h-3.5" />
                     <span>Bez spojení – změny se odešlou později</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                  <div className="flex items-center gap-1.5 mt-0.5 text-[13px] text-emerald-600 dark:text-emerald-400 font-semibold">
                     <CloudCheck className="w-3.5 h-3.5" />
                     <span>Cloud účet aktivní</span>
                   </div>
@@ -138,21 +137,21 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
 
             <div className="grid grid-cols-2 gap-2 text-center">
               <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="text-xl font-bold text-slate-900 dark:text-white">
+                <div className="text-xl font-semibold text-slate-900 dark:text-white">
                   {contracts.length}
                 </div>
-                <div className="text-xs text-slate-500">Smluv v cloudu</div>
+                <div className="text-sm text-slate-500">Smluv v cloudu</div>
               </div>
               <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="text-xl font-bold text-slate-900 dark:text-white">
+                <div className="text-xl font-semibold text-slate-900 dark:text-white">
                   {clients.length}
                 </div>
-                <div className="text-xs text-slate-500">Uložených klientů</div>
+                <div className="text-sm text-slate-500">Uložených klientů</div>
               </div>
             </div>
 
             {(lastSyncTime || status.pending > 0) && (
-              <div className="text-xs text-center text-slate-500 dark:text-slate-400">
+              <div className="text-sm text-center text-slate-500 dark:text-slate-400">
                 {lastSyncTime && <>Poslední synchronizace: {lastSyncTime}</>}
                 {lastSyncTime && status.pending > 0 && ' · '}
                 {status.pending > 0 && <>Čeká na odeslání: {status.pending}</>}
@@ -164,7 +163,7 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
                 type="button"
                 onClick={handleSync}
                 disabled={isSyncing}
-                className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50"
+                className="min-h-11 w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50"
               >
                 <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
                 <span>{isSyncing ? 'Probíhá synchronizace...' : 'Synchronizovat nyní'}</span>
@@ -174,7 +173,7 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
                 type="button"
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="w-full py-2 px-4 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="min-h-11 w-full py-2 px-4 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>{isLoggingOut ? 'Odhlašuji...' : 'Odhlásit se z cloudového účtu'}</span>
@@ -185,7 +184,7 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
               <button
                 type="button"
                 onClick={() => setView('data-info')}
-                className="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white inline-flex items-center gap-1.5 cursor-pointer"
+                className="min-h-11 min-w-11 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white inline-flex items-center gap-1.5 cursor-pointer"
               >
                 <Info className="w-3.5 h-3.5" />
                 <span>Kde jsou moje data?</span>
@@ -193,7 +192,7 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
               <button
                 type="button"
                 onClick={() => setView('delete')}
-                className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 inline-flex items-center gap-1.5 cursor-pointer"
+                className="min-h-11 min-w-11 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 inline-flex items-center gap-1.5 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Smazat účet</span>
@@ -204,7 +203,7 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
 
           {view === 'data-info' && (
             <div className="space-y-4">
-              <h4 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
+              <h4 className="font-semibold text-slate-900 dark:text-white text-base flex items-center gap-2">
                 <Info className="w-4 h-4 text-blue-600" />
                 <span>Kde jsou moje data</span>
               </h4>
@@ -241,7 +240,7 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
                     exportAppBackup();
                     if (onToast) onToast('success', 'Záloha dat byla stažena.');
                   }}
-                  className="py-2 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-semibold text-xs inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                  className="min-h-11 py-2 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-semibold text-sm inline-flex items-center gap-1.5 cursor-pointer transition-colors"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Stáhnout zálohu dat</span>
@@ -249,7 +248,7 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setView('account')}
-                  className="py-2 px-3.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="min-h-11 inline-flex items-center justify-center py-2 px-3.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   Zpět na účet
                 </button>
@@ -259,7 +258,7 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
 
           {view === 'delete' && (
             <form onSubmit={handleDeleteAccount} className="space-y-4" noValidate>
-              <h4 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
+              <h4 className="font-semibold text-slate-900 dark:text-white text-base flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-red-600" />
                 <span>Smazat účet a všechna data</span>
               </h4>
@@ -284,7 +283,7 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
                   exportAppBackup();
                   if (onToast) onToast('success', 'Záloha dat byla stažena.');
                 }}
-                className="py-2 px-3.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-xs inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                className="min-h-11 py-2 px-3.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm inline-flex items-center gap-1.5 cursor-pointer transition-colors"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Nejdřív stáhnout zálohu dat</span>
@@ -310,7 +309,7 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
                   autoComplete="current-password"
                   value={deletePassword}
                   onChange={(e) => setDeletePassword(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-all focus:outline-hidden focus:ring-2 border-slate-300 dark:border-slate-700 focus:border-red-500 focus:ring-red-100 dark:focus:ring-red-950"
+                  className="min-h-11 w-full px-3.5 py-2.5 rounded-xl border text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-all focus:outline-hidden focus:ring-2 border-slate-300 dark:border-slate-700 focus:border-red-500 focus:ring-red-100 dark:focus:ring-red-950"
                 />
               </div>
 
@@ -324,7 +323,7 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
                 <button
                   type="submit"
                   disabled={isDeleting}
-                  className="py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-sm inline-flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="min-h-11 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-sm inline-flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>{isDeleting ? 'Mažu účet…' : 'Nenávratně smazat účet'}</span>
@@ -333,7 +332,7 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
                   type="button"
                   onClick={() => setView('account')}
                   disabled={isDeleting}
-                  className="py-2.5 px-4 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
+                  className="min-h-11 inline-flex items-center justify-center py-2.5 px-4 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   Zrušit
                 </button>
@@ -343,14 +342,14 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between">
-          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+        <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5">
+          <span className="text-[13px] text-slate-400 dark:text-slate-500">
             Zabezpečené cloudové úložiště v EU
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="min-h-11 inline-flex items-center justify-center px-4 py-1.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             Zavřít
           </button>

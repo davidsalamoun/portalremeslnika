@@ -212,14 +212,13 @@ Přesnou cenovou nabídku s položkovým rozpočtem vám rád připravím.`;
       title="Kalkulačka na obhlídce"
       subtitle="Rychlý odhad ceny na místě."
       size="xl"
-      bare
       closeOnBackdrop={false}
       onClose={onClose}
     >
 
         {/* Trade Selector */}
         <div>
-          <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+          <label className="block text-[13px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
             Zvolte řemeslný obor:
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -234,14 +233,14 @@ Přesnou cenovou nabídku s položkovým rozpočtem vám rád připravím.`;
                     setSelectedTradeId(t.id);
                     setQuantity(t.defaultQty);
                   }}
-                  className={`p-2.5 rounded-lg border text-left flex items-center gap-2 transition-colors cursor-pointer ${
+                  className={`min-h-11 min-w-11 p-2.5 rounded-lg border text-left flex items-center gap-2 transition-colors cursor-pointer ${
                     isSelected
-                      ? 'bg-slate-900 text-amber-400 dark:bg-slate-800 border-slate-900 dark:border-slate-700 font-bold shadow-xs'
+                      ? 'bg-slate-900 text-amber-400 dark:bg-slate-800 border-slate-900 dark:border-slate-700 font-semibold shadow-xs'
                       : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
                   }`}
                 >
                   <span>{renderTradeIcon(t.iconName, isSelected)}</span>
-                  <span className="text-xs truncate font-medium">{t.title}</span>
+                  <span className="text-sm truncate font-medium">{t.title}</span>
                 </button>
               );
             })}
@@ -251,7 +250,7 @@ Přesnou cenovou nabídku s položkovým rozpočtem vám rád připravím.`;
         {/* Quantity & Quality Inputs */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700">
           <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-mono uppercase text-[11px]">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 text-[13px]">
               Rozsah díla ({selectedTrade.unit}):
             </label>
             <div className="flex items-center gap-2">
@@ -260,23 +259,23 @@ Přesnou cenovou nabídku s položkovým rozpočtem vám rád připravím.`;
                 min="1"
                 value={quantity || ''}
                 onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white text-center focus:ring-2 focus:ring-amber-500"
+                className="min-h-11 w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-lg font-semibold tabular-nums text-slate-900 dark:text-white text-center focus:ring-2 focus:ring-amber-500"
               />
-              <span className="text-xs font-bold font-mono text-slate-500 shrink-0">
+              <span className="text-sm font-semibold text-slate-500 shrink-0">
                 {selectedTrade.unit}
               </span>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-mono uppercase text-[11px]">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 text-[13px]">
               Třída materiálu & chemie:
             </label>
             <div className="grid grid-cols-2 gap-1.5 h-10">
               <button
                 type="button"
                 onClick={() => setQualityTier('standard')}
-                className={`rounded-lg text-xs font-black transition-colors cursor-pointer font-mono ${
+                className={`min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
                   qualityTier === 'standard'
                     ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
                     : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
@@ -287,7 +286,7 @@ Přesnou cenovou nabídku s položkovým rozpočtem vám rád připravím.`;
               <button
                 type="button"
                 onClick={() => setQualityTier('premium')}
-                className={`rounded-lg text-xs font-black transition-colors cursor-pointer font-mono ${
+                className={`min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
                   qualityTier === 'premium'
                     ? 'bg-amber-500 text-slate-950 shadow-xs'
                     : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
@@ -300,7 +299,7 @@ Přesnou cenovou nabídku s položkovým rozpočtem vám rád připravím.`;
         </div>
 
         {/* 10% Reserve Checkbox */}
-        <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+        <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
           <input
             type="checkbox"
             checked={includeBuffer}
@@ -313,27 +312,27 @@ Přesnou cenovou nabídku s položkovým rozpočtem vám rád připravím.`;
         {/* Calculation Result Card */}
         <div className="p-4 rounded-lg bg-slate-900 dark:bg-slate-950 text-white border border-slate-800 space-y-3 shadow-md">
           <div className="flex items-baseline justify-between">
-            <span className="text-[11px] font-black font-mono text-amber-400 uppercase tracking-wider">
+            <span className="text-[13px] font-semibold text-amber-400">
               Doporučená cena zakázky bez DPH
             </span>
-            <div className="flex items-center gap-1.5 text-xs font-mono text-slate-300">
+            <div className="flex items-center gap-1.5 text-sm text-slate-300">
               <Clock className="w-3.5 h-3.5 text-amber-400" />
               <span>cca {calculation.estimatedDays} {calculation.estimatedDays === 1 ? 'pracovní den' : 'pracovní dny'}</span>
             </div>
           </div>
 
-          <div className="text-3xl sm:text-4xl font-mono font-black tabular-nums tracking-tight text-white">
+          <div className="text-3xl sm:text-4xl font-semibold tabular-nums text-white">
             {formatCurrency(calculation.totalPrice)}
           </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800 text-xs">
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800 text-sm">
             <div className="bg-slate-800/60 p-2 rounded border border-slate-700/60">
-              <span className="text-slate-400 text-[10px] font-mono uppercase block">Odměna za práci:</span>
-              <strong className="text-sm font-mono tabular-nums font-bold text-white">{formatCurrency(calculation.laborPrice)}</strong>
+              <span className="text-slate-400 text-[13px] block">Odměna za práci:</span>
+              <strong className="text-sm tabular-nums font-semibold text-white">{formatCurrency(calculation.laborPrice)}</strong>
             </div>
             <div className="bg-slate-800/60 p-2 rounded border border-slate-700/60">
-              <span className="text-slate-400 text-[10px] font-mono uppercase block">Materiál & chemie:</span>
-              <strong className="text-sm font-mono tabular-nums font-bold text-amber-400">{formatCurrency(calculation.materialPrice)}</strong>
+              <span className="text-slate-400 text-[13px] block">Materiál & chemie:</span>
+              <strong className="text-sm tabular-nums font-semibold text-amber-400">{formatCurrency(calculation.materialPrice)}</strong>
             </div>
           </div>
         </div>
@@ -343,18 +342,18 @@ Přesnou cenovou nabídku s položkovým rozpočtem vám rád připravím.`;
           <button
             type="button"
             onClick={handleCopyEstimate}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer font-mono"
+            className="min-h-11 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-sm transition-colors cursor-pointer"
           >
-            {copied ? <Check className="w-4 h-4 text-emerald-500 stroke-[2.5]" /> : <Copy className="w-4 h-4" />}
+            {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
             <span>{copied ? 'Zkopírováno!' : 'Zkopírovat pro SMS / WhatsApp'}</span>
           </button>
 
           <button
             type="button"
             onClick={handleApply}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-colors cursor-pointer shadow-xs font-mono"
+            className="min-h-11 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-sm transition-colors cursor-pointer shadow-xs"
           >
-            <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+            <ArrowRight className="w-4 h-4" />
             <span>Převést do Smlouvy o dílo</span>
           </button>
         </div>
