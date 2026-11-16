@@ -611,7 +611,7 @@ export default function App() {
 
       {/* Horní navigace */}
       <Navbar
-        activeTab={previewContract ? 'nova-smlouva' : activeTab}
+        activeTab={activeTab}
         onSelectTab={handleTabChange}
         contractsCount={contracts.length}
         clientsCount={clients.length}
@@ -666,7 +666,7 @@ export default function App() {
                 onOpenPaywall={openPaywallProp}
                 onOpenContract={(contract) => {
                   setPreviewContract(contract);
-                  setPreviewInitialDoc('smlouva');
+                  setPreviewInitialDoc(contract.docKind === 'quote' ? 'nabidka' : 'smlouva');
                 }}
                 onNewContract={() => {
                   if (!isProUser(contractor) && contracts.length >= PRO_CONFIG.maxFreeContracts) {
@@ -735,7 +735,7 @@ export default function App() {
                 onDeleteEvent={handleDeleteCalendarEvent}
                 onOpenContract={(contract) => {
                   setPreviewContract(contract);
-                  setPreviewInitialDoc('smlouva');
+                  setPreviewInitialDoc(contract.docKind === 'quote' ? 'nabidka' : 'smlouva');
                 }}
                 onNewContract={handleProtectedNewContract}
               />
@@ -843,7 +843,7 @@ export default function App() {
 
       {/* Spodní lišta pro pohodlné ovládání palcem na mobilu */}
       <BottomNav
-        activeTab={previewContract ? 'nova-smlouva' : activeTab}
+        activeTab={activeTab}
         onSelectTab={handleTabChange}
         overdueInvoicesCount={overdueInvoicesCount}
         onOpenEstimateCalculator={() => setIsEstimateCalculatorOpen(true)}

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { docBar, docBarTitle, docBarNote, docBarActions, docButton, docButtonStrong, docButtonPrimary, docChip } from './docBar';
+import { Dialog } from './Dialog';
 import {
   FilePlus2,
   Calendar,
@@ -126,21 +128,16 @@ export const AmendmentView: React.FC<AmendmentViewProps> = ({
     onToast?.('success', `Dodatek č. ${newAmend.amendmentNumber} byl úspěšně vytvořen`);
   };
 
+  const [amendmentToDelete, setAmendmentToDelete] = useState<string | null>(null);
+
   const handleDeleteAmendment = (id: string) => {
-    let confirmed = true;
-    try {
-      confirmed = window.confirm('Opravdu chcete tento dodatek smazat?');
-    } catch {
-      confirmed = true;
+    const updated = amendments.filter((a) => a.id !== id);
+    onUpdateContract({ ...contract, amendments: updated });
+    if (selectedAmendmentId === id) {
+      setSelectedAmendmentId(updated.length > 0 ? updated[0].id : null);
     }
-    if (confirmed) {
-      const updated = amendments.filter((a) => a.id !== id);
-      onUpdateContract({ ...contract, amendments: updated });
-      if (selectedAmendmentId === id) {
-        setSelectedAmendmentId(updated.length > 0 ? updated[0].id : null);
-      }
-      onToast?.('info', 'Dodatek byl odstraněn');
-    }
+    setAmendmentToDelete(null);
+    onToast?.('info', 'Dodatek je smazaný.');
   };
 
   const handleSaveSignature = (sigUrl: string) => {
@@ -169,132 +166,76 @@ export const AmendmentView: React.FC<AmendmentViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top summary & action banner */}
-      <div className="p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs font-mono text-slate-500 dark:text-slate-400">
-            <span>Vícepráce a změny</span>
-            <span aria-hidden="true">·</span>
-            <span>Změnové listy ke smlouvě</span>
+      {/* Lišta dodatků (jen na obrazovce) */}
+      <div className={docBar}>
+        <div className="min-w-0">
+          <div className={docBarTitle}>Dodatky ke smlouvě</div>
+          <div className={docBarNote}>
+            {amendments.length === 0
+              ? 'Vícepráce, méněpráce a změny zadání sjednané po podpisu smlouvy.'
+              : `Původní cena ${formatCurrency(contract.price)}, dodatky ${totalAmendmentsPrice >= 0 ? '+' : '−'}${formatCurrency(Math.abs(totalAmendmentsPrice))}, nová cena díla ${formatCurrency(totalAdjustedPrice)}.`}
           </div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
-            Dodatky ke smlouvě o dílo č. {contract.contractNumber}
-          </h2>
-          <p className="text-xs text-slate-600 dark:text-slate-300 max-w-2xl">
-            Vznikly na stavbě práce navíc? Vystavte právně závazný očíslovaný dodatek s navýšením ceny a podpisem klienta, abyste měli jistotu proplacení.
-          </p>
         </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={() => setIsNewModalOpen(true)}
-            className="h-10 px-4 text-xs font-bold rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xs inline-flex items-center gap-2 transition-colors cursor-pointer"
-          >
-            <FilePlus2 className="w-4 h-4 text-slate-950" />
-            <span>+ Vystavit nový dodatek</span>
+        <div className={docBarActions}>
+          {selectedAmendment && (
+            <button type="button" onClick={() => setAmendmentToDelete(selectedAmendment.id)} className={docButton} aria-label={`Smazat dodatek č. ${selectedAmendment.amendmentNumber}`}>
+              <Trash2 className="w-4 h-4" />
+              <span>Smazat dodatek</span>
+            </button>
+          )}
+          <button type="button" onClick={() => setIsNewModalOpen(true)} className={docButtonPrimary}>
+            <FilePlus2 className="w-[18px] h-[18px]" />
+            <span>Nový dodatek</span>
           </button>
         </div>
       </div>
 
-      {/* Financial overview card */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="text-xs text-slate-500 dark:text-slate-400">Původní sjednaná cena</div>
-          <div className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-            {formatCurrency(contract.price)}
-          </div>
-          <div className="text-[11px] text-slate-400">Ze základní smlouvy</div>
-        </div>
-
-        <div className="p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="text-xs text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" />
-            Vícepráce celkem ({amendments.length} {amendments.length === 1 ? 'dodatek' : 'dodatky'})
-          </div>
-          <div className="text-lg font-bold text-amber-600 dark:text-amber-400 mt-0.5">
-            {totalAmendmentsPrice >= 0 ? `+${formatCurrency(totalAmendmentsPrice)}` : formatCurrency(totalAmendmentsPrice)}
-          </div>
-          <div className="text-[11px] text-slate-400">Schválené dodatky</div>
-        </div>
-
-        <div className="p-3.5 bg-blue-50/60 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-900/60 shadow-sm">
-          <div className="text-xs text-blue-700 dark:text-blue-300 font-semibold">
-            Nová celková cena díla
-          </div>
-          <div className="text-lg font-black text-blue-900 dark:text-blue-100 mt-0.5">
-            {formatCurrency(totalAdjustedPrice)}
-          </div>
-          <div className="text-[11px] text-blue-600 dark:text-blue-400">Včetně všech víceprací</div>
-        </div>
-      </div>
-
-      {/* Amendment selector if more than 1 */}
       {amendments.length > 1 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <div role="group" aria-label="Výběr dodatku" className="no-print flex gap-2 overflow-x-auto pb-1 text-[15px]">
           {amendments.map((a) => (
             <button
               key={a.id}
+              type="button"
+              aria-pressed={selectedAmendment?.id === a.id}
               onClick={() => setSelectedAmendmentId(a.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                selectedAmendment?.id === a.id
-                  ? 'bg-amber-600 text-white shadow-sm'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
-              }`}
+              className={`${docChip(selectedAmendment?.id === a.id)} whitespace-nowrap`}
             >
-              Dodatek č. {a.amendmentNumber}: {a.title || 'Vícepráce'}
+              č. {a.amendmentNumber}: {a.title || 'Vícepráce'}
             </button>
           ))}
         </div>
       )}
 
-      {/* Document View / Empty State */}
-      {amendments.length === 0 ? (
-        <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-          <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
-            Zatím nebyl vystaven žádný dodatek
-          </h3>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1 mb-5">
-            Pokud si klient během realizace objedná další práce, materiál navíc nebo úpravu zadání, vytvořte k této smlouvě Dodatek č. 1.
-          </p>
-          <button
-            type="button"
-            onClick={() => setIsNewModalOpen(true)}
-            className="px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-sm inline-flex items-center gap-2"
-          >
-            <FilePlus2 className="w-4 h-4" />
-            Vytvořit první dodatek na vícepráce
-          </button>
-        </div>
-      ) : selectedAmendment ? (
-        <div className="space-y-4">
-          {/* Action toolbar for print/sign */}
-          <div className="no-print flex flex-wrap items-center justify-between gap-2 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
-            <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Prohlížíte: <strong>Dodatek č. {selectedAmendment.amendmentNumber}</strong>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={handlePrint}
-                className="h-9 px-3.5 text-xs font-bold rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-700 dark:hover:bg-slate-600 inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
-              >
-                <Printer className="w-3.5 h-3.5 text-amber-400" />
-                Tisk / PDF
+      {amendmentToDelete && (
+        <Dialog title="Smazat dodatek?" onClose={() => setAmendmentToDelete(null)}>
+          <div className="space-y-5">
+            <p className="text-slate-900 dark:text-slate-100">
+              Dodatek zmizí i s podpisy a cena díla se přepočítá bez něj. Smazání nejde vrátit.
+            </p>
+            <div className="flex flex-wrap justify-end gap-2.5">
+              <button type="button" onClick={() => setAmendmentToDelete(null)} className={docButtonStrong}>
+                Ponechat
               </button>
               <button
                 type="button"
-                onClick={() => handleDeleteAmendment(selectedAmendment.id)}
-                className="h-9 px-3 text-xs font-semibold rounded-lg bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900/40 inline-flex items-center gap-1.5 cursor-pointer"
+                onClick={() => handleDeleteAmendment(amendmentToDelete)}
+                className="min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-rose-700 bg-rose-700 hover:bg-rose-800 text-white font-semibold cursor-pointer transition-colors"
               >
-                <Trash2 className="w-3.5 h-3.5" />
-                Smazat dodatek
+                <Trash2 className="w-[18px] h-[18px]" />
+                <span>Smazat</span>
               </button>
             </div>
           </div>
+        </Dialog>
+      )}
 
+      {/* Dokument, nebo prázdný stav */}
+      {amendments.length === 0 ? (
+        <div className="no-print bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-5 py-5 text-[15px] text-slate-600 dark:text-slate-300">
+          Zatím tu není žádný dodatek. Když si klient objedná práce navíc nebo změnu zadání, sepište ji tlačítkem Nový dodatek.
+        </div>
+      ) : selectedAmendment ? (
+        <div className="space-y-4">
           {/* Printable A4 Paper of the Amendment */}
           <div
             id="amendment-printable-paper"

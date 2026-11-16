@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { docBar, docBarTitle, docBarNote, docBarActions, docButton, docButtonPrimary } from './docBar';
 import {
   FileText,
   Printer,
@@ -92,81 +93,35 @@ export const PriceQuoteView: React.FC<PriceQuoteViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Banner / Conversion to Contract */}
-      <div className="no-print p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs font-mono text-slate-500 dark:text-slate-400">
-            <span>Cenová nabídka / Kalkulace</span>
-            <span aria-hidden="true">·</span>
-            <span>Nezávazná nabídka pro klienta</span>
+      {/* Lišta nabídky (jen na obrazovce) */}
+      <div className={docBar}>
+        <div className="min-w-0">
+          <div className={docBarTitle}>Cenová nabídka</div>
+          <div className={docBarNote}>
+            č. {quoteNumber}, platí do {formatDateCs(validUntil)}. Po odsouhlasení ji převedete na smlouvu.
           </div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
-            Cenová nabídka č. {quoteNumber}
-          </h2>
-          <p className="text-xs text-slate-600 dark:text-slate-300 max-w-2xl">
-            Klient si vyžádal kalkulaci? Nabídku můžete vytisknout, poslat přes WhatsApp nebo e-mail. Jakmile klient odsouhlasí podmínky, jedním kliknutím ji převedete na ostrou Smlouvu o dílo.
-          </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={handleConvert}
-            className="h-10 px-4 text-xs font-bold rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xs inline-flex items-center gap-2 transition-colors cursor-pointer"
-          >
-            <CheckCircle2 className="w-4 h-4 text-slate-950" />
-            <span>Převést na Smlouvu o dílo</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Share and Print bar */}
-      <div className="no-print flex flex-wrap items-center justify-between gap-2 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-          <Clock className="w-3.5 h-3.5 text-blue-500" />
-          <span>Platnost nabídky: do <strong>{formatDateCs(validUntil)}</strong></span>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
+        <div className={docBarActions}>
           {contract.client.phone && (
-            <a
-              href={whatsappShareUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 inline-flex items-center gap-1.5 cursor-pointer transition-colors"
-            >
-              <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
-              WhatsApp
+            <a href={whatsappShareUrl} target="_blank" rel="noopener noreferrer" className={docButton}>
+              <MessageSquare className="w-4 h-4" />
+              <span>WhatsApp</span>
             </a>
           )}
-
           {contract.client.email && (
-            <button
-              type="button"
-              onClick={handleEmail}
-              className="h-9 px-3 text-xs font-semibold rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-900 inline-flex items-center gap-1.5 cursor-pointer"
-            >
-              <Mail className="w-3.5 h-3.5 text-blue-600" />
-              E-mail
+            <button type="button" onClick={handleEmail} className={docButton}>
+              <Mail className="w-4 h-4" />
+              <span>E-mail</span>
             </button>
           )}
-
-          <button
-            type="button"
-            onClick={handleCopyShare}
-            className="h-9 px-3 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1.5 cursor-pointer"
-          >
-            <Copy className="w-3.5 h-3.5" />
-            Kopírovat
+          <button type="button" onClick={handleCopyShare} className={docButton}>
+            <Copy className="w-4 h-4" />
+            <span>Zkopírovat zprávu</span>
           </button>
-
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="h-9 px-3.5 text-xs font-bold rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-700 dark:hover:bg-slate-600 inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
-          >
-            <Printer className="w-3.5 h-3.5 text-amber-400" />
-            Tisk / PDF
+          <button type="button" onClick={handleConvert} className={docButtonPrimary}>
+            <CheckCircle2 className="w-[18px] h-[18px]" />
+            <span>Převést na smlouvu</span>
           </button>
         </div>
       </div>

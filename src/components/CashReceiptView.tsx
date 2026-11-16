@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { docBar, docBarTitle, docBarNote, docBarActions, docButton, docButtonStrong, docButtonPrimary, docChip } from './docBar';
+import { Dialog } from './Dialog';
+import { getContractTotal } from '../utils/invoiceMath';
 import {
   Banknote,
   Calendar,
@@ -131,21 +134,21 @@ export const CashReceiptView: React.FC<CashReceiptViewProps> = ({
     onToast?.('success', `Příjmový pokladní doklad ${newReceipt.receiptNumber} byl vystaven`);
   };
 
+  const [receiptToDelete, setReceiptToDelete] = useState<string | null>(null);
+
   const handleDeleteReceipt = (id: string) => {
-    let confirmed = true;
-    try {
-      confirmed = window.confirm('Opravdu chcete tento pokladní doklad smazat?');
-    } catch {
-      confirmed = true;
+    const updated = receipts.filter((r) => r.id !== id);
+    onUpdateContract({ ...contract, cashReceipts: updated });
+    if (selectedReceiptId === id) {
+      setSelectedReceiptId(updated.length > 0 ? updated[0].id : null);
     }
-    if (confirmed) {
-      const updated = receipts.filter((r) => r.id !== id);
-      onUpdateContract({ ...contract, cashReceipts: updated });
-      if (selectedReceiptId === id) {
-        setSelectedReceiptId(updated.length > 0 ? updated[0].id : null);
-      }
-      onToast?.('info', 'Pokladní doklad byl smazán');
-    }
+    setReceiptToDelete(null);
+    onToast?.('info', 'Pokladní doklad je smazaný.');
+  };
+
+  const openNewReceipt = () => {
+    setFormNumber(`PPD-${contract.contractNumber.replace(/[^0-9]/g, '') || new Date().getFullYear()}-${String(receipts.length + 1).padStart(2, '0')}`);
+    setIsNewModalOpen(true);
   };
 
   const handleSaveSignature = (sigUrl: string) => {
@@ -166,135 +169,80 @@ export const CashReceiptView: React.FC<CashReceiptViewProps> = ({
 
   const totalCashCollected = receipts.reduce((sum, r) => sum + (r.amount || 0), 0);
 
+  const jobTotal = getContractTotal(contract);
+
   return (
     <div className="space-y-6">
-      {/* Banner */}
-      <div className="p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs font-mono text-slate-500 dark:text-slate-400">
-            <span>Příjmové pokladní doklady (PPD)</span>
-            <span aria-hidden="true">·</span>
-            <span>Hotovostní platby</span>
+      {/* Lišta pokladních dokladů (jen na obrazovce) */}
+      <div className={docBar}>
+        <div className="min-w-0">
+          <div className={docBarTitle}>Platby v hotovosti</div>
+          <div className={docBarNote}>
+            {receipts.length === 0
+              ? 'Příjmový pokladní doklad pro zálohu nebo doplatek převzatý na ruku.'
+              : `Přijato ${formatCurrency(totalCashCollected)} z ${formatCurrency(jobTotal)}, zbývá ${formatCurrency(Math.max(0, jobTotal - totalCashCollected))}.`}
           </div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
-            Platby v hotovosti ke smlouvě č. {contract.contractNumber}
-          </h2>
-          <p className="text-xs text-slate-600 dark:text-slate-300 max-w-2xl">
-            Přebíráte od klienta zálohu nebo doplatek v hotovosti na stavbě? Vystavte oficiální příjmový pokladní doklad s částkou vypsanou slovy a podpisy obou stran.
-          </p>
         </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={() => {
-              setFormNumber(`PPD-${contract.contractNumber.replace(/[^0-9]/g, '') || new Date().getFullYear()}-${String(receipts.length + 1).padStart(2, '0')}`);
-              setIsNewModalOpen(true);
-            }}
-            className="h-10 px-4 text-xs font-bold rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xs inline-flex items-center gap-2 transition-colors cursor-pointer"
-          >
-            <Banknote className="w-4 h-4 text-slate-950" />
-            <span>+ Vystavit pokladní doklad</span>
+        <div className={docBarActions}>
+          {selectedReceipt && (
+            <button type="button" onClick={() => setReceiptToDelete(selectedReceipt.id)} className={docButton} aria-label={`Smazat doklad ${selectedReceipt.receiptNumber}`}>
+              <Trash2 className="w-4 h-4" />
+              <span>Smazat doklad</span>
+            </button>
+          )}
+          <button type="button" onClick={openNewReceipt} className={docButtonPrimary}>
+            <Banknote className="w-[18px] h-[18px]" />
+            <span>Nový pokladní doklad</span>
           </button>
         </div>
       </div>
 
-      {/* Stats summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="text-xs text-slate-500 dark:text-slate-400">Celková cena zakázky</div>
-          <div className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-            {formatCurrency(contract.price)}
-          </div>
-          <div className="text-[11px] text-slate-400">Ze smlouvy o dílo</div>
-        </div>
-
-        <div className="p-3.5 bg-emerald-50/60 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm">
-          <div className="text-xs text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1">
-            <Banknote className="w-3.5 h-3.5" />
-            Přijato v hotovosti ({receipts.length} dokladů)
-          </div>
-          <div className="text-lg font-bold text-emerald-700 dark:text-emerald-300 mt-0.5">
-            {formatCurrency(totalCashCollected)}
-          </div>
-          <div className="text-[11px] text-emerald-600 dark:text-emerald-400">Podložené pokladními doklady</div>
-        </div>
-
-        <div className="p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="text-xs text-slate-500 dark:text-slate-400">Zbývá doplatit</div>
-          <div className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-            {formatCurrency(Math.max(0, contract.price - totalCashCollected))}
-          </div>
-          <div className="text-[11px] text-slate-400">Před vyúčtováním</div>
-        </div>
-      </div>
-
-      {/* Receipt switcher */}
       {receipts.length > 1 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <div role="group" aria-label="Výběr dokladu" className="no-print flex gap-2 overflow-x-auto pb-1 text-[15px]">
           {receipts.map((r) => (
             <button
               key={r.id}
+              type="button"
+              aria-pressed={selectedReceipt?.id === r.id}
               onClick={() => setSelectedReceiptId(r.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                selectedReceipt?.id === r.id
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
-              }`}
+              className={`${docChip(selectedReceipt?.id === r.id)} whitespace-nowrap tabular-nums`}
             >
-              {r.receiptNumber} ({formatCurrency(r.amount)})
+              {r.receiptNumber}, {formatCurrency(r.amount)}
             </button>
           ))}
         </div>
       )}
 
-      {/* Empty state or Document paper */}
-      {receipts.length === 0 ? (
-        <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-          <Banknote className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
-            Zatím jste nevystavili žádný pokladní doklad
-          </h3>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1 mb-5">
-            Při převzetí peněz v hotovosti na ruku (např. záloha na nákup dlažby, oken či materiálu) vystavte klientovi stvrzenku.
-          </p>
-          <button
-            type="button"
-            onClick={() => setIsNewModalOpen(true)}
-            className="px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm inline-flex items-center gap-2"
-          >
-            <Banknote className="w-4 h-4" />
-            Vystavit první pokladní doklad
-          </button>
-        </div>
-      ) : selectedReceipt ? (
-        <div className="space-y-4">
-          {/* Action bar */}
-          <div className="no-print flex flex-wrap items-center justify-between gap-2 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
-            <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Doklad: <strong>{selectedReceipt.receiptNumber}</strong>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="h-9 px-3.5 text-xs font-bold rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-700 dark:hover:bg-slate-600 inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
-              >
-                <Printer className="w-3.5 h-3.5 text-amber-400" />
-                Tisk / PDF
+      {receiptToDelete && (
+        <Dialog title="Smazat pokladní doklad?" onClose={() => setReceiptToDelete(null)}>
+          <div className="space-y-5">
+            <p className="text-slate-900 dark:text-slate-100">
+              Doklad zmizí i s podpisy a přijatá hotovost se u zakázky sníží. Smazání nejde vrátit.
+            </p>
+            <div className="flex flex-wrap justify-end gap-2.5">
+              <button type="button" onClick={() => setReceiptToDelete(null)} className={docButtonStrong}>
+                Ponechat
               </button>
               <button
                 type="button"
-                onClick={() => handleDeleteReceipt(selectedReceipt.id)}
-                className="h-9 px-3 text-xs font-semibold rounded-lg bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900/40 inline-flex items-center gap-1.5 cursor-pointer"
+                onClick={() => handleDeleteReceipt(receiptToDelete)}
+                className="min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-rose-700 bg-rose-700 hover:bg-rose-800 text-white font-semibold cursor-pointer transition-colors"
               >
-                <Trash2 className="w-3.5 h-3.5" />
-                Smazat doklad
+                <Trash2 className="w-[18px] h-[18px]" />
+                <span>Smazat</span>
               </button>
             </div>
           </div>
+        </Dialog>
+      )}
 
+      {/* Doklad, nebo prázdný stav */}
+      {receipts.length === 0 ? (
+        <div className="no-print bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-5 py-5 text-[15px] text-slate-600 dark:text-slate-300">
+          Zatím tu není žádný pokladní doklad. Když převezmete peníze v hotovosti, vystavte klientovi doklad tlačítkem Nový pokladní doklad.
+        </div>
+      ) : selectedReceipt ? (
+        <div className="space-y-4">
           {/* Printable Czech Cash Receipt Box (Classic official SEVT style) */}
           <div
             id="cash-receipt-printable"
