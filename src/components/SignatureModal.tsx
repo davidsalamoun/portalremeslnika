@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { Dialog } from './Dialog';
 import { PenTool, RotateCcw, Check, X, ShieldCheck, FileCheck2 } from 'lucide-react';
 
 interface SignatureModalProps {
@@ -165,30 +166,14 @@ export const SignatureModal: React.FC<SignatureModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-lg w-full overflow-hidden flex flex-col">
-        {/* Hlavička */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/80 text-[#1E3A78] dark:text-blue-300 flex items-center justify-center">
-              <PenTool className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                {title}
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Podepisující: <strong className="text-slate-800 dark:text-slate-200">{signerName}</strong>
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Dialog
+      title={title}
+      subtitle={<>Podepisuje {signerName}</>}
+      size="lg"
+      bare
+      closeOnBackdrop={false}
+      onClose={onClose}
+    >
 
         {/* Instrukce */}
         <div className="px-5 pt-3 pb-1 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
@@ -280,7 +265,6 @@ export const SignatureModal: React.FC<SignatureModalProps> = ({
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </Dialog>
   );
 };

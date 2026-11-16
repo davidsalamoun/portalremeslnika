@@ -414,30 +414,14 @@ export const CashReceiptView: React.FC<CashReceiptViewProps> = ({
 
       {/* New Receipt Modal */}
       {isNewModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 rounded-xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 rounded-lg">
-                  <Banknote className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                    Vystavit příjmový pokladní doklad
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    ke smlouvě č. {contract.contractNumber}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsNewModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+        <Dialog
+          title="Nový pokladní doklad"
+          subtitle={<>ke smlouvě č. {contract.contractNumber}</>}
+          size="lg"
+          bare
+          closeOnBackdrop={false}
+          onClose={() => setIsNewModalOpen(false)}
+        >
 
             {/* Quick presets */}
             <div className="mt-4">
@@ -555,8 +539,7 @@ export const CashReceiptView: React.FC<CashReceiptViewProps> = ({
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+          </Dialog>
       )}
 
       {/* Signature Modal */}

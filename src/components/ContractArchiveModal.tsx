@@ -1,4 +1,5 @@
 import React from 'react';
+import { Dialog, dialogActionButton } from './Dialog';
 import {
   FolderArchive,
   X,
@@ -187,54 +188,15 @@ export const ContractArchiveModal: React.FC<ContractArchiveModalProps> = ({
   const receiptsCount = (contract.cashReceipts || []).length;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl w-full max-w-4xl max-h-[94vh] flex flex-col shadow-2xl overflow-hidden my-auto">
-        {/* Header - Industrial Digital Dossier */}
-        <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950 text-white">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
-              <FolderArchive className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-400 text-slate-950">
-                  Digitální šanon
-                </span>
-                <span className="text-xs px-2 py-0.5 rounded font-mono font-semibold bg-slate-900 text-slate-300 border border-slate-800">
-                  #{contract.contractNumber}
-                </span>
-              </div>
-              <h3 className="font-black text-base sm:text-lg leading-tight text-white mt-0.5">
-                Kompletní složka a archiv zakázky
-              </h3>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePrint}
-              className="h-9 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer transition-all"
-              title="Vytisknout celou složku do PDF"
-            >
-              <Printer className="w-4 h-4 text-amber-400" />
-              <span className="hidden sm:inline">Tisk do PDF</span>
-            </button>
-            <button
-              onClick={handleExportHtml}
-              className="h-9 px-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
-              title="Stáhnout jako offline HTML soubor"
-            >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Stáhnout složku</span>
-            </button>
-            <button
-              onClick={onClose}
-              className="w-9 h-9 rounded-lg hover:bg-white/10 text-white flex items-center justify-center transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+    <Dialog
+      title="Složka zakázky"
+      subtitle={<>smlouva {contract.contractNumber}</>}
+      size="3xl"
+      actions={<><button type="button" onClick={handlePrint} className={dialogActionButton}><Printer className="w-4 h-4" /><span className="hidden sm:inline">Tisk</span></button><button type="button" onClick={handleExportHtml} className={dialogActionButton}><Download className="w-4 h-4" /><span className="hidden sm:inline">Stáhnout</span></button></>}
+      bare
+      closeOnBackdrop={false}
+      onClose={onClose}
+    >
 
         {/* Content Body - Printable Archival Dossier */}
         <div className="flex-1 overflow-y-auto p-5 sm:p-8 space-y-6 text-slate-800 dark:text-slate-100 print:p-0">
@@ -452,7 +414,6 @@ export const ContractArchiveModal: React.FC<ContractArchiveModalProps> = ({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </Dialog>
   );
 };

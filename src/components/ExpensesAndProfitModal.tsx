@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { Dialog } from './Dialog';
 import {
   X,
   Plus,
@@ -182,33 +183,14 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-4xl w-full my-6 flex flex-col max-h-[92vh] overflow-hidden text-slate-800 dark:text-slate-100">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 bg-slate-900 text-white shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
-              <TrendingUp className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                <span>Ziskovost & Náklady zakázky</span>
-                <span className="text-xs px-2 py-0.5 rounded font-mono font-semibold bg-slate-800 text-slate-300 border border-slate-700">
-                  {contract.contractNumber}
-                </span>
-              </h2>
-              <p className="text-xs text-slate-400">
-                Evidence skutečných nákladů na materiál, půjčovny a subdodávky pro přesný výpočet čistého zisku
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Dialog
+      title="Náklady a zisk"
+      subtitle={<>smlouva {contract.contractNumber}</>}
+      size="3xl"
+      bare
+      closeOnBackdrop={false}
+      onClose={onClose}
+    >
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
@@ -599,7 +581,7 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
             Hotovo
           </button>
         </div>
-      </div>
+      
 
       {/* Lightbox / Zvětšená účtenka */}
       {selectedReceiptPreview && (
@@ -622,6 +604,6 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </Dialog>
   );
 };

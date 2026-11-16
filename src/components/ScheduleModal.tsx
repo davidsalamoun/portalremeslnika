@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Dialog } from './Dialog';
 import {
   X,
   Plus,
@@ -146,28 +147,14 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
       : 0;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto">
-        {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-900 text-white">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-amber-400">
-              <Calendar className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="font-extrabold text-base leading-tight">Harmonogram a kalendář etap</h3>
-              <p className="text-xs text-slate-300">
-                Gantt časová osa, termíny realizace a navázané zálohové platby
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-9 h-9 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Dialog
+      title="Harmonogram"
+      subtitle="Etapy prací a jejich termíny."
+      size="2xl"
+      bare
+      closeOnBackdrop={false}
+      onClose={onClose}
+    >
 
         {/* Content body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
@@ -365,7 +352,6 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
             Zavřít
           </button>
         </div>
-      </div>
-    </div>
+      </Dialog>
   );
 };

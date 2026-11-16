@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Dialog } from './Dialog';
 import {
   X,
   MessageSquare,
@@ -121,35 +122,14 @@ export const QuickClientMessagesModal: React.FC<QuickClientMessagesModalProps> =
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 rounded-xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-        {/* Header - Industrial Client Dispatch */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-              <MessageSquare className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-                  SMS / WhatsApp
-                </span>
-                <span className="text-xs text-slate-400 font-mono">
-                  #{contract.contractNumber}
-                </span>
-              </div>
-              <h3 className="font-black text-base text-slate-900 dark:text-white mt-0.5">
-                Rychlá zpráva investorovi
-              </h3>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+    <Dialog
+      title="Zpráva zákazníkovi"
+      subtitle={<>smlouva {contract.contractNumber}</>}
+      size="lg"
+      bare
+      closeOnBackdrop={false}
+      onClose={onClose}
+    >
 
         {/* Template Selector Grid */}
         <div className="grid grid-cols-2 gap-2">
@@ -252,7 +232,6 @@ export const QuickClientMessagesModal: React.FC<QuickClientMessagesModalProps> =
             <span>Odeslat WhatsApp</span>
           </button>
         </div>
-      </div>
-    </div>
+      </Dialog>
   );
 };

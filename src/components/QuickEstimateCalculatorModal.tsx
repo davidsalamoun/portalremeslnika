@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Dialog } from './Dialog';
 import {
   X,
   Calculator,
@@ -207,31 +208,14 @@ Přesnou cenovou nabídku s položkovým rozpočtem vám rád připravím.`;
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 rounded-xl max-w-xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[92vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-black">
-              <Calculator className="w-5 h-5 stroke-[2.5]" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono uppercase font-black text-amber-600 dark:text-amber-400">Terénní kalkulace</span>
-                <span className="text-[11px] font-mono text-slate-400">· Okamžitý rozpočet na stavbě</span>
-              </div>
-              <h3 className="font-black text-base text-slate-900 dark:text-white tracking-tight">
-                Rychlá kalkulačka na koleni
-              </h3>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 cursor-pointer transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Dialog
+      title="Kalkulačka na obhlídce"
+      subtitle="Rychlý odhad ceny na místě."
+      size="xl"
+      bare
+      closeOnBackdrop={false}
+      onClose={onClose}
+    >
 
         {/* Trade Selector */}
         <div>
@@ -374,7 +358,6 @@ Přesnou cenovou nabídku s položkovým rozpočtem vám rád připravím.`;
             <span>Převést do Smlouvy o dílo</span>
           </button>
         </div>
-      </div>
-    </div>
+      </Dialog>
   );
 };
