@@ -59,203 +59,104 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 
   return (
     <>
-      {/* "More" Sheet Overlay for mobile */}
+      {/* Nabídka „Více“ na mobilu */}
       {isMoreMenuOpen && (
         <div
-          className="no-print lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex flex-col justify-end animate-in fade-in duration-200"
+          className="no-print lg:hidden fixed inset-0 z-50 bg-slate-950/60 flex flex-col justify-end"
           onClick={() => setIsMoreMenuOpen(false)}
         >
           <div
-            className="bg-white dark:bg-slate-900 rounded-t-xl p-5 shadow-2xl border-t border-slate-200 dark:border-slate-800 space-y-4 max-h-[85vh] overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Další nabídka"
+            className="bg-white dark:bg-slate-900 rounded-t-md border-t border-slate-900 dark:border-slate-600 shadow-2xl max-h-[85vh] overflow-y-auto text-[15px] leading-snug"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Sheet Handle & Close */}
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-slate-900 dark:bg-slate-800 text-amber-400 flex items-center justify-center">
-                  <Menu className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">
-                    Nástroje dílny & stavby
-                  </h3>
-                  <p className="text-3xs text-slate-400">Rychlý přístup na mobilu</p>
-                </div>
-              </div>
+            <div className="px-5 pt-4 pb-1 flex items-center justify-between gap-3">
+              <h2 className="text-[26px] font-bold text-slate-900 dark:text-white">Více</h2>
               <button
+                type="button"
                 onClick={() => setIsMoreMenuOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 cursor-pointer"
+                aria-label="Zavřít"
+                className="w-11 h-11 -mr-2 inline-flex items-center justify-center rounded-md text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* PRO License Card in Sheet */}
-            {onOpenPaywall && (
-              <button
-                onClick={() => {
-                  setIsMoreMenuOpen(false);
-                  onOpenPaywall();
-                }}
-                className={`w-full p-3.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-                  subInfo.isPro
-                    ? 'bg-amber-50/70 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800'
-                    : 'bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-xs border-amber-400'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                      subInfo.isPro
-                        ? 'bg-amber-400 text-slate-950'
-                        : 'bg-slate-950 text-amber-400'
-                    }`}
-                  >
-                    <Crown className="w-5 h-5 fill-current" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-black">
-                      {subInfo.isPro ? subInfo.label : 'Přejít na Mistr PRO'}
-                    </div>
-                    <div
-                      className={`text-3xs ${
-                        subInfo.isPro
-                          ? 'text-slate-500 dark:text-slate-400'
-                          : 'text-slate-950 font-medium'
-                      }`}
-                    >
-                      {subInfo.isPro
-                        ? 'Klikněte pro daňový doklad a licenci'
-                        : 'Neomezené SOD, razítko, QR faktury'}
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className={`text-3xs font-extrabold px-2.5 py-1 rounded-md ${
-                    subInfo.isPro
-                      ? 'bg-white dark:bg-slate-900 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-700'
-                      : 'bg-slate-950 text-white'
+            <div className="divide-y divide-slate-100 dark:divide-slate-800 border-y border-slate-100 dark:border-slate-800">
+              {(
+                [
+                  { tab: 'kalendar', label: 'Kalendář', icon: Calendar },
+                  { tab: 'klienti', label: 'Klienti', icon: Users },
+                  { tab: 'historie', label: 'Archiv', icon: History },
+                  { tab: 'finance', label: 'Finance', icon: TrendingUp },
+                  { tab: 'nastaveni', label: 'Nastavení', icon: Settings },
+                ] as const
+              ).map(({ tab, label, icon: Icon }) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => handleTabClick(tab)}
+                  aria-current={activeTab === tab ? 'page' : undefined}
+                  className={`w-full min-h-[52px] px-5 flex items-center gap-3.5 text-left cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                    activeTab === tab ? 'font-semibold text-blue-600 dark:text-blue-300' : 'font-medium text-slate-900 dark:text-slate-100'
                   }`}
                 >
-                  {subInfo.isPro ? 'Správa' : 'Aktivovat'}
-                </div>
-              </button>
-            )}
-
-            {/* Grid of Other Tools */}
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                onClick={() => handleTabClick('kalendar')}
-                className={`p-3 rounded-xl border text-left flex items-center gap-2.5 transition-colors cursor-pointer ${
-                  activeTab === 'kalendar'
-                    ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-400 text-amber-900 dark:text-amber-200 font-bold'
-                    : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
-                }`}
-              >
-                <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
-                  <Calendar className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-slate-900 dark:text-white">Kalendář</div>
-                  <div className="text-3xs text-slate-500">Etapy & výjezdy</div>
-                </div>
-              </button>
-
-              <button
-                onClick={() => handleTabClick('klienti')}
-                className={`p-3 rounded-xl border text-left flex items-center gap-2.5 transition-colors cursor-pointer ${
-                  activeTab === 'klienti'
-                    ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-400 text-amber-900 dark:text-amber-200 font-bold'
-                    : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
-                }`}
-              >
-                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-400 flex items-center justify-center shrink-0">
-                  <Users className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-slate-900 dark:text-white">Adresář</div>
-                  <div className="text-3xs text-slate-500">Klienti & kontakty</div>
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsMoreMenuOpen(false);
-                  if (onOpenEstimateCalculator) {
+                  <Icon className="w-5 h-5 shrink-0" />
+                  <span>{label}</span>
+                </button>
+              ))}
+              {onOpenEstimateCalculator && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMoreMenuOpen(false);
                     onOpenEstimateCalculator();
-                  } else {
-                    handleTabClick('nova-smlouva');
-                  }
-                }}
-                className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-left flex items-center gap-2.5 transition-colors cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                  <Calculator className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-slate-900 dark:text-white">Kalkulačka</div>
-                  <div className="text-3xs text-slate-500">Rychlý rozpočet</div>
-                </div>
-              </button>
-
-              <button
-                onClick={() => handleTabClick('finance')}
-                className={`p-3 rounded-xl border text-left flex items-center gap-2.5 transition-colors cursor-pointer ${
-                  activeTab === 'finance'
-                    ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-400 text-amber-900 dark:text-amber-200 font-bold'
-                    : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
-                }`}
-              >
-                <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-400 flex items-center justify-center shrink-0">
-                  <TrendingUp className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-slate-900 dark:text-white">Finance & Daně</div>
-                  <div className="text-3xs text-slate-500">Příjmy & výdaje</div>
-                </div>
-              </button>
-
-              <button
-                onClick={() => handleTabClick('nastaveni')}
-                className={`p-3 rounded-xl border text-left flex items-center gap-2.5 transition-colors cursor-pointer col-span-2 ${
-                  activeTab === 'nastaveni'
-                    ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-400 text-amber-900 dark:text-amber-200 font-bold'
-                    : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
-                }`}
-              >
-                <div className="w-8 h-8 rounded-lg bg-slate-900 dark:bg-slate-800 text-amber-400 flex items-center justify-center shrink-0">
-                  <Settings className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-slate-900 dark:text-white">Můj živnostenský profil</div>
-                  <div className="text-3xs text-slate-500">IČO, bankovní účet, zálohy a razítko</div>
-                </div>
-              </button>
+                  }}
+                  className="w-full min-h-[52px] px-5 flex items-center gap-3.5 text-left font-medium text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  <Calculator className="w-5 h-5 shrink-0" />
+                  <span>Kalkulačka na obhlídce</span>
+                </button>
+              )}
+              {onOpenPaywall && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMoreMenuOpen(false);
+                    onOpenPaywall();
+                  }}
+                  className="w-full min-h-[52px] px-5 flex items-center gap-3.5 text-left font-medium text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  <Crown className="w-5 h-5 shrink-0" />
+                  <span>{subInfo.isPro ? subInfo.label : 'Mistr PRO'}</span>
+                </button>
+              )}
             </div>
 
-            {/* Quick Actions (Cloud + Dark Mode) */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+            <div className="px-5 py-3 flex flex-wrap gap-2.5">
               {onOpenCloudModal && (
                 <button
+                  type="button"
                   onClick={() => {
                     setIsMoreMenuOpen(false);
                     onOpenCloudModal();
                   }}
-                  className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
-                  title="Cloud účet"
+                  className="min-h-11 px-4 flex-1 min-w-0 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold cursor-pointer"
                 >
-                  <Cloud className="w-4 h-4 text-blue-600" />
-                  <span>{currentUser ? 'Účet OK' : 'Cloud'}</span>
+                  <Cloud className="w-[18px] h-[18px] shrink-0" />
+                  <span className="truncate">{currentUser?.email || 'Účet'}</span>
                 </button>
               )}
-
               {onToggleDarkMode && (
                 <button
+                  type="button"
                   onClick={onToggleDarkMode}
-                  className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 cursor-pointer"
-                  title="Režim vzhledu"
+                  className="min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold cursor-pointer"
                 >
-                  {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+                  {isDarkMode ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
+                  <span>{isDarkMode ? 'Světlý režim' : 'Tmavý režim'}</span>
                 </button>
               )}
             </div>
