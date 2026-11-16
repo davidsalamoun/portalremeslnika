@@ -36,6 +36,10 @@ interface CashReceiptViewProps {
   initialPaymentFor?: 'zaloha' | 'doplatek' | 'plna_castka' | 'viceprace';
 }
 
+const formLabel = 'block font-semibold text-slate-900 dark:text-slate-100 mb-1.5';
+const formInput =
+  'w-full min-h-12 px-3.5 py-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white';
+
 export const CashReceiptView: React.FC<CashReceiptViewProps> = ({
   contract,
   onUpdateContract,
@@ -418,128 +422,82 @@ export const CashReceiptView: React.FC<CashReceiptViewProps> = ({
           title="Nový pokladní doklad"
           subtitle={<>ke smlouvě č. {contract.contractNumber}</>}
           size="lg"
-          bare
           closeOnBackdrop={false}
           onClose={() => setIsNewModalOpen(false)}
         >
-
-            {/* Quick presets */}
-            <div className="mt-4">
-              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1.5">
-                Rychlá předvolba účelu a částky:
-              </span>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleSelectPreset('zaloha')}
-                  className={`p-2 rounded-lg text-left border text-xs transition-colors ${
-                    formPaymentFor === 'zaloha'
-                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 font-semibold'
-                      : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-700 dark:text-slate-300'
-                  }`}
-                >
-                  <div className="font-bold">Záloha na materiál</div>
-                  <div className="text-[11px] text-slate-500">
-                    {contract.advanceAmount ? formatCurrency(contract.advanceAmount) : 'Ze smlouvy'}
-                  </div>
+          <div className="space-y-4">
+            <div>
+              <div className={formLabel}>Za co platí</div>
+              <div role="group" aria-label="Za co platí" className="flex flex-wrap gap-2">
+                <button type="button" aria-pressed={formPaymentFor === 'zaloha'} onClick={() => handleSelectPreset('zaloha')} className={docChip(formPaymentFor === 'zaloha')}>
+                  Záloha{contract.advanceAmount ? ` ${formatCurrency(contract.advanceAmount)}` : ''}
                 </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleSelectPreset('doplatek')}
-                  className={`p-2 rounded-lg text-left border text-xs transition-colors ${
-                    formPaymentFor === 'doplatek'
-                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 font-semibold'
-                      : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-700 dark:text-slate-300'
-                  }`}
-                >
-                  <div className="font-bold">Doplatek díla</div>
-                  <div className="text-[11px] text-slate-500">
-                    {formatCurrency(remainingToPay)}
-                  </div>
+                <button type="button" aria-pressed={formPaymentFor === 'doplatek'} onClick={() => handleSelectPreset('doplatek')} className={docChip(formPaymentFor === 'doplatek')}>
+                  Doplatek {formatCurrency(remainingToPay)}
                 </button>
               </div>
             </div>
 
-            <form onSubmit={handleCreateReceipt} className="mt-4 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Číslo dokladu *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formNumber}
-                    onChange={(e) => setFormNumber(e.target.value)}
-                    className="w-full text-xs py-2 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Datum přijetí hotovosti *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={formDate}
-                    onChange={(e) => setFormDate(e.target.value)}
-                    className="w-full text-xs py-2 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-              </div>
-
+            <form onSubmit={handleCreateReceipt} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Přijatá částka (v Kč) *
+                <label htmlFor="ppd-castka" className={formLabel}>
+                  Přijatá částka v Kč
                 </label>
                 <input
+                  id="ppd-castka"
                   type="number"
                   required
                   min="1"
                   step="1"
+                  inputMode="numeric"
                   value={formAmount}
-                  onChange={(e) =>
-                    setFormAmount(e.target.value === '' ? '' : parseFloat(e.target.value))
-                  }
-                  placeholder="20000"
-                  className="w-full text-xs py-2 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  onChange={(e) => setFormAmount(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                  className={`${formInput} font-display font-semibold text-[20px] tabular-nums max-w-[14rem]`}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Účel platby *
+                <label htmlFor="ppd-ucel" className={formLabel}>
+                  Účel platby
                 </label>
                 <input
+                  id="ppd-ucel"
                   type="text"
                   required
                   value={formPurpose}
                   onChange={(e) => setFormPurpose(e.target.value)}
-                  placeholder="např. Záloha na materiál..."
-                  className="w-full text-xs py-2 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="např. Záloha na materiál"
+                  className={formInput}
                 />
               </div>
 
-              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setIsNewModalOpen(false)}
-                  className="px-3.5 py-2 text-xs font-medium rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="ppd-cislo" className={formLabel}>
+                    Číslo dokladu
+                  </label>
+                  <input id="ppd-cislo" type="text" required value={formNumber} onChange={(e) => setFormNumber(e.target.value)} className={`${formInput} tabular-nums`} />
+                </div>
+                <div>
+                  <label htmlFor="ppd-datum" className={formLabel}>
+                    Datum přijetí
+                  </label>
+                  <input id="ppd-datum" type="date" required value={formDate} onChange={(e) => setFormDate(e.target.value)} className={formInput} />
+                </div>
+              </div>
+
+              <div className="pt-1 flex flex-wrap justify-end gap-2.5">
+                <button type="button" onClick={() => setIsNewModalOpen(false)} className={docButtonStrong}>
                   Zrušit
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1.5"
-                >
-                  <Check className="w-4 h-4" />
-                  Vystavit pokladní doklad
+                <button type="submit" className={docButtonPrimary}>
+                  <Check className="w-[18px] h-[18px]" />
+                  <span>Vystavit doklad</span>
                 </button>
               </div>
             </form>
-          </Dialog>
+          </div>
+        </Dialog>
       )}
 
       {/* Signature Modal */}

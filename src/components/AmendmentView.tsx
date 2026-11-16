@@ -38,6 +38,11 @@ interface AmendmentViewProps {
   initialOpenNew?: boolean;
 }
 
+const formLabel = 'block font-semibold text-slate-900 dark:text-slate-100 mb-1.5';
+const formInput =
+  'w-full min-h-12 px-3.5 py-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white';
+const formOptional = <span className="font-normal text-slate-600 dark:text-slate-400">(nepovinné)</span>;
+
 export const AmendmentView: React.FC<AmendmentViewProps> = ({
   contract,
   onUpdateContract,
@@ -460,123 +465,103 @@ export const AmendmentView: React.FC<AmendmentViewProps> = ({
           title={<>Nový dodatek č. {nextNumber}</>}
           subtitle={<>ke smlouvě č. {contract.contractNumber}</>}
           size="lg"
-          bare
           closeOnBackdrop={false}
           onClose={() => setIsNewModalOpen(false)}
         >
+          <form onSubmit={handleCreateAmendment} className="space-y-4">
+            <div>
+              <label htmlFor="dodatek-nazev" className={formLabel}>
+                Název změny
+              </label>
+              <input
+                id="dodatek-nazev"
+                type="text"
+                required
+                autoFocus
+                value={formTitle}
+                onChange={(e) => setFormTitle(e.target.value)}
+                placeholder="např. Přeložka odpadu a 5 zásuvek navíc"
+                className={formInput}
+              />
+            </div>
 
-            <form onSubmit={handleCreateAmendment} className="mt-4 space-y-4">
-              {/* Rychlý výběr z ceníku */}
-              <div className="p-2.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 flex items-center justify-between">
-                <span className="text-xs text-amber-900 dark:text-amber-200 font-medium">
-                  Máte předpřipravený ceník řemeslných prací?
-                </span>
+            <div>
+              <div className="flex flex-wrap items-end justify-between gap-x-4">
+                <label htmlFor="dodatek-popis" className={formLabel}>
+                  Popis {formOptional}
+                </label>
                 <button
                   type="button"
                   onClick={() => setIsPriceListOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow-xs cursor-pointer"
+                  className="min-h-11 inline-flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-300 underline underline-offset-2 cursor-pointer mb-0.5"
                 >
-                  <BookOpen className="w-3.5 h-3.5" />
+                  <BookOpen className="w-4 h-4" />
                   <span>Vybrat z ceníku</span>
                 </button>
               </div>
+              <textarea
+                id="dodatek-popis"
+                rows={3}
+                value={formDescription}
+                onChange={(e) => setFormDescription(e.target.value)}
+                placeholder="Co se dělá navíc nebo jinak než podle smlouvy, včetně materiálu."
+                className={formInput}
+              />
+            </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Stručný název víceprací *
+                <label htmlFor="dodatek-cena" className={formLabel}>
+                  Změna ceny v Kč
                 </label>
                 <input
-                  type="text"
+                  id="dodatek-cena"
+                  type="number"
                   required
-                  value={formTitle}
-                  onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="např. Přeložka odpadu a 5 zásuvek navíc"
-                  className="w-full text-xs py-2 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  step="1"
+                  inputMode="numeric"
+                  value={formPriceDiff}
+                  onChange={(e) => setFormPriceDiff(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                  placeholder="12000"
+                  className={`${formInput} tabular-nums`}
                 />
+                <p className="mt-1.5 text-slate-600 dark:text-slate-400">Méněpráce zadejte se znaménkem minus.</p>
               </div>
-
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Detailní popis prováděných víceprací
-                </label>
-                <textarea
-                  rows={3}
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Popište, co přesně bude děláno navíc oproti původní smlouvě, včetně materiálu..."
-                  className="w-full text-xs py-2 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Cena víceprací (v Kč) *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    step="100"
-                    value={formPriceDiff}
-                    onChange={(e) =>
-                      setFormPriceDiff(e.target.value === '' ? '' : parseFloat(e.target.value))
-                    }
-                    placeholder="12000"
-                    className="w-full text-xs py-2 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Prodloužení termínu (dny)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={formAdditionalDays}
-                    onChange={(e) =>
-                      setFormAdditionalDays(
-                        e.target.value === '' ? '' : parseInt(e.target.value, 10)
-                      )
-                    }
-                    placeholder="např. 3"
-                    className="w-full text-xs py-2 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Datum sjednání dodatku
+                <label htmlFor="dodatek-dny" className={formLabel}>
+                  Prodloužení termínu ve dnech {formOptional}
                 </label>
                 <input
-                  type="date"
-                  value={formIssueDate}
-                  onChange={(e) => setFormIssueDate(e.target.value)}
-                  className="w-full text-xs py-2 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  id="dodatek-dny"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputMode="numeric"
+                  value={formAdditionalDays}
+                  onChange={(e) => setFormAdditionalDays(e.target.value === '' ? '' : parseInt(e.target.value, 10))}
+                  className={`${formInput} tabular-nums`}
                 />
               </div>
+            </div>
 
-              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setIsNewModalOpen(false)}
-                  className="px-3.5 py-2 text-xs font-medium rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                >
-                  Zrušit
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-xs font-bold rounded-lg bg-amber-600 hover:bg-amber-700 text-white shadow-sm flex items-center gap-1.5"
-                >
-                  <Check className="w-4 h-4" />
-                  Vystavit a podepsat dodatek
-                </button>
-              </div>
-            </form>
-          </Dialog>
+            <div className="max-w-[14rem]">
+              <label htmlFor="dodatek-datum" className={formLabel}>
+                Datum sjednání
+              </label>
+              <input id="dodatek-datum" type="date" value={formIssueDate} onChange={(e) => setFormIssueDate(e.target.value)} className={formInput} />
+            </div>
+
+            <div className="pt-1 flex flex-wrap justify-end gap-2.5">
+              <button type="button" onClick={() => setIsNewModalOpen(false)} className={docButtonStrong}>
+                Zrušit
+              </button>
+              <button type="submit" className={docButtonPrimary}>
+                <Check className="w-[18px] h-[18px]" />
+                <span>Vystavit dodatek</span>
+              </button>
+            </div>
+          </form>
+        </Dialog>
       )}
 
       {/* Signature Modal */}
