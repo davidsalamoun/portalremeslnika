@@ -447,7 +447,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             </div>
 
             <div className="p-5 sm:p-6 space-y-3">
-              <div className={`${fieldLabel} !mb-0`}>Váš podpis</div>
+              <div id="nastaveni-podpis" className={`${fieldLabel} !mb-0 scroll-mt-24`}>Váš podpis</div>
               <p className="text-slate-600 dark:text-slate-400">Uložený podpis se vloží do každé nové smlouvy a předávacího protokolu.</p>
               {signature ? (
                 <div className="flex flex-wrap items-center gap-3">

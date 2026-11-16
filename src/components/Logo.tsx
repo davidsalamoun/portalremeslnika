@@ -36,11 +36,13 @@ export const Metr: React.FC<{
   steps?: number;
   /** Vše hotovo: všechny úseky žluté, žádný není označen jako aktuální */
   done?: boolean;
+  /** Označit poslední žlutý úsek tmavým pruhem jako aktuální (výchozí); bez toho metr jen počítá hotové úseky */
+  markCurrent?: boolean;
   label: string;
   animate?: boolean;
   onDark?: boolean;
   className?: string;
-}> = ({ step, steps = 6, done = false, label, animate = false, onDark = false, className = '' }) => {
+}> = ({ step, steps = 6, done = false, markCurrent = true, label, animate = false, onDark = false, className = '' }) => {
   const line = onDark ? '#FFFFFF' : '#1A1D21';
   // Tři krátké rysky uvnitř úseku (čtvrtiny); na hranicích úseků je jen dělicí čára
   const ticks = (color: string) => ({
@@ -62,7 +64,7 @@ export const Metr: React.FC<{
     >
       {Array.from({ length: steps }, (_, i) => {
         const filled = done || i <= step;
-        const current = !done && i === step;
+        const current = markCurrent && !done && i === step;
         return (
           <div
             key={i}

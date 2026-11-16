@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { getVatRegistration, getFlatTaxBand } from '../src/utils/taxLimits';
 import { getVatBreakdown, getVatRate } from '../src/utils/invoiceMath';
 import { getSiteAddress } from '../src/utils/siteAddress';
+import { getGettingStartedSteps } from '../src/utils/gettingStarted';
 
 test('registrace k DPH podle obratu', () => {
   assert.equal(getVatRegistration(0), 'below');
@@ -38,4 +39,14 @@ test('adresa stavby: vlastní, jinak adresa klienta', () => {
   assert.equal(getSiteAddress({ client }), 'Slunečná 45, Černošice');
   assert.equal(getSiteAddress({ client, siteAddress: '  ' }), 'Slunečná 45, Černošice');
   assert.equal(getSiteAddress({ client, siteAddress: ' Polní 3, Beroun ' }), 'Polní 3, Beroun');
+});
+
+test('průvodce prvním spuštěním: kroky podle skutečných dat', () => {
+  const done = (...args: Parameters<typeof getGettingStartedSteps>) => getGettingStartedSteps(...args).map((s) => s.done);
+  const profile = { name: 'Jan Novák', ico: '12345678', address: 'Praha', bankAccount: '1/0100', phone: '', email: '', defaultPlace: '' };
+  assert.deepEqual(done(null, 0, []), [false, false, false, false]);
+  assert.deepEqual(done({ ...profile, bankAccount: '' }, 0, []), [false, false, false, false]);
+  assert.deepEqual(done(profile, 0, []), [true, false, false, false]);
+  assert.deepEqual(done({ ...profile, signature: 'data:image/png;base64,x' }, 1, []), [true, true, true, false]);
+  assert.deepEqual(done(profile, 0, [{ id: 'c1' }]), [true, false, true, true]);
 });
