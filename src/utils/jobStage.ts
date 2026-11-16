@@ -21,7 +21,9 @@ export const JOB_STAGE_LABELS: { key: JobStageKey; label: string }[] = [
 export interface JobStage {
   key: JobStageKey;
   label: string;
-  /** Poloha na metru v procentech (0–100) */
+  /** Pořadí fáze od nuly – úsek na metru */
+  index: number;
+  /** Poloha v procentech (0–100), slouží k řazení */
   percent: number;
   /** Co je potřeba udělat dál, jednou větou */
   next: string;
@@ -77,7 +79,7 @@ export function getJobStage(contract: Contract): JobStage {
       break;
   }
 
-  return { key, label, percent: STAGE_PERCENT[key], next };
+  return { key, label, index: JOB_STAGE_LABELS.findIndex((s) => s.key === key), percent: STAGE_PERCENT[key], next };
 }
 
 /** Rozpracovaná zakázka = cokoli, co ještě není zaplacené. */
