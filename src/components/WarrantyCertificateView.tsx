@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { docBar, docBarTitle, docBarNote, docBarActions, docButton, docChip } from './docBar';
 import {
   Printer,
   Download,
@@ -227,135 +228,60 @@ export const WarrantyCertificateView: React.FC<WarrantyCertificateViewProps> = (
 
   return (
     <div className="space-y-6">
-      {/* Ovládací panel nahoře (no-print) */}
-      <div className="no-print bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/20">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                Záruční list & Garanční certifikát díla
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Jednostránkový oficiální garanční certifikát pro klienta s dobou trvání a podmínkami servisu
-              </p>
-            </div>
-          </div>
-
-          {/* Akce */}
-          <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
-            <button
-              type="button"
-              onClick={() => setIsShareModalOpen(true)}
-              className="h-9 inline-flex items-center gap-1.5 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:hover:bg-emerald-900 dark:text-emerald-300 font-semibold text-xs border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>Odeslat (WhatsApp / SMS)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="h-9 inline-flex items-center gap-1.5 px-3.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 font-bold text-xs shadow-xs transition-colors cursor-pointer"
-            >
-              <Printer className="w-3.5 h-3.5 text-amber-400 dark:text-amber-600" />
-              <span>Vytisknout / PDF</span>
-            </button>
+      {/* Lišta záručního listu (jen na obrazovce) */}
+      <div className={docBar}>
+        <div className="min-w-0">
+          <div className={docBarTitle}>Záruční list</div>
+          <div className={docBarNote}>
+            Záruka od {formatDateCs(issueDate)} do {formatDateCs(validUntil)}.
           </div>
         </div>
-
-        {/* Rychlé přepínače záruční doby */}
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-700 dark:text-slate-300">Délka záruky:</span>
+        <div className={docBarActions}>
+          <div role="group" aria-label="Délka záruky" className="flex flex-wrap gap-2">
             {[24, 36, 60].map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => handleMonthsChange(m)}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                  months === m
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
-                }`}
-              >
-                {m} měsíců ({m / 12} {m === 24 ? 'roky' : 'let'})
+              <button key={m} type="button" aria-pressed={months === m} onClick={() => handleMonthsChange(m)} className={docChip(months === m)}>
+                {m} měsíců
               </button>
             ))}
           </div>
-
-          <div className="flex items-center gap-3">
-            <span className="text-slate-500">
-              Platnost od: <strong>{formatDateCs(issueDate)}</strong>
-            </span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-              Platnost do: {formatDateCs(validUntil)}
-            </span>
-          </div>
+          <button type="button" onClick={() => setIsShareModalOpen(true)} className={docButton}>
+            <Send className="w-4 h-4" />
+            <span>Odeslat</span>
+          </button>
         </div>
+      </div>
 
-        {/* Roční garanční servisní prohlídky & Připomínky */}
-        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="font-extrabold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-              Garanční servisní kalendář & Připomínky pro klienta ({inspections.length} ročních kontrol)
-            </span>
-            <span className="text-3xs text-slate-400">
-              Upozorní klienta po 1 roce a zajistí další servis / zakázky
-            </span>
+      {/* Záruční prohlídky (jen na obrazovce) */}
+      {inspections.length > 0 && (
+        <div className="no-print bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md divide-y divide-slate-100 dark:divide-slate-800 text-[15px] leading-snug">
+          <div className="px-4 py-3">
+            <div className="font-semibold text-slate-900 dark:text-white">Záruční prohlídky</div>
+            <div className={docBarNote}>Jednou ročně se připomenou v kalendáři. Zákazníkovi můžete poslat pozvánku.</div>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {inspections.map((insp) => (
-              <div
-                key={insp.id}
-                className={`p-3 rounded-xl border flex items-center justify-between gap-2 text-xs transition-all ${
-                  insp.status === 'completed'
-                    ? 'bg-emerald-50/60 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
-                    : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'
-                }`}
-              >
-                <div>
-                  <div className="font-extrabold flex items-center gap-1.5">
-                    <span>{insp.inspectionYear}. roční prohlídka:</span>
-                    <span className="text-slate-500 font-bold">{formatDateCs(insp.scheduledDate)}</span>
-                  </div>
-                  <div className="text-3xs mt-0.5 font-medium opacity-80">
-                    {insp.status === 'completed' ? '✓ Provedeno bez závad' : 'Plánováno (revize silikonů a spár)'}
-                  </div>
+          {inspections.map((insp) => {
+            const done = insp.status === 'completed';
+            return (
+              <div key={insp.id} className="px-4 py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <div className="min-w-0">
+                  <span className="font-semibold text-slate-900 dark:text-white">Po {insp.inspectionYear}. roce</span>
+                  <span className={docBarNote}>
+                    , {formatDateCs(insp.scheduledDate)}, {done ? 'provedeno' : 'plánováno'}
+                  </span>
                 </div>
-
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => handleSendInspectionWhatsApp(insp.inspectionYear, insp.scheduledDate)}
-                    className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-3xs flex items-center gap-1 cursor-pointer"
-                    title="Odeslat připomínku ročního servisu do WhatsAppu"
-                  >
-                    <Send className="w-3 h-3" />
-                    <span>WhatsApp</span>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => handleSendInspectionWhatsApp(insp.inspectionYear, insp.scheduledDate)} className={docButton}>
+                    <Send className="w-4 h-4" />
+                    <span>Pozvat zákazníka</span>
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToggleInspectionDone(insp.inspectionYear)}
-                    className={`px-2 py-1.5 rounded-lg font-bold text-3xs cursor-pointer ${
-                      insp.status === 'completed'
-                        ? 'bg-white dark:bg-slate-900 text-slate-700 border border-slate-300'
-                        : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                    }`}
-                  >
-                    {insp.status === 'completed' ? 'Zrušit' : 'Označit splněno'}
+                  <button type="button" aria-pressed={done} onClick={() => handleToggleInspectionDone(insp.inspectionYear)} className={docChip(done)}>
+                    {done ? 'Provedeno' : 'Označit jako provedenou'}
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
-      </div>
+      )}
 
       {/* Papír Záručního listu pro tisk (standardní A4 layout) */}
       <div className="print-content bg-white text-slate-900 rounded-xl shadow-xl p-8 sm:p-12 border border-slate-200 max-w-4xl mx-auto font-sans relative">

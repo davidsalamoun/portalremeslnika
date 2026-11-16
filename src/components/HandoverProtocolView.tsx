@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { docBar, docBarTitle, docBarNote, docBarActions, docChip } from './docBar';
 import {
   FileCheck2,
   CheckCircle,
@@ -137,65 +138,27 @@ export const HandoverProtocolView: React.FC<HandoverProtocolViewProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Ovládací lišta protokolu */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-xs no-print transition-colors">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 flex items-center justify-center font-bold text-xs">
-            <FileCheck2 className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm">Předávací protokol k dílu</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Právní doklad o převzetí zakázky a zahájení běhu 24měsíční záruky
-            </p>
-          </div>
+      {/* Lišta protokolu (jen na obrazovce) */}
+      <div className={docBar}>
+        <div className="min-w-0">
+          <div className={docBarTitle}>Předávací protokol</div>
+          <div className={docBarNote}>Doklad o předání a převzetí díla. Podpisem se u zakázky uloží datum předání.</div>
         </div>
-
-        {/* Přepínač Protokol / Fotodokumentace */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-semibold">
-            <button
-              onClick={() => setActiveTab('protokol')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-                activeTab === 'protokol'
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400'
-              }`}
-            >
-              <FileCheck2 className="w-3.5 h-3.5" />
-              <span>Dokument A4</span>
+        <div className={docBarActions}>
+          <div role="group" aria-label="Zobrazení" className="flex gap-2">
+            <button type="button" aria-pressed={activeTab === 'protokol'} onClick={() => setActiveTab('protokol')} className={docChip(activeTab === 'protokol')}>
+              Protokol
             </button>
-            <button
-              onClick={() => setActiveTab('fotky')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-                activeTab === 'fotky'
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400'
-              }`}
-            >
-              <Camera className="w-3.5 h-3.5" />
-              <span>Fotodokumentace ({photos.length})</span>
+            <button type="button" aria-pressed={activeTab === 'fotky'} onClick={() => setActiveTab('fotky')} className={docChip(activeTab === 'fotky')}>
+              Fotky ({photos.length})
             </button>
           </div>
-
           {activeTab === 'protokol' && (
-            <div className="flex items-center gap-1.5 text-xs bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-              <button
-                type="button"
-                onClick={() => setHasDefects(false)}
-                className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
-                  !hasDefects ? 'bg-white dark:bg-slate-900 shadow-xs text-emerald-800 dark:text-emerald-300' : 'text-slate-600 dark:text-slate-400'
-                }`}
-              >
+            <div role="group" aria-label="Stav díla při předání" className="flex gap-2">
+              <button type="button" aria-pressed={!hasDefects} onClick={() => setHasDefects(false)} className={docChip(!hasDefects)}>
                 Bez vad
               </button>
-              <button
-                type="button"
-                onClick={() => setHasDefects(true)}
-                className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
-                  hasDefects ? 'bg-white dark:bg-slate-900 shadow-xs text-amber-800 dark:text-amber-300' : 'text-slate-600 dark:text-slate-400'
-                }`}
-              >
+              <button type="button" aria-pressed={hasDefects} onClick={() => setHasDefects(true)} className={docChip(hasDefects)}>
                 S vadami
               </button>
             </div>

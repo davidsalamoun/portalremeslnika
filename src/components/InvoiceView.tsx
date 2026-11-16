@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { docBar, docBarTitle, docBarNote, docBarActions, docButton, docChip } from './docBar';
 import {
   Download,
   Printer,
@@ -146,132 +147,55 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Akční lišta pro fakturu */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-xs no-print transition-colors">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/80 text-[#1E3A78] dark:text-blue-300 flex items-center justify-center font-bold text-xs shrink-0">
-            <Receipt className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-              {isAdvance ? 'Zálohová faktura k zakázce' : 'Konečná faktura / Daňový doklad'}
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Doklad č. {invoiceNumber} · Splatnost do {formatDateCs(dueDateIso)}
-            </p>
+      {/* Lišta faktury (jen na obrazovce) */}
+      <div className={docBar}>
+        <div className="min-w-0">
+          <div className={docBarTitle}>{isAdvance ? 'Zálohová faktura' : 'Konečná faktura'}</div>
+          <div className={docBarNote}>
+            č. {invoiceNumber}, splatná {formatDateCs(dueDateIso)}
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {onChangeInvoiceType && (
-            <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
-              <button
-                type="button"
-                onClick={() => onChangeInvoiceType('final')}
-                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                  !isAdvance
-                    ? 'bg-white dark:bg-slate-900 text-[#1E3A78] dark:text-blue-300 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                }`}
-              >
-                Konečná faktura
+        <div className={docBarActions}>
+          {onChangeInvoiceType && hasAdvance && (
+            <div role="group" aria-label="Druh faktury" className="flex gap-2">
+              <button type="button" aria-pressed={!isAdvance} onClick={() => onChangeInvoiceType('final')} className={docChip(!isAdvance)}>
+                Konečná
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (!hasAdvance) {
-                    onToast?.('info', 'Ke smlouvě není sjednána záloha. Zálohovou fakturu lze vystavit, až zálohu ve smlouvě doplníte.');
-                    return;
-                  }
-                  onChangeInvoiceType('advance');
-                }}
-                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                  isAdvance
-                    ? 'bg-white dark:bg-slate-900 text-[#1E3A78] dark:text-blue-300 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                }`}
-              >
-                Zálohová faktura
+              <button type="button" aria-pressed={isAdvance} onClick={() => onChangeInvoiceType('advance')} className={docChip(isAdvance)}>
+                Zálohová
               </button>
             </div>
           )}
-          {/* ⚡ Vícepráce tlačítko */}
           {onOpenAmendments && !isAdvance && (
-            <button
-              onClick={onOpenAmendments}
-              className="h-9 inline-flex items-center gap-1.5 px-3 rounded-lg bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 text-xs font-semibold border border-amber-200 dark:border-amber-800 transition-colors cursor-pointer"
-              title="Přidat vícepráce (Změnový list) a automaticky přepočítat doplatek"
-            >
-              <FilePlus2 className="w-3.5 h-3.5 text-amber-600" />
-              <span>+ Vícepráce</span>
+            <button type="button" onClick={onOpenAmendments} className={docButton}>
+              <FilePlus2 className="w-4 h-4" />
+              <span>Vícepráce</span>
             </button>
           )}
-
-          {/* 💵 Příjmový doklad tlačítko */}
           {onOpenCashReceipt && (
-            <button
-              onClick={() => onOpenCashReceipt(isAdvance ? 'zaloha' : 'doplatek')}
-              className="h-9 inline-flex items-center gap-1.5 px-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer"
-              title="Vystavit Příjmový pokladní doklad pro platbu v hotovosti"
-            >
-              <Banknote className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Vystavit PPD (hotovost)</span>
+            <button type="button" onClick={() => onOpenCashReceipt(isAdvance ? 'zaloha' : 'doplatek')} className={docButton}>
+              <Banknote className="w-4 h-4" />
+              <span>Platba v hotovosti</span>
             </button>
           )}
-
-          {/* Kopírovat platební údaje */}
-          <button
-            type="button"
-            onClick={handleCopyPaymentInfo}
-            className="h-9 inline-flex items-center gap-1.5 px-3 rounded-lg bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-[#1E3A78] dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 transition-colors cursor-pointer"
-            title="Zkopírovat platební údaje do schránky pro rychlé vložení do SMS nebo chatu"
-          >
-            <Copy className="w-3.5 h-3.5" />
-            <span>Kopírovat platbu</span>
+          <button type="button" onClick={handleCopyPaymentInfo} className={docButton}>
+            <Copy className="w-4 h-4" />
+            <span>Zkopírovat platební údaje</span>
           </button>
-
-          {/* WhatsApp share */}
           <a
             href={getWhatsAppShareUrl(contract, isAdvance ? 'zaloha' : 'faktura')}
             target="_blank"
             rel="noopener noreferrer"
-            className="h-9 inline-flex items-center gap-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-            title="Odeslat platební údaje klientovi na WhatsApp"
+            className={docButton}
           >
-            <MessageSquare className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">WhatsApp</span>
+            <MessageSquare className="w-4 h-4" />
+            <span>WhatsApp</span>
           </a>
-
-          {/* Email share */}
-          <a
-            href={getMailtoShareUrl(contract, isAdvance ? 'zaloha' : 'faktura')}
-            className="h-9 inline-flex items-center gap-1.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-            title="Odeslat e-mailem"
-          >
-            <Send className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">E-mail</span>
+          <a href={getMailtoShareUrl(contract, isAdvance ? 'zaloha' : 'faktura')} className={docButton}>
+            <Send className="w-4 h-4" />
+            <span>E-mail</span>
           </a>
-
-          <button
-            onClick={handlePrint}
-            className="h-9 inline-flex items-center gap-1.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Tisk</span>
-          </button>
-
-          <button
-            onClick={handleDownloadPdf}
-            disabled={isPdfGenerating}
-            className="h-9 inline-flex items-center gap-2 px-3.5 rounded-lg bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-75"
-          >
-            {isPdfGenerating ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
-            ) : (
-              <FileDown className="w-3.5 h-3.5 text-amber-400" />
-            )}
-            <span>PDF faktury</span>
-          </button>
         </div>
       </div>
 
