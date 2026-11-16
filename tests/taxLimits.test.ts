@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { getVatRegistration, getFlatTaxBand } from '../src/utils/taxLimits';
 import { getVatBreakdown, getVatRate } from '../src/utils/invoiceMath';
+import { getSiteAddress } from '../src/utils/siteAddress';
 
 test('registrace k DPH podle obratu', () => {
   assert.equal(getVatRegistration(0), 'below');
@@ -30,4 +31,11 @@ test('rozpis DPH z ceny včetně daně', () => {
   assert.equal(Math.round((b.base + b.vat) * 100), 8_450_000);
   assert.equal(getVatRate({}), 21);
   assert.equal(getVatRate({ vatRate: 12 }), 12);
+});
+
+test('adresa stavby: vlastní, jinak adresa klienta', () => {
+  const client = { id: 'c', name: 'Klient', address: 'Slunečná 45, Černošice', email: '', phone: '', createdAt: '' };
+  assert.equal(getSiteAddress({ client }), 'Slunečná 45, Černošice');
+  assert.equal(getSiteAddress({ client, siteAddress: '  ' }), 'Slunečná 45, Černošice');
+  assert.equal(getSiteAddress({ client, siteAddress: ' Polní 3, Beroun ' }), 'Polní 3, Beroun');
 });

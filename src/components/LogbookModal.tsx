@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getSiteAddress } from '../utils/siteAddress';
 import { Dialog } from './Dialog';
 import {
   X,
@@ -45,7 +46,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
   const [activeTab, setActiveTab] = useState<'batch' | 'single' | 'list'>('batch');
 
   const contractorAddress = contract.contractor.address || 'Sídlo zhotovitele';
-  const clientAddress = contract.client.address || contract.executionPlace || 'Adresa stavby';
+  const clientAddress = getSiteAddress(contract) || 'Adresa stavby';
 
   // Single trip state
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);

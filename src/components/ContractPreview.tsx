@@ -31,6 +31,7 @@ import {
   Users,
   Wrench,
   FolderArchive,
+  MapPin,
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
@@ -73,6 +74,8 @@ import { getContractorProfile, saveContractorProfile, addStoredContract } from '
 import { watchSignedShare, getSignedShare } from '../utils/signShares';
 import { triggerHaptic } from '../utils/haptics';
 import { CraftsmanStamp } from './CraftsmanStamp';
+import { Dialog } from './Dialog';
+import { getSiteAddress } from '../utils/siteAddress';
 import { isProUser } from '../utils/subscription';
 
 interface ContractPreviewProps {
@@ -135,6 +138,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
   const [signatureModalRole, setSignatureModalRole] = useState<'contractor' | 'client' | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isExpensesModalOpen, setIsExpensesModalOpen] = useState(false);
+  const [siteAddressDraft, setSiteAddressDraft] = useState<string | null>(null);
   const [isLogbookModalOpen, setIsLogbookModalOpen] = useState(false);
   const [isShoppingListModalOpen, setIsShoppingListModalOpen] = useState(false);
   const [isTechnicalProtocolsModalOpen, setIsTechnicalProtocolsModalOpen] = useState(false);
@@ -607,6 +611,11 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
         <button type="button" onClick={() => setIsExpensesModalOpen(true)} className={tbButton}>
           <TrendingUp className="w-[18px] h-[18px]" />
           <span>Náklady a zisk</span>
+        </button>
+
+        <button type="button" onClick={() => setSiteAddressDraft(currentContract.siteAddress || '')} className={tbButton}>
+          <MapPin className="w-[18px] h-[18px]" />
+          <span>Adresa stavby</span>
         </button>
 
         {isPro && (
@@ -1131,7 +1140,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
                       </div>
 
                       {currentContract.contractorSignature ? (
-                        <div className="flex flex-col items-center justify-end h-20 z-10">
+                        <div className="flex flex-col items-center justify-end min-h-20 z-10">
                           <img
                             src={currentContract.contractorSignature}
                             alt="Podpis zhotovitele"
@@ -1189,6 +1198,54 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
           </>
         )}
       </div>
+
+      {/* Adresa stavby */}
+      {siteAddressDraft !== null && (
+        <Dialog title="Adresa stavby" size="md" onClose={() => setSiteAddressDraft(null)}>
+          <form
+            className="space-y-4 text-[15px]"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const updated = { ...currentContract, siteAddress: siteAddressDraft.trim() || undefined };
+              setCurrentContract(updated);
+              onSaveToHistory(updated);
+              setSiteAddressDraft(null);
+            }}
+          >
+            <div>
+              <label htmlFor="nahled-adresa-stavby" className="block font-semibold text-slate-900 dark:text-slate-100 mb-1.5">
+                Kde se pracuje
+              </label>
+              <input
+                id="nahled-adresa-stavby"
+                type="text"
+                autoComplete="off"
+                autoFocus
+                value={siteAddressDraft}
+                onChange={(e) => setSiteAddressDraft(e.target.value)}
+                placeholder={currentContract.client?.address || 'např. Na Výsluní 12, Říčany'}
+                className="w-full min-h-12 px-3 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100"
+              />
+              <p className="mt-1.5 text-slate-600 dark:text-slate-400">
+                {siteAddressDraft.trim()
+                  ? 'Použije se pro navigaci, počasí, kalendář a knihu jízd. Text smlouvy se nemění.'
+                  : `Když pole necháte prázdné, platí adresa klienta${currentContract.client?.address ? `: ${currentContract.client.address}` : ''}.`}
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-end gap-2.5">
+              <button type="button" onClick={() => setSiteAddressDraft(null)} className={tbButton}>
+                Zrušit
+              </button>
+              <button
+                type="submit"
+                className="min-h-11 px-4 inline-flex items-center justify-center rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-500 text-slate-900 font-semibold cursor-pointer transition-colors"
+              >
+                Uložit
+              </button>
+            </div>
+          </form>
+        </Dialog>
+      )}
 
       {/* Signature Modal */}
       <SignatureModal

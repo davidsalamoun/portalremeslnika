@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { getSiteAddress } from '../utils/siteAddress';
 import { CloudRain, ChevronDown, ChevronUp, Send } from 'lucide-react';
 import { Contract } from '../types/contract';
 import { todayIso } from '../utils/invoiceMath';
@@ -20,7 +21,7 @@ import {
  * třech dnech chladno, srážky nebo silný vítr; jinak (i když se místo nebo předpověď nepodaří zjistit) nic.
  */
 export const JobWeather: React.FC<{ contract: Contract }> = ({ contract }) => {
-  const address = contract.client?.address;
+  const address = getSiteAddress(contract);
   const [outlook, setOutlook] = useState<WeatherOutlook | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 

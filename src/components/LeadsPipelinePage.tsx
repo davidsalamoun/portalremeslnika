@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { getSiteAddress } from '../utils/siteAddress';
 import { Plus, ArrowRight, ArrowLeft, Phone, MessageSquare } from 'lucide-react';
 import { Contract, Client } from '../types/contract';
 import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
@@ -223,7 +224,7 @@ export const LeadsPipelinePage: React.FC<LeadsPipelinePageProps> = ({
                       {contract.workDescription || 'Zakázka bez popisu'}
                     </button>
                     <div className="text-slate-600 dark:text-slate-400">
-                      {[contract.client?.name, contract.client?.address, `č. ${contract.contractNumber}`].filter(Boolean).join(', ')}
+                      {[contract.client?.name, getSiteAddress(contract), `č. ${contract.contractNumber}`].filter(Boolean).join(', ')}
                     </div>
                   </div>
                   <div className="w-full sm:w-auto flex sm:block items-baseline justify-between gap-3 sm:text-right">

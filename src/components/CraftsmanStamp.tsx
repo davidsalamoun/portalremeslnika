@@ -11,9 +11,9 @@ interface CraftsmanStampProps {
 // Barvy a písmo jsou zadané přímo, protože razítko leží na papíře dokumentu, kde se vzhled aplikace nepoužívá.
 const INK = '#1B3F8B';
 const SIZES = {
-  sm: { width: 172, name: 14, text: 9.5, ico: 12, padding: '6px 10px 5px' },
-  md: { width: 220, name: 17, text: 11, ico: 14, padding: '9px 14px 8px' },
-  lg: { width: 260, name: 20, text: 12.5, ico: 16, padding: '10px 18px 9px' },
+  sm: { width: 172, name: 14, text: 9.5, ico: 12, padX: 10, padY: 6 },
+  md: { width: 220, name: 17, text: 11, ico: 14, padX: 14, padY: 9 },
+  lg: { width: 260, name: 20, text: 12.5, ico: 16, padX: 18, padY: 10 },
 };
 
 export const CraftsmanStamp: React.FC<CraftsmanStampProps> = ({ contractor, className = '', size = 'md' }) => {
@@ -21,21 +21,21 @@ export const CraftsmanStamp: React.FC<CraftsmanStampProps> = ({ contractor, clas
     return null;
   }
   const s = SIZES[size];
+  // Rozměry se počítají ze šířky razítka: v úzkém sloupci (mobil) se zmenší celé, místo aby se text lámal
+  const scaled = (px: number) => `min(${px}px, ${((px / s.width) * 100).toFixed(2)}cqw)`;
 
   return (
     <div
       className={`relative select-none pointer-events-none ${className}`}
-      style={{ transform: 'rotate(-1.5deg)', maxWidth: '100%' }}
+      style={{ transform: 'rotate(-1.5deg)', width: s.width, maxWidth: '100%', containerType: 'inline-size' }}
       title={`Razítko: ${contractor.name}`}
     >
       <div
         style={{
-          width: s.width,
-          maxWidth: '100%',
           boxSizing: 'border-box',
           border: `2px solid ${INK}`,
           borderRadius: 3,
-          padding: s.padding,
+          padding: `${scaled(s.padY)} ${scaled(s.padX)}`,
           color: INK,
           opacity: 0.92,
           textAlign: 'center',
@@ -47,20 +47,20 @@ export const CraftsmanStamp: React.FC<CraftsmanStampProps> = ({ contractor, clas
           style={{
             fontFamily: "'Barlow Semi Condensed', 'IBM Plex Sans', sans-serif",
             fontWeight: 700,
-            fontSize: s.name,
+            fontSize: scaled(s.name),
             lineHeight: 1.1,
             overflowWrap: 'anywhere',
           }}
         >
           {contractor.name}
         </div>
-        {contractor.address && <div style={{ fontSize: s.text, marginTop: 2 }}>{contractor.address}</div>}
-        {contractor.phone && <div style={{ fontSize: s.text }}>tel. {contractor.phone}</div>}
+        {contractor.address && <div style={{ fontSize: scaled(s.text), marginTop: 2 }}>{contractor.address}</div>}
+        {contractor.phone && <div style={{ fontSize: scaled(s.text) }}>tel. {contractor.phone}</div>}
         <div
           style={{
             fontFamily: "'Barlow Semi Condensed', 'IBM Plex Sans', sans-serif",
             fontWeight: 600,
-            fontSize: s.ico,
+            fontSize: scaled(s.ico),
             letterSpacing: '0.03em',
             borderTop: `1.5px solid ${INK}`,
             marginTop: 4,

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getSiteAddress } from '../utils/siteAddress';
 import { Dialog } from './Dialog';
 import {
   X,
@@ -170,7 +171,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
   // WhatsApp share generator
   const handleShareWhatsApp = () => {
     triggerHaptic('success');
-    const siteAddress = contract.client.address || contract.executionPlace || 'Místo stavby';
+    const siteAddress = getSiteAddress(contract) || 'Místo stavby';
     const clientName = contract.client.name;
 
     let text = `*NÁKUPNÍ SEZNAM DO STAVEBNIN*\n`;

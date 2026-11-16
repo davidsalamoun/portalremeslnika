@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { getSiteAddress } from '../utils/siteAddress';
 import { Dialog } from './Dialog';
 import QRCode from 'qrcode';
 import {
@@ -189,7 +190,7 @@ připomínám náš dohodnutý termín nástupu na realizaci zakázky:
 "${contract.workDescription}"
 
 • Nástup: v ${formattedStartWithWeekday} v ${startTime} hod.
-• Místo: ${contract.client.address}
+• Místo: ${getSiteAddress(contract)}
 
 Prosím o zajištění přístupu do prostor, případně o uvolnění pracovního prostoru a přístup k vodě a elektřině.
 

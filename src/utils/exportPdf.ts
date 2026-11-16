@@ -3,6 +3,10 @@ import html2canvas from 'html2canvas-pro';
 import { Contract } from '../types/contract';
 import { generateContractFilename } from './exportNames';
 
+/** Šířka papíru A4 v pixelech obrazovky (210 mm při 96 dpi) a šířka okna, ve kterém se kopie stránky vykreslí. */
+const PDF_PAPER_WIDTH = 794;
+const PDF_WINDOW_WIDTH = 1280;
+
 /**
  * Vygeneruje a stáhne PDF soubor z HTML elementu smlouvy s podporou vícestránkového dělení
  * a českou diakritikou.
@@ -22,7 +26,14 @@ export async function exportContractToPdf(
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
-      windowWidth: contractElement.scrollWidth,
+      // Kopie stránky se vykreslí vždy v šířce počítače a papír v šířce A4 – PDF tak vyjde stejně z mobilu
+      // i z počítače a text se neláme jinak než v náhledu na počítači
+      windowWidth: PDF_WINDOW_WIDTH,
+      onclone: (_doc, cloned) => {
+        cloned.style.width = `${PDF_PAPER_WIDTH}px`;
+        cloned.style.minWidth = `${PDF_PAPER_WIDTH}px`;
+        cloned.style.maxWidth = `${PDF_PAPER_WIDTH}px`;
+      },
       // Ovládací prvky určené jen pro obrazovku (tlačítka na dokumentu) do PDF nepatří, stejně jako do tisku
       ignoreElements: (el) => el.classList?.contains('no-print') ?? false,
     });
