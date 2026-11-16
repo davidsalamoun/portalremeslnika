@@ -424,7 +424,7 @@ export const WarrantyCertificateView: React.FC<WarrantyCertificateViewProps> = (
                 Za zhotovitele vystavil a podepsal:
               </span>
               <div className="relative flex flex-col items-center justify-end min-h-16 w-full">
-                <div className="absolute -top-7 -right-2 sm:-right-6 opacity-85 pointer-events-none">
+                <div className="mb-1.5 max-w-full opacity-85 pointer-events-none">
                   <CraftsmanStamp contractor={contract.contractor} size="sm" />
                 </div>
                 {contract.contractorSignature ? (

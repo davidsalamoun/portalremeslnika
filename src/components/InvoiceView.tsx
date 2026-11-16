@@ -521,7 +521,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
           </div>
 
           {/* Celkem k úhradě & Razítko */}
-          <div className="space-y-4 text-right">
+          <div className="space-y-2 text-right">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
                 {isAdvance ? 'ZÁLOHA K ÚHRADĚ:' : 'DOPLATEK K ÚHRADĚ:'}
@@ -534,11 +534,11 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
               </p>
             </div>
 
-            <div className="pt-6 relative">
-              <div className="absolute -top-10 right-2 opacity-85 pointer-events-none">
+            <div className="relative flex flex-wrap items-end justify-end gap-x-3 gap-y-2">
+              <div className="max-w-full opacity-85 pointer-events-none">
                 <CraftsmanStamp contractor={contract.contractor} size="sm" />
               </div>
-              <div className="border-t-2 border-dotted border-slate-400 w-48 ml-auto pt-1.5 text-center relative z-10">
+              <div className="border-t-2 border-dotted border-slate-400 w-36 pt-1.5 text-center relative z-10">
                 <span className="text-xs font-bold text-slate-900 block">
                   {contract.contractor.name}
                 </span>

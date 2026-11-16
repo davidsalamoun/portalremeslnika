@@ -65,7 +65,8 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
 - **Značka a metr:** `components/Logo.tsx` (`LogoMark`, `Logo`, `Metr`). Metr má šest úseků, jeden na fázi: hotové fáze
   jsou žluté, aktuální má dole tmavý pruh; krátké rysky jsou jen uvnitř úseků, ne na jejich hranicích. Popisky pod
   metrem se sázejí do stejné mřížky (`grid-cols-6`). Animace `animate-metr` proběhne jednou. Razítko
-  (`CraftsmanStamp.tsx`) je obyčejné firemní: rámeček, jméno, adresa, telefon, pod linkou IČO a DIČ.
+  (`CraftsmanStamp.tsx`) je obyčejné firemní: rámeček, jméno, adresa, telefon, pod linkou IČO a DIČ. V dokladech má vlastní místo
+  nad podpisem (na faktuře a nabídce vedle jména) – nepokládat ho absolutně přes podpis, jméno ani částku.
 - **Fáze zakázky:** `utils/jobStage.ts` (`getJobStage`, `isActiveJob`) určuje fázi Poptávka → Nabídka → Smlouva →
   Realizace → Předáno → Zaplaceno, podíl na metru a větu „co dál“. Používat ji všude, kde se ukazuje postup zakázky.
   Posun mezi fázemi dělá `moveJobStage` (nastaví `leadStage` a `status`, při zaplacení i `paidDate`); `leadStage`

@@ -25,12 +25,13 @@ export const CraftsmanStamp: React.FC<CraftsmanStampProps> = ({ contractor, clas
   return (
     <div
       className={`relative select-none pointer-events-none ${className}`}
-      style={{ transform: 'rotate(-2.5deg)' }}
+      style={{ transform: 'rotate(-1.5deg)', maxWidth: '100%' }}
       title={`Razítko: ${contractor.name}`}
     >
       <div
         style={{
           width: s.width,
+          maxWidth: '100%',
           boxSizing: 'border-box',
           border: `2px solid ${INK}`,
           borderRadius: 3,

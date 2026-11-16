@@ -1125,8 +1125,8 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
                     <p className="font-bold text-black mb-2">Zhotovitel:</p>
 
                     <div className="relative flex flex-col items-center justify-end min-h-20 mb-2 w-full">
-                      {/* Úřední otisk razítka zhotovitele */}
-                      <div className="absolute -top-7 -right-2 sm:-right-8 opacity-85 pointer-events-none">
+                      {/* Razítko zhotovitele: nad podpisem, s vlastním místem */}
+                      <div className="mb-1.5 max-w-full opacity-85 pointer-events-none">
                         <CraftsmanStamp contractor={currentContract.contractor} size="sm" />
                       </div>
 
