@@ -106,6 +106,9 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   Texty upomínek skládá `utils/invoiceReminder.ts`; faktura před splatností se jen připomíná, bez volby tónu.
 - **Přehled** (`DashboardPage.tsx`) je vzor pro další obrazovky: nadpis sekce + odkaz vpravo, bílý rámeček s řádky
   oddělenými linkou, velká čísla písmem `font-display`, vedlejší akce jako tlačítka s obrysem, žádné dlaždice se statistikami.
+- **Průvodce prvním spuštěním** (`components/GettingStarted.tsx`, kroky v `utils/gettingStarted.ts`): na přehledu, dokud
+  nejsou hotové čtyři kroky (údaje, podpis, klient, první smlouva) nebo ho uživatel neskryje (klíč
+  `getting_started_hidden` v localStorage, jen na tomto zařízení). Hotovost kroku se počítá z dat, neukládá se.
 - **Počasí** (`utils/weather.ts`, `components/JobWeather.tsx`): u zakázky ve fázi Smlouva a Realizace se ukáže řádek jen
   tehdy, když předpověď pro obec stavby hlásí do tří dnů chladno, srážky nebo silný vítr. Obec se bere z adresy
   stavby (`getSiteAddress`) a dohledává u Open-Meteo; když se nenajde, nezobrazí se nic (nikdy nedosazovat jiné místo). Texty jsou
@@ -139,7 +142,7 @@ server.ts                     lokální spuštění: api/index.ts + Vite middlew
 vercel.json                   konfigurace nasazení na Vercel
 index.html, vite.config.ts    vstup a konfigurace Vite (alias @ = kořen repozitáře)
 supabase/schema.sql           databázové schéma a zabezpečení (spouští se ručně v Supabase SQL Editoru)
-tests/                        testy (synchronizace, obrázky, částky a data faktur, hranice DPH, čeština, IBAN a QR platba)
+tests/                        testy (synchronizace, obrázky, částky a data faktur, hranice DPH, adresa stavby, průvodce, čeština, IBAN a QR platba)
 src/
   main.tsx, App.tsx           main.tsx obalí aplikaci přihlášením (AuthGate); App.tsx drží veškerý stav,
                               přepíná záložky (bez routeru) a otevírá modály
@@ -228,7 +231,8 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
 - Předání díla (`handoverData`) se ukládá podpisem předávacího protokolu; čte ho záruční list, faktura i složka zakázky.
 - Pod náhledem dokumentů je upozornění, že vzory nenahrazují právní poradenství (jen na obrazovce, třída `no-print`).
 - Export PDF (`exportPdf.ts`) vykresluje papír vždy v šířce A4 (794 px) v okně širokém 1280 px, takže PDF z mobilu
-  je stejné jako z počítače. Vynechává prvky s třídou `no-print`; tlačítko „Uložit PDF“ ukládá právě zobrazený dokument.
+  je stejné jako z počítače. Doklad, který přesahuje jednu stranu nejvýš o 10 %, se nepatrně zmenší na jednu stranu
+  (`MAX_SHRINK_TO_FIT`). Vynechává prvky s třídou `no-print`; tlačítko „Uložit PDF“ ukládá právě zobrazený dokument.
 
 ## AI
 

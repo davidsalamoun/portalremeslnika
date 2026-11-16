@@ -34,6 +34,8 @@ import { getSubscriptionInfo, isProUser } from '../utils/subscription';
 import { isInvoiceable, isContractPaid, getFinalBalance, getInvoiceStatus, getContractTotal } from '../utils/invoiceMath';
 import { getJobStage, isActiveJob, JOB_STAGE_LABELS } from '../utils/jobStage';
 import { Metr } from './Logo';
+import { GettingStarted } from './GettingStarted';
+import { getGettingStartedSteps, GettingStartedKey } from '../utils/gettingStarted';
 
 const EVENT_TYPE_LABELS: Record<CalendarEventType, string> = {
   realizace: 'Realizace',
@@ -68,6 +70,8 @@ interface DashboardPageProps {
   contracts: Contract[];
   calendarEvents: CalendarEvent[];
   contractor?: ContractorProfile | null;
+  clientsCount?: number;
+  onGettingStartedStep?: (key: GettingStartedKey) => void;
   onSelectTab: (tab: TabType) => void;
   onOpenContract: (contract: Contract) => void;
   onNewContract: () => void;
@@ -95,6 +99,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   contracts,
   calendarEvents,
   contractor,
+  clientsCount = 0,
+  onGettingStartedStep,
   onSelectTab,
   onOpenContract,
   onNewContract,
@@ -302,6 +308,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             {contractor?.subscriptionPlan === 'pro_trial' ? 'Spravovat licenci' : 'Vyzkoušet PRO zdarma'}
           </button>
         </div>
+      )}
+
+      {onGettingStartedStep && (
+        <GettingStarted steps={getGettingStartedSteps(contractor, clientsCount, contracts)} onStep={onGettingStartedStep} />
       )}
 
       {/* Dnes */}

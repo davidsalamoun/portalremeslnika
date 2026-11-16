@@ -662,6 +662,20 @@ export default function App() {
                 contracts={contracts}
                 calendarEvents={calendarEvents}
                 contractor={contractor}
+                clientsCount={clients.length}
+                onGettingStartedStep={(key) => {
+                  if (key === 'client') handleOpenNewClientDialog();
+                  else if (key === 'contract') {
+                    setSelectedTradeTemplate(null);
+                    setActiveTab('nova-smlouva');
+                  } else {
+                    setActiveTab('nastaveni');
+                    // Podpis je v Nastavení níž – po vykreslení stránky se k němu posune
+                    if (key === 'signature') {
+                      window.setTimeout(() => document.getElementById('nastaveni-podpis')?.scrollIntoView({ block: 'start' }), 400);
+                    }
+                  }
+                }}
                 onSelectTab={handleTabChange}
                 onOpenPaywall={openPaywallProp}
                 onOpenContract={(contract) => {
