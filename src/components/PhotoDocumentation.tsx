@@ -102,14 +102,14 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
       {!readonly && (
         <div className="no-print bg-slate-50 dark:bg-slate-900/80 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
               Kategorie nové fotky:
             </span>
-            <div className="inline-flex rounded-lg bg-slate-200 dark:bg-slate-800 p-0.5 text-xs">
+            <div className="inline-flex rounded-lg bg-slate-200 dark:bg-slate-800 p-0.5 text-sm">
               <button
                 type="button"
                 onClick={() => setNewCategory('before')}
-                className={`px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                className={`min-h-11 inline-flex items-center justify-center px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
                   newCategory === 'before'
                     ? 'bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-400'
@@ -120,7 +120,7 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
               <button
                 type="button"
                 onClick={() => setNewCategory('progress')}
-                className={`px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                className={`min-h-11 inline-flex items-center justify-center px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
                   newCategory === 'progress'
                     ? 'bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-400'
@@ -131,7 +131,7 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
               <button
                 type="button"
                 onClick={() => setNewCategory('after')}
-                className={`px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                className={`min-h-11 inline-flex items-center justify-center px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
                   newCategory === 'after'
                     ? 'bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-400'
@@ -165,7 +165,7 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
               type="button"
               disabled={isProcessing}
               onClick={() => cameraInputRef.current?.click()}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
+              className="min-h-11 flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
               title="Vyfotit fotoaparátem v mobilu"
             >
               <Camera className="w-3.5 h-3.5 text-blue-600 shrink-0" />
@@ -176,7 +176,7 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
               type="button"
               disabled={isProcessing}
               onClick={() => fileInputRef.current?.click()}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1E3A78] dark:bg-blue-600 hover:bg-[#162c5c] dark:hover:bg-blue-500 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+              className="min-h-11 flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1E3A78] dark:bg-blue-600 hover:bg-[#162c5c] dark:hover:bg-blue-500 text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
               title="Vybrat fotku z galerie mobilu nebo disku"
             >
               {isProcessing ? (
@@ -194,10 +194,10 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
       {photos.length === 0 ? (
         <div className="no-print p-6 text-center border-2 border-dashed border-slate-300 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-900/30">
           <Camera className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-          <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
             Zatím nebyla přidána žádná fotodokumentace
           </p>
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+          <p className="text-[13px] text-slate-400 dark:text-slate-500 mt-0.5">
             Můžete vyfotit stav díla před realizací a po dokončení jako právní přílohu protokolu.
           </p>
         </div>
@@ -221,7 +221,7 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
 
                   {/* Štítek kategorie */}
                   <span
-                    className={`absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-md border shadow-xs ${badge.bg}`}
+                    className={`absolute top-2 left-2 text-[13px] font-semibold px-2 py-0.5 rounded-md border shadow-xs ${badge.bg}`}
                   >
                     {badge.label}
                   </span>
@@ -231,7 +231,7 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
                     <button
                       type="button"
                       onClick={() => setActivePhotoZoom(photo)}
-                      className="p-1.5 rounded-lg bg-black/60 hover:bg-black/80 text-white transition-colors"
+                      className="min-h-11 min-w-11 inline-flex items-center justify-center p-1.5 rounded-lg bg-black/60 hover:bg-black/80 text-white transition-colors"
                       title="Zvětšit fotku"
                     >
                       <ZoomIn className="w-3.5 h-3.5" />
@@ -240,7 +240,7 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
                       <button
                         type="button"
                         onClick={() => handleDeletePhoto(photo.id)}
-                        className="p-1.5 rounded-lg bg-rose-600/90 hover:bg-rose-700 text-white transition-colors"
+                        className="min-h-11 min-w-11 inline-flex items-center justify-center p-1.5 rounded-lg bg-rose-600/90 hover:bg-rose-700 text-white transition-colors"
                         title="Smazat fotku"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -250,21 +250,21 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
                 </div>
 
                 {/* Popisek */}
-                <div className="p-2.5 flex-1 flex flex-col justify-between text-xs">
+                <div className="p-2.5 flex-1 flex flex-col justify-between text-sm">
                   {isEditing ? (
                     <div className="flex items-center gap-1">
                       <input
                         type="text"
                         value={tempCaption}
                         onChange={(e) => setTempCaption(e.target.value)}
-                        className="w-full px-2 py-1 text-xs border rounded-md dark:bg-slate-950 dark:border-slate-700"
+                        className="min-h-11 w-full px-2 py-1 text-sm border rounded-md dark:bg-slate-950 dark:border-slate-700"
                         placeholder="Popis fotografie..."
                         autoFocus
                       />
                       <button
                         type="button"
                         onClick={() => handleSaveCaption(photo.id)}
-                        className="p-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700"
+                        className="min-h-11 min-w-11 inline-flex items-center justify-center p-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700"
                       >
                         <Check className="w-3.5 h-3.5" />
                       </button>
@@ -281,13 +281,13 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
                     </p>
                   )}
 
-                  <div className="mt-2 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
+                  <div className="mt-2 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[13px] text-slate-400">
                     <span>{new Date(photo.createdAt).toLocaleDateString('cs-CZ')}</span>
                     {!readonly && !isEditing && (
                       <button
                         type="button"
                         onClick={() => handleStartEditCaption(photo)}
-                        className="text-blue-600 hover:underline no-print"
+                        className="min-h-11 min-w-11 inline-flex items-center justify-center text-blue-600 hover:underline no-print"
                       >
                         Upravit popisek
                       </button>
