@@ -52,7 +52,7 @@ Proměnné (případně `STRIPE_SECRET_KEY`) se nastavují v projektu na Vercelu
 ## Vzhled
 
 Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2aA4MkA), zaveden po částech:
-část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; část 2 (hotovo) = přehled, zakázky, faktury, formulář smlouvy s rozpočtem; část 3 = klienti, kalendář, finance, archiv a mobilní nabídka „Více“ (hotovo), zbývá nastavení, náhled dokumentů a starší okna.
+část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; část 2 (hotovo) = přehled, zakázky, faktury, formulář smlouvy s rozpočtem; část 3 = klienti, kalendář, finance, archiv, nastavení a mobilní nabídka „Více“ (hotovo), zbývá lišta náhledu dokumentů a starší okna.
 
 - **Barvy** jsou v `src/index.css` v bloku `@theme` jako přemapované palety Tailwindu, takže stávající třídy platí dál:
   `slate-*` = grafit a papír (text `slate-900` #1A1D21, pozadí `slate-50` #F4F5F2), `blue-*` = razítková modrá
@@ -80,6 +80,8 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   registrace, jen ukazuje vzdálenost k hranicím 1, 1,5 a 2 mil. Kč a odkazuje na účetní. Graf: jedna řada, hodnota
   měsíce po najetí nebo fokusu, skrytá tabulka pro čtečky.
 - **Archiv** (`HistoryPage.tsx`): seznam všech dokumentů s hledáním; fáze se tu jen zobrazuje, mění se v Zakázkách.
+- **Nastavení** (`SettingsPage.tsx`): údaje zhotovitele, podpis, razítko, ceník a záloha. Potvrzení (smazání položky,
+  obnova ceníku, obnova ze zálohy) jdou přes `Dialog`, ne přes `window.confirm`.
 - **Okna** nad obsahem stavět z `components/Dialog.tsx` (nadpis, křížek, Escape, klik mimo, na mobilu zdola). Starší
   modály s tmavou hlavičkou se na něj převádějí postupně.
 - **Faktury** (`InvoicesOverviewPage.tsx`): souhrn v jednom rámečku, záložky stavů, seznam s odznakem splatnosti.
