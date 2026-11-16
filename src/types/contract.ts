@@ -17,6 +17,7 @@ export interface ContractorProfile {
   phone: string;         // Telefon
   email: string;         // E-mail
   defaultPlace: string;  // Místo uzavření smlouvy (např. v Praze, v Brně)
+  expenseFlatRate?: 80 | 60 | 40; // Výdajový paušál podle druhu činnosti – jen pro přehled pásem paušální daně ve Financích
   signature?: string;    // Výchozí digitální podpis zhotovitele (base64 PNG)
   aresVerified?: AresVerification; // Údaje naposledy načtené z registru ARES (pro štítek „ověřeno“)
   subscriptionPlan?: 'free' | 'pro_trial' | 'pro_monthly' | 'pro_yearly';
@@ -123,6 +124,7 @@ export interface Contract {
   conclusionDate: string;
   executionPlace: string;
   hasVat: boolean;
+  vatRate?: 21 | 12;                     // Sazba DPH u plátce; chybí = 21 % (12 % stavební práce na dokončené stavbě pro bydlení)
   status?: ContractStatus;               // Stav workflow zakázky
   leadStage?: LeadStage;                 // Fáze v CRM pipeline poptávek
   nextStepDate?: string;                 // Datum příštího kroku (obhlídka, zavolat, poslat nabídku)

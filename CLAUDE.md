@@ -76,8 +76,10 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
 - **Názvy:** v aplikaci se píše „klient“ (shodně s nabídkou Klienti) a „událost“ v kalendáři; ve zprávách odesílaných
   lidem „zákazník“. Nepoužívat „dispečink“, „výjezd“, „pracovní stůl“ ani znak & v nadpisech.
 - **Finance** (`FinancialRadarPage.tsx`): obrat a zisk se počítají z cen smluv podle data uzavření (`getContractTotal`,
-  jen `isInvoiceable`). Texty o DPH a paušální dani jsou záměrně opatrné – aplikace neurčuje pásmo ani okamžik
-  registrace, jen ukazuje vzdálenost k hranicím 1, 1,5 a 2 mil. Kč a odkazuje na účetní. Graf: jedna řada, hodnota
+  jen `isInvoiceable`). Hranice DPH a pásma paušální daně jsou v `utils/taxLimits.ts` (stav 2025–2026: nad 2 mil. Kč
+  plátce od 1. 1. dalšího roku, nad 2 536 500 Kč od následujícího dne; pásma podle výdajového paušálu
+  `expenseFlatRate` v profilu, na který se ptá přímo tato stránka). Při změně zákona upravit tam i texty; vždy
+  ponechat větu, že údaje jsou orientační a ověřují se u účetní. Částky měsíčních plateb paušální daně neuvádět. Graf: jedna řada, hodnota
   měsíce po najetí nebo fokusu, skrytá tabulka pro čtečky.
 - **Archiv** (`HistoryPage.tsx`): seznam všech dokumentů s hledáním; fáze se tu jen zobrazuje, mění se v Zakázkách.
 - **Nastavení** (`SettingsPage.tsx`): údaje zhotovitele, podpis, razítko, ceník a záloha. Potvrzení (smazání položky,
@@ -131,7 +133,7 @@ server.ts                     lokální spuštění: api/index.ts + Vite middlew
 vercel.json                   konfigurace nasazení na Vercel
 index.html, vite.config.ts    vstup a konfigurace Vite (alias @ = kořen repozitáře)
 supabase/schema.sql           databázové schéma a zabezpečení (spouští se ručně v Supabase SQL Editoru)
-tests/                        testy (synchronizace, obrázky, částky a data faktur, čeština, IBAN a QR platba)
+tests/                        testy (synchronizace, obrázky, částky a data faktur, hranice DPH, čeština, IBAN a QR platba)
 src/
   main.tsx, App.tsx           main.tsx obalí aplikaci přihlášením (AuthGate); App.tsx drží veškerý stav,
                               přepíná záložky (bez routeru) a otevírá modály
@@ -153,6 +155,7 @@ src/
     spayd.ts                  QR platba (SPAYD), převod čísla účtu na IBAN
     invoiceMath.ts            jednotná pravidla pro částky, data a splatnost faktur
     invoiceReminder.ts        texty upomínek k fakturám
+    taxLimits.ts              hranice obratu pro DPH a pásma paušální daně
     jobStage.ts               fáze zakázky pro metr a posun mezi fázemi
     ares.ts                   dohledání firmy podle IČO v ARES
     weather.ts                počasí na stavbě: obec z adresy, předpověď Open-Meteo, rizika pro venkovní práce
@@ -211,7 +214,9 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
   splatnost 14 dnů. Zálohová faktura se vystavuje k datu uzavření smlouvy a jen na zálohu sjednanou ve smlouvě
   (`advanceAmount`); bez ní se nenabízí a žádná částka se nedomýšlí.
 - Cenová nabídka (`docKind: 'quote'`) a zakázka bez ceny nejsou pohledávkou ani tržbou.
-- U plátců jsou ceny včetně DPH; export pro účetní počítá daň jako 21/121 z ceny. Faktura sama základ a DPH nerozepisuje.
+- U plátců (profil má DIČ) jsou ceny včetně DPH. Sazbu zakázky určuje `getVatRate` (`contract.vatRate`, výchozí 21 %,
+  volba 12 % v liště konečné faktury); konečná faktura plátce rozepisuje základ, sazbu a daň přes `getVatBreakdown`
+  a stejnou sazbu používá export pro účetní. Zálohová faktura rozpis nemá.
 - Částka slovy vždy přes `amountInWordsCzk` (rod a tvar měny), vícepráce/méněpráce přes `formatSignedCurrency`.
 - Předání díla (`handoverData`) se ukládá podpisem předávacího protokolu; čte ho záruční list, faktura i složka zakázky.
 - Pod náhledem dokumentů je upozornění, že vzory nenahrazují právní poradenství (jen na obrazovce, třída `no-print`).
@@ -231,5 +236,6 @@ odstraněny včetně serverových endpointů a závislosti na Gemini. Nepřidáv
 - Testy pokrývají synchronizaci, odkazy na obrázky, výpočty faktur a české pomocné funkce; přihlášení a UI se ověřují ručně.
 - PDF je obrázek stránky (nejde v něm hledat text). Strany se dělí v mezeře mezi řádky (`computePageSlices`
   v `exportPdf.ts`), ne podle odstavců nebo bloků – nadpis tak může zůstat na konci strany bez svého textu.
-- Faktura plátce DPH nerozepisuje základ, sazbu a daň; sazba je všude 21 % (stavební práce pro bydlení mají 12 %).
+- DPH: aplikace nevystavuje daňový doklad k přijaté záloze ani neřeší přenesení daňové povinnosti mezi plátci;
+  sazba je jedna na celou zakázku (21 % nebo 12 %).
 - Po startu se všechny obrázky účtu načtou do paměti; u tisíců fotek bude potřeba načítání na vyžádání.

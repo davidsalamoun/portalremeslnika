@@ -821,6 +821,7 @@ export default function App() {
                 onOpenContract={handleShowPreview}
                 onToast={addToast}
                 onOpenPaywall={PAYMENTS_ENABLED ? (reason) => handleOpenPaywall(reason) : undefined}
+                onUpdateContractor={handleUpdateContractorProfile}
               />
             )}
 

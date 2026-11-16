@@ -100,6 +100,27 @@ export function getInvoiceStatus(contract: Contract, today: string = todayIso())
   return { isPaid, isOverdue: !isPaid && daysPastDue > 0, daysPastDue, dueDate };
 }
 
+export type VatRate = 21 | 12;
+
+/** Sazba DPH zakázky: základní 21 %, pokud u ní není zvolena snížená 12 %. */
+export function getVatRate(contract: Pick<Contract, 'vatRate'>): VatRate {
+  return contract.vatRate === 12 ? 12 : 21;
+}
+
+export interface VatBreakdown {
+  base: number;
+  vat: number;
+  gross: number;
+  rate: VatRate;
+}
+
+/** Rozpis ceny včetně daně na základ a DPH s přesností na haléře (daň = cena × sazba / (100 + sazba)). */
+export function getVatBreakdown(gross: number, rate: VatRate = 21): VatBreakdown {
+  const vat = Math.round(((gross * rate) / (100 + rate)) * 100) / 100;
+  const base = Math.round((gross - vat) * 100) / 100;
+  return { base, vat, gross, rate };
+}
+
 /** DPH obsažená v ceně uvedené včetně daně (ceny v aplikaci jsou u plátců včetně DPH). */
 export function vatIncludedInGross(gross: number, ratePercent = 21): number {
   return Math.round((gross * ratePercent) / (100 + ratePercent));

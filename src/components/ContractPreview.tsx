@@ -700,6 +700,10 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
             onOpenAmendments={handleQuickOpenAmendment}
             onOpenCashReceipt={handleQuickOpenReceipt}
             onChangeInvoiceType={(type) => setActiveDocType(type === 'advance' ? 'zaloha' : 'faktura')}
+            onUpdateContract={(updated) => {
+              setCurrentContract(updated);
+              onSaveToHistory(updated);
+            }}
           />
         ) : activeDocType === 'zaruka' ? (
           <WarrantyCertificateView

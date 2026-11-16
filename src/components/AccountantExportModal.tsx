@@ -20,7 +20,7 @@ import {
 import { Contract, ContractorProfile } from '../types/contract';
 import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
 import { triggerHaptic } from '../utils/haptics';
-import { isInvoiceable, getContractTotal, getFinalInvoiceDates, vatIncludedInGross } from '../utils/invoiceMath';
+import { isInvoiceable, getContractTotal, getFinalInvoiceDates, vatIncludedInGross, getVatRate } from '../utils/invoiceMath';
 
 interface AccountantExportModalProps {
   isOpen: boolean;
@@ -164,8 +164,8 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
       const baseDate = invoiceDates.issueDate;
       if (isInvoiceable(c) && baseDate >= dateFrom && baseDate <= dateTo) {
         const totalPrice = getContractTotal(c);
-        // Ceny jsou u plátců uvedené včetně DPH, daň je tedy část ceny (21/121), ne přirážka
-        const vatVal = c.hasVat ? vatIncludedInGross(totalPrice) : 0;
+        // Ceny jsou u plátců uvedené včetně DPH, daň je tedy část ceny (21/121, u snížené sazby 12/112), ne přirážka
+        const vatVal = c.hasVat ? vatIncludedInGross(totalPrice, getVatRate(c)) : 0;
 
         invoices.push({
           id: c.id,
