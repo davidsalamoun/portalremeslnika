@@ -197,6 +197,8 @@ src/
     invoiceMath.ts            jednotná pravidla pro částky, data a splatnost faktur
     invoiceReminder.ts        texty upomínek k fakturám
     taxLimits.ts              hranice obratu pro DPH a pásma paušální daně
+    invoiceNumbering.ts       čísla faktur, smluv a nabídek (přidělení při vystavení)
+    isdoc.ts, zipStore.ts     faktura ve formátu ISDOC, ZIP bez komprese a stažení souboru
     jobStage.ts               fáze zakázky pro metr a posun mezi fázemi
     siteAddress.ts            adresa stavby zakázky (`contract.siteAddress`, jinak adresa klienta)
     ares.ts                   dohledání firmy podle IČO v ARES
@@ -259,6 +261,11 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
   poslat. Starší zakázky mají číslo z doby založení a platí jako vystavené. Zakázku s vystavenou fakturou
   (`hasIssuedInvoice`) nejde smazat, jen stornovat (`invoiceCancelledAt`: storno na faktuře, mimo pohledávky a tržby).
   Pořadí smluv a nabídek (`nextDocumentSequence`) je taky nejvyšší + 1, ne počet zakázek.
+- **ISDOC** (`utils/isdoc.ts`): vystavená faktura jde stáhnout jako `.isdoc` (tlačítko v liště faktury) a podklady pro
+  účetní nabízejí všechny faktury období v ZIPu (`utils/zipStore.ts`, ZIP bez komprese). Konečná faktura zdaňuje celou
+  cenu (daň shora z celku, haléřový rozdíl na největším řádku) a zálohu odečítá jako nedaňovou (`NonTaxedDeposits`);
+  zálohová faktura je typ 4. Stejně počítá i rozpis DPH na faktuře v aplikaci. Platnost hlídá `tests/isdoc.test.ts`
+  proti oficiálnímu schématu `tests/fixtures/isdoc-invoice-6.0.2.xsd` (`xmllint-wasm`). Banky (název, BIC) v `CZ_BANKS`.
 - **Jen faktura** (`docKind: 'invoice'`): faktura bez smlouvy z formuláře Nová smlouva; náhled má jen fakturu a pokladní
   doklad, zakázka je rovnou ve fázi Předáno.
 - Konečná faktura se vystavuje k předání díla (`handoverData.handoverDate`, jinak `deliveryDate`), DUZP je stejné,
@@ -266,7 +273,7 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
   (`advanceAmount`); bez ní se nenabízí a žádná částka se nedomýšlí.
 - Cenová nabídka (`docKind: 'quote'`) a zakázka bez ceny nejsou pohledávkou ani tržbou.
 - U plátců (profil má DIČ) jsou ceny včetně DPH. Sazbu zakázky určuje `getVatRate` (`contract.vatRate`, výchozí 21 %,
-  volba 12 % v liště konečné faktury); konečná faktura plátce rozepisuje základ, sazbu a daň přes `getVatBreakdown`
+  volba 12 % v liště konečné faktury); konečná faktura plátce rozepisuje základ, sazbu a daň z celé ceny díla přes `getVatBreakdown`
   a stejnou sazbu používá export pro účetní. Zálohová faktura rozpis nemá.
 - Částka slovy vždy přes `amountInWordsCzk` (rod a tvar měny), vícepráce/méněpráce přes `formatSignedCurrency`.
 - Předání díla (`handoverData`) se ukládá podpisem předávacího protokolu; čte ho záruční list, faktura i složka zakázky.

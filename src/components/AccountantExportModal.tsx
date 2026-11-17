@@ -1,9 +1,12 @@
 import React, { useState, useMemo } from 'react';
+import { buildIsdoc, isdocFileName } from '../utils/isdoc';
+import { createZip, downloadFile } from '../utils/zipStore';
 import { getFinalInvoiceNumber } from '../utils/invoiceNumbering';
 import { Dialog } from './Dialog';
 import {
   X,
   FileSpreadsheet,
+  FileCode2,
   Download,
   Printer,
   Mail,
@@ -321,6 +324,20 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
     if (onToast) {
       onToast('success', `Export pro účetní za ${periodLabel} byl stažen do CSV.`);
     }
+  };
+
+  // Faktury za období ve formátu ISDOC (jedna faktura = jeden soubor, dohromady v ZIPu)
+  const handleExportIsdoc = () => {
+    const ids = new Set(filteredData.invoices.map((i) => i.id));
+    const files = contracts
+      .filter((c) => ids.has(c.id))
+      .map((c) => ({ name: isdocFileName(c, 'final'), content: buildIsdoc(c, 'final') }));
+    if (files.length === 0) {
+      onToast?.('info', 'V tomto období není žádná vystavená faktura.');
+      return;
+    }
+    downloadFile(`Faktury_ISDOC_${period}_${selectedYear}.zip`, createZip(files), 'application/zip');
+    onToast?.('success', files.length === 1 ? 'Stažena 1 faktura ve formátu ISDOC.' : `Staženo ${files.length} faktur ve formátu ISDOC (ZIP).`);
   };
 
   // Mailto generator for Accountant
@@ -754,6 +771,16 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
             >
               <FileSpreadsheet className="w-4 h-4" />
               <span>Export do Excel / CSV</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleExportIsdoc}
+              className="min-h-[44px] px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm flex items-center gap-2 cursor-pointer transition-all"
+              title="Faktury jako elektronické doklady ISDOC – načte je Pohoda, Money, ABRA a další účetní programy"
+            >
+              <FileCode2 className="w-4 h-4" />
+              <span>Faktury v ISDOC (ZIP)</span>
             </button>
 
             <button

@@ -81,9 +81,9 @@ test.describe('faktura plátce DPH', () => {
     await openDoc(app, 'faktura', /^Faktura/);
     const paper = app.locator('.contract-page').first();
     await expect(paper).toContainText('FAKTURA – DAŇOVÝ DOKLAD');
-    await expect(paper).toContainText('3 960,84 Kč');
+    await expect(paper).toContainText('5 349,27 Kč');
     await app.getByRole('button', { name: '12 %' }).click();
-    await expect(paper).toContainText('2 445,21 Kč');
+    await expect(paper).toContainText('3 302,36 Kč');
   });
 });
 
@@ -95,5 +95,28 @@ test.describe('prázdný účet', () => {
       await openTab(app, tab);
       await expectNoOverflow(app);
     }
+  });
+});
+
+test.describe('export ISDOC', () => {
+  test('faktura i podklady pro účetní jdou stáhnout jako ISDOC', async ({ app }, testInfo) => {
+    test.skip(testInfo.project.name === 'mobil', 'stažení stačí ověřit na počítači');
+    const fs = await import('node:fs/promises');
+    await app.getByRole('button', { name: /Rekonstrukce koupelny/ }).first().click();
+    await openDoc(app, 'faktura', /^Faktura/);
+    const [isdoc] = await Promise.all([app.waitForEvent('download'), app.getByRole('button', { name: 'ISDOC' }).click()]);
+    expect(isdoc.suggestedFilename()).toBe('FA-2026001.isdoc');
+    const xml = await fs.readFile((await isdoc.path())!, 'utf8');
+    expect(xml).toContain('<Invoice xmlns="http://isdoc.cz/namespace/2013" version="6.0.2">');
+    expect(xml).toContain('<PayableAmount>22822.00</PayableAmount>');
+
+    await app.getByRole('button', { name: 'Zpět' }).first().click();
+    await openTab(app, 'Finance');
+    await app.getByRole('button', { name: /Podklady pro účetní/ }).click();
+    await app.getByRole('dialog').getByRole('button', { name: /^(Celý rok|Rok)/ }).first().click().catch(() => {});
+    const [zip] = await Promise.all([app.waitForEvent('download'), app.getByRole('button', { name: 'Faktury v ISDOC (ZIP)' }).click()]);
+    expect(zip.suggestedFilename()).toMatch(/^Faktury_ISDOC_.*\.zip$/);
+    const bytes = await fs.readFile((await zip.path())!);
+    expect(bytes.readUInt32LE(0)).toBe(0x04034b50);
   });
 });
