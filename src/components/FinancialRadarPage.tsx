@@ -379,7 +379,10 @@ export const FinancialRadarPage: React.FC<FinancialRadarPageProps> = ({
                   {formatCurrency(profit)}
                 </div>
                 <div className="mt-1.5 text-slate-600 dark:text-slate-400">
-                  tržby minus výdaje na zakázky, marže {margin} %, {yearContracts.length} {jobsWord(yearContracts.length)}
+                  {totals.expenses > 0
+                    ? `tržby minus výdaje na zakázky, marže ${margin} %`
+                    : 'u zakázek zatím nejsou zapsané žádné výdaje, zisk se proto rovná tržbám'}
+                  , {yearContracts.length} {jobsWord(yearContracts.length)}
                 </div>
               </div>
               {[

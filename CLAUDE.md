@@ -12,11 +12,11 @@ dál se vyvíjí mimo něj.
 1. **Veškeré UI je v češtině.** Texty, hlášky, toasty, popisky i chybové stavy. Komentáře v kódu mohou být česky.
 2. **Držet vzhled „Výkres a metr“** (viz oddíl Vzhled). Nové prvky stavět z jeho barev, písem a tvarů; nevracet
    stíny, zaoblené karty, barevné přechody, popisky verzálkami ani strojové písmo. Dokumenty (smlouva, faktura,
-   protokol…) si drží vlastní papírový vzhled a neupravují se bez pokynu.
+   protokol…) mají vlastní střízlivý papírový vzhled (viz Dokumenty) a neupravují se bez pokynu.
 3. **Právní texty šablon neměnit bez výslovného pokynu.** Týká se znění smluv, dodatků, protokolů, záručních
    listů, faktur a dokladů v `src/components/ContractPreview.tsx`, `AmendmentView.tsx`, `HandoverProtocolView.tsx`,
    `WarrantyCertificateView.tsx`, `InvoiceView.tsx`, `CashReceiptView.tsx`, `PriceQuoteView.tsx`,
-   `TechnicalProtocolsModal.tsx`, `src/utils/exportDocx.ts` a `src/data/craftTemplates.ts`.
+   `ContractBody.tsx` (znění smlouvy), `TechnicalProtocolsModal.tsx`, `src/utils/exportDocx.ts` a `src/data/craftTemplates.ts`.
    Náhled (HTML/PDF) a export do Wordu obsahují tentýž text dvakrát – při schválené změně upravit obě místa.
 4. **Žádná tajemství v prohlížeči ani v repozitáři.** `STRIPE_SECRET_KEY` jen na serveru.
    Proměnné s prefixem `VITE_` jsou veřejné. `.env*` se necommituje (kromě `.env.example`).
@@ -59,7 +59,7 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   (`blue-600` #1B3F8B: navigace, odkazy, podpisy), `amber-*` = žlutá z metru (`amber-400` #F5C400: jen hlavní akce
   a postup zakázky). Zelená = zaplaceno/hotovo, červená = po splatnosti/chyby. Nepřidávat další akcentní barvy.
 - **Písmo:** IBM Plex Sans na texty (`font-sans`), Barlow Semi Condensed na nadpisy a velká čísla (`h1`–`h4` automaticky,
-  jinak třída `font-display`). Třídy `uppercase` a `font-mono` jsou mimo dokumenty záměrně zneškodněné.
+  jinak třída `font-display`). Třídy `uppercase` a `font-mono` jsou záměrně zneškodněné (i v dokumentech).
 - **Tvary:** rohy 4 px (`rounded-md` až `rounded-3xl`), `rounded-full` jen pro odznaky. Plochy oddělují linky 1 px;
   stín mají jen okna nad obsahem (`shadow-xl`, `shadow-2xl`).
 - **Značka a metr:** `components/Logo.tsx` (`LogoMark`, `Logo`, `Metr`). Metr má šest úseků, jeden na fázi: hotové fáze
@@ -118,7 +118,10 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
 - **Režimy:** aplikace se řídí světlým/tmavým režimem zařízení; přepínačem si uživatel nastaví vlastní volbu
   (`utils/theme.ts`, klíč `theme_choice` v localStorage). Každá úprava musí fungovat v obou režimech.
 - **Dokumenty** (`.contract-page`, `#amendment-printable-paper`, `#quote-printable-paper`, `.print-content`,
-  `[data-pdf-paper]`) mají v `index.css` vrácené původní barvy, rohy a písmo – vypadají jako papír, ne jako aplikace.
+  `[data-pdf-paper]`) mají jeden vzhled daný pravidly v `index.css`: písmo aplikace (i smlouva, dřív patková), linky místo barevných
+  ploch, rohy 2 px, žádné verzálky ani strojové písmo; barvu má jen částka k úhradě a razítko. Pravidla přebarvují
+  stávající třídy (`bg-*`, `border-*`, `text-*`) uvnitř papíru – novou barevnou plochu do dokladu nepřidávat. Ovládání
+  na papíře (jen na obrazovce) musí mít třídu `no-print` nebo být `button`/`a`, jinak mu pravidla vezmou barvy.
 - Ovládací prvky mají výšku aspoň 44 px a viditelné označení při ovládání klávesnicí.
 
 ## Načítání aplikace
@@ -212,7 +215,9 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
 - **Online podpis** (`utils/signShares.ts`, tabulka `sign_shares`): řemeslník založí odkaz `?sign=<token>` s náhodným
   tajným kódem (uložen u smlouvy jako `signToken`). Zákazník se nepřihlašuje a k tabulce přístup nemá – smlouvu čte
   a podepisuje jen přes databázové funkce `get_sign_share` / `submit_sign_share`. Do odkazu se ukládá jen výřez smlouvy
-  (`toSharedContract`), ne náklady, fotky ani deník. Podepsaný odkaz už nejde změnit ani podepsat znovu; nepodepsaný
+  (`toSharedContract`): souhrn a údaje, ze kterých se skládá celé znění smlouvy (`shareVersion: 2`) – ne náklady, fotky
+  ani deník. Portál ukazuje souhrn a u smlouvy celé znění přes `components/ContractBody.tsx` (tentýž text jako náhled
+  zakázky); starší odkazy bez `shareVersion` ukážou jen souhrn. V portálu nepsat „právně závazně“ ani odkazy na eIDAS a paragrafy. Podepsaný odkaz už nejde změnit ani podepsat znovu; nepodepsaný
   vyprší po 90 dnech. Aplikace se na podpis ptá pravidelně (jen u smluv se `signToken` bez podpisu).
 
 ## Faktury a částky
