@@ -7,9 +7,11 @@ type AuthMode = 'login' | 'register' | 'forgot' | 'check-email' | 'reset-sent' |
 
 interface AuthScreenProps {
   /** 'new-password' po kliknutí na odkaz pro obnovu hesla z e-mailu */
-  initialMode?: 'login' | 'new-password';
+  initialMode?: 'login' | 'register' | 'new-password';
   /** Zavolá se po úspěšném nastavení nového hesla */
   onPasswordUpdated?: () => void;
+  /** Návrat na úvodní stránku (odkaz u značky) */
+  onBack?: () => void;
 }
 
 const inputClass =
@@ -19,7 +21,7 @@ const primaryButtonClass =
   'w-full min-h-[52px] flex items-center justify-center gap-2 px-5 rounded-md bg-amber-400 hover:bg-amber-300 text-slate-900 text-[17px] font-semibold border-[1.5px] border-slate-900 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed';
 const linkClass = 'text-base font-semibold text-blue-600 dark:text-blue-300 underline underline-offset-2 cursor-pointer';
 
-export const AuthScreen: React.FC<AuthScreenProps> = ({ initialMode = 'login', onPasswordUpdated }) => {
+export const AuthScreen: React.FC<AuthScreenProps> = ({ initialMode = 'login', onPasswordUpdated, onBack }) => {
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -116,7 +118,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ initialMode = 'login', o
           backgroundSize: '120px 120px, 120px 120px, 24px 24px, 24px 24px',
         }}
       >
-        <Logo size={34} />
+        {onBack ? (
+          <button type="button" onClick={onBack} aria-label="Řemeslník PRO – úvodní stránka" className="self-start cursor-pointer">
+            <Logo size={34} />
+          </button>
+        ) : (
+          <Logo size={34} />
+        )}
 
         <div className="max-w-xl">
           <p className="font-display font-bold text-3xl sm:text-5xl lg:text-6xl leading-[1.04]">

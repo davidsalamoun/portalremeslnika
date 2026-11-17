@@ -110,6 +110,12 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   Ani nejostřejší tón nehrozí vymáháním – žádá úhradu do 7 dnů a nabízí domluvu.
 - **Přehled** (`DashboardPage.tsx`) je vzor pro další obrazovky: nadpis sekce + odkaz vpravo, bílý rámeček s řádky
   oddělenými linkou, velká čísla písmem `font-display`, vedlejší akce jako tlačítka s obrysem, žádné dlaždice se statistikami.
+- **Úvodní stránka** (`LandingPage.tsx`): co vidí nepřihlášený návštěvník (AuthGate). Kdo se na zařízení už přihlásil
+  (klíč `remeslnik_returning_user`), dostane rovnou přihlášení; logo na přihlášení vede zpět na úvod. Živá ukázka
+  zakázky je jen animace (bez animací hotový stav) s volbou řemesla (vymyšlené ukázkové zakázky v `CRAFTS`); na mobilu
+  se pod úvodem přilepí tlačítko „Založit účet zdarma“, podpis na zkoušku se nikam neukládá, QR kód nese adresu webu.
+  Snímky jsou v `public/landing/` z aplikace s testovacími daty – při změně vzhledu je přegenerovat. Texty o ceně
+  a datech musí odpovídat skutečnosti.
 - **Průvodce prvním spuštěním** (`components/GettingStarted.tsx`, kroky v `utils/gettingStarted.ts`): na přehledu, dokud
   nejsou hotové čtyři kroky (údaje, podpis, klient, první smlouva) nebo ho uživatel neskryje (klíč
   `getting_started_hidden` v localStorage, jen na tomto zařízení). Hotovost kroku se počítá z dat, neukládá se.
@@ -134,7 +140,8 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
 `manifest.webmanifest` (přidání na plochu telefonu) a `og.png` (náhled odkazu ve zprávách, 1200 × 630). `og:image`
 musí být celá adresa: `vite.config.ts` při buildu dosadí za `__SITE_URL__` v `index.html` adresu z proměnné `SITE_URL`,
 jinak produkční adresu projektu na Vercelu (`VERCEL_PROJECT_PRODUCTION_URL`). Při změně značky přegenerovat všechny.
-Písma se načítají jen dvě (IBM Plex Sans, Barlow Semi Condensed).
+Písma jsou jen dvě (IBM Plex Sans, Barlow Semi Condensed) a jsou uložená v aplikaci (`src/fonts.css`, balíčky
+`@fontsource`) – nenačítat nic z Google Fonts ani jiných cizích serverů (IP návštěvníka, práce bez signálu).
 
 ## Načítání aplikace
 
@@ -147,8 +154,7 @@ modál přidávat do `lazyLoaders`, ne statickým importem; `exportDocx`/`export
 
 `src/sw/serviceWorkerSource.ts` je zdroj service workeru; `vite.config.ts` (plugin `offlineServiceWorker`) z něj při
 buildu vytvoří `dist/sw.js` se seznamem všech souborů aplikace a verzí. `main.tsx` ho registruje jen v produkčním buildu.
-Soubory aplikace se čtou z mezipaměti, stránka ze sítě (po 3 s bez odpovědi z mezipaměti), písma Google se ukládají
-při použití; data (Supabase, `/api`) jdou vždy na síť. Nový soubor v `public/` se do seznamu dostane sám.
+Soubory aplikace (včetně písem) se čtou z mezipaměti, stránka ze sítě (po 3 s bez odpovědi z mezipaměti); data (Supabase, `/api`) jdou vždy na síť. Nový soubor v `public/` se do seznamu dostane sám.
 Bez signálu `AuthGate` nečeká na obnovu vypršelého přístupového klíče a pustí uživatele s uloženým přihlášením
 (`getStoredSessionUser`) k datům v zařízení. Změny se zařadí do fronty a odešlou po návratu signálu; když první
 pokus selže (Supabase po neúspěšné obnově klíče minutu čeká), synchronizace se zkouší znovu po 15, 30 a 60 s.

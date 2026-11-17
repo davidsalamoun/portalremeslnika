@@ -32,7 +32,8 @@ function offlineServiceWorker(): Plugin {
       const hash = crypto.createHash('sha256');
       const files: string[] = [];
       for (const [fileName, item] of Object.entries(bundle)) {
-        if (fileName.endsWith('.map')) continue;
+        // .woff jsou jen záloha pro velmi staré prohlížeče (všechny současné načtou .woff2)
+        if (fileName.endsWith('.map') || fileName.endsWith('.woff')) continue;
         files.push(fileName);
         hash.update(fileName);
         hash.update(item.type === 'chunk' ? item.code : typeof item.source === 'string' ? item.source : Buffer.from(item.source));

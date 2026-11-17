@@ -55,6 +55,8 @@ export const test = base.extend<{
       localStorage.setItem('remeslnik_kalendar', JSON.stringify(d.events));
     }, data);
     await page.goto('/');
+    // Nepřihlášený návštěvník vidí úvodní stránku
+    await page.getByRole('button', { name: 'Přihlásit se' }).first().click();
     await page.fill('#auth-email', 'jan@example.cz');
     await page.fill('#auth-password', 'tajneheslo1');
     await page.getByRole('button', { name: 'Přihlásit se' }).click();

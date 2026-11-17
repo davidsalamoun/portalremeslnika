@@ -1,6 +1,7 @@
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import {AuthGate} from './components/AuthGate.tsx';
+import './fonts.css';
 import './index.css';
 
 // Service worker (jen v produkčním buildu): aplikace se po prvním načtení otevře i bez signálu
