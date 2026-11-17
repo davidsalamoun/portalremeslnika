@@ -143,6 +143,29 @@ export function getContractVatBreakdown(
   return getVatBreakdown(amount, rate);
 }
 
+type AdvanceTaxDocFields = Pick<Contract, 'reverseCharge' | 'advanceAmount' | 'vatRate' | 'advanceTaxDocNumber' | 'advancePaidDate'> & {
+  contractor: Pick<Contract['contractor'], 'dic'>;
+};
+
+/**
+ * Daňový doklad k přijaté platbě (§ 28 odst. 1 písm. d) zákona o DPH): plátce z přijaté zálohy přizná daň ke dni
+ * přijetí platby. Nabízí se jen plátci se sjednanou zálohou a ne při přenesení daňové povinnosti (tam daň přizná
+ * zákazník až ke dni plnění).
+ */
+export function canHaveAdvanceTaxDoc(contract: AdvanceTaxDocFields): boolean {
+  return !!contract.contractor?.dic && !isReverseCharge(contract) && !!contract.advanceAmount && contract.advanceAmount > 0;
+}
+
+/** Zakázka má vystavený doklad k přijaté záloze – konečná faktura pak zálohu odečítá i s daní. */
+export function hasAdvanceTaxDoc(contract: AdvanceTaxDocFields): boolean {
+  return canHaveAdvanceTaxDoc(contract) && !!contract.advanceTaxDocNumber && !!contract.advancePaidDate;
+}
+
+/** Rozpis přijaté zálohy (daň shora z přijaté částky). */
+export function getAdvanceTaxBreakdown(contract: AdvanceTaxDocFields): VatBreakdown {
+  return getVatBreakdown(Number(contract.advanceAmount) || 0, getVatRate(contract));
+}
+
 /** Jak se k ceně uvádí DPH (smlouva, nabídka, protokol, portál podpisu). */
 export function priceVatNote(contract: Pick<Contract, 'reverseCharge'> & { contractor: Pick<Contract['contractor'], 'dic'> }): string {
   if (!contract.contractor?.dic) return 'zhotovitel není plátcem DPH';

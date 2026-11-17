@@ -11,7 +11,7 @@ import { Contract } from '../types/contract';
  */
 export const NUMBERING_VERSION = 2;
 
-type Numbered = Partial<Pick<Contract, 'invoiceNumber' | 'advanceInvoiceNumber' | 'numbering'>>;
+type Numbered = Partial<Pick<Contract, 'invoiceNumber' | 'advanceInvoiceNumber' | 'numbering' | 'advanceTaxDocNumber'>>;
 
 /** Pořadí čísla v daném roce (RRRRNNN, případně s předponou FA-/ZAL-/FV-); jinak 0. */
 function sequenceInYear(value: string | undefined, year: number): number {
@@ -43,6 +43,12 @@ export function nextAdvanceInvoiceNumber(contracts: Numbered[], year: number): s
   return formatInvoiceNumber(year, max + 1);
 }
 
+/** Další číslo daňového dokladu k přijaté platbě (řada DP-, nejvyšší v roce + 1). */
+export function nextAdvanceTaxDocNumber(contracts: Numbered[], year: number): string {
+  const max = Math.max(0, ...contracts.map((c) => sequenceInYear(c.advanceTaxDocNumber, year)));
+  return formatInvoiceNumber(year, max + 1);
+}
+
 /**
  * Pořadí nové smlouvy nebo nabídky v roce (SOD-RRRR-NNN, CN-RRRR-NNN mají společné pořadí): nejvyšší použité + 1,
  * takže se po smazání zakázky číslo neopakuje.
@@ -57,6 +63,6 @@ export function nextDocumentSequence(contracts: Pick<Contract, 'contractNumber' 
 }
 
 /** Zakázka s fakturou vystavenou v aplikaci se nesmaže – fakturu lze jen stornovat. */
-export function hasIssuedInvoice(contract: Pick<Contract, 'invoiceIssuedAt' | 'advanceInvoiceIssuedAt'>): boolean {
-  return !!(contract.invoiceIssuedAt || contract.advanceInvoiceIssuedAt);
+export function hasIssuedInvoice(contract: Pick<Contract, 'invoiceIssuedAt' | 'advanceInvoiceIssuedAt' | 'advanceTaxDocIssuedAt'>): boolean {
+  return !!(contract.invoiceIssuedAt || contract.advanceInvoiceIssuedAt || contract.advanceTaxDocIssuedAt);
 }

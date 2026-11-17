@@ -9,6 +9,7 @@ import {
   getFinalInvoiceNumber,
   nextAdvanceInvoiceNumber,
   nextFinalInvoiceNumber,
+  nextAdvanceTaxDocNumber,
 } from '../utils/invoiceNumbering';
 import {
   Download,
@@ -43,7 +44,18 @@ import { exportContractToPdf } from '../utils/lazyExports';
 import { getWhatsAppShareUrl, getMailtoShareUrl } from '../utils/shareUtils';
 import { triggerHaptic } from '../utils/haptics';
 import { CraftsmanStamp } from './CraftsmanStamp';
-import { getAdvanceInvoiceDates, getContractVatBreakdown, getFinalInvoiceDates, getVatRate, isReverseCharge, VatRate } from '../utils/invoiceMath';
+import {
+  canHaveAdvanceTaxDoc,
+  getAdvanceInvoiceDates,
+  getAdvanceTaxBreakdown,
+  getContractVatBreakdown,
+  getFinalInvoiceDates,
+  getVatRate,
+  hasAdvanceTaxDoc,
+  isReverseCharge,
+  todayIso,
+  VatRate,
+} from '../utils/invoiceMath';
 
 const formatHalere = (amount: number) =>
   `${new Intl.NumberFormat('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount)} Kč`;
@@ -54,7 +66,7 @@ interface InvoiceViewProps {
   onToast?: (type: 'success' | 'error' | 'info', text: string) => void;
   onOpenAmendments?: () => void;
   onOpenCashReceipt?: (type: 'zaloha' | 'doplatek') => void;
-  onChangeInvoiceType?: (type: 'final' | 'advance') => void;
+  onChangeInvoiceType?: (type: 'final' | 'advance' | 'advance_tax') => void;
   onUpdateContract?: (updated: Contract) => void;
 }
 
@@ -136,6 +148,31 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
     onToast?.('info', `Faktura ${invoiceNumber} je stornovaná. Zakázka už se nepočítá do pohledávek ani tržeb.`);
   };
 
+  // Daňový doklad k přijaté platbě (záloze): jen plátce se zálohou, ne při přenesení daňové povinnosti
+  const advanceTaxDoc = hasAdvanceTaxDoc(contract);
+  const canIssueAdvanceTaxDoc = isAdvance && canHaveAdvanceTaxDoc(contract) && !contract.advanceTaxDocNumber && !!onUpdateContract;
+  const advanceTax = advanceTaxDoc ? getAdvanceTaxBreakdown(contract) : null;
+  // Hotovostní platba zálohy z pokladního dokladu předvyplní datum a způsob
+  const cashAdvance = (contract.cashReceipts || []).filter((r) => r.paymentFor === 'zaloha').sort((a, b) => b.issueDate.localeCompare(a.issueDate))[0];
+  const [paidDialog, setPaidDialog] = useState<{ date: string; method: 'transfer' | 'cash' } | null>(null);
+  const pendingTaxDocNumber = paidDialog ? nextAdvanceTaxDocNumber(getStoredContracts(), new Date().getFullYear()) : '';
+  const paidDateError = paidDialog && (!paidDialog.date || paidDialog.date > todayIso()) ? 'Zadejte den, kdy záloha přišla (nejpozději dnes).' : '';
+
+  const handleIssueAdvanceTaxDoc = () => {
+    if (!onUpdateContract || !paidDialog || paidDateError) return;
+    const number = nextAdvanceTaxDocNumber(getStoredContracts(), new Date().getFullYear());
+    onUpdateContract({
+      ...contract,
+      advancePaidDate: paidDialog.date,
+      advancePaidMethod: paidDialog.method,
+      advanceTaxDocNumber: number,
+      advanceTaxDocIssuedAt: new Date().toISOString(),
+    });
+    setPaidDialog(null);
+    onToast?.('success', `Daňový doklad k přijaté platbě DP-${number} je vystavený.`);
+    onChangeInvoiceType?.('advance_tax');
+  };
+
   const variableSymbol = (contract.variableSymbol || contract.invoiceNumber || '').replace(/\D/g, '');
 
   // Data dokladu podle jednotných pravidel (utils/invoiceMath): zálohová faktura při uzavření smlouvy,
@@ -214,7 +251,9 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
         <div className="min-w-0">
           <div className={docBarTitle}>{isAdvance ? 'Zálohová faktura' : isInvoiceOnly ? 'Faktura' : 'Konečná faktura'}</div>
           <div className={docBarNote}>
-            {isCancelled
+            {isAdvance && advanceTaxDoc
+              ? `${isIssued ? `č. ${invoiceNumber}, ` : ''}zaplaceno ${formatDateCs(contract.advancePaidDate!)} (doklad DP-${contract.advanceTaxDocNumber})`
+              : isCancelled
               ? `č. ${invoiceNumber}, stornovaná`
               : isIssued
                 ? `č. ${invoiceNumber}, splatná ${formatDateCs(dueDateIso)}`
@@ -237,7 +276,24 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
               <button type="button" aria-pressed={isAdvance} onClick={() => onChangeInvoiceType('advance')} className={docChip(isAdvance)}>
                 Zálohová
               </button>
+              {advanceTaxDoc && (
+                <button type="button" aria-pressed={false} onClick={() => onChangeInvoiceType('advance_tax')} className={docChip(false)}>
+                  Doklad k záloze
+                </button>
+              )}
             </div>
+          )}
+          {canIssueAdvanceTaxDoc && (
+            <button
+              type="button"
+              onClick={() =>
+                setPaidDialog({ date: cashAdvance?.issueDate || todayIso(), method: cashAdvance ? 'cash' : 'transfer' })
+              }
+              className={docButtonPrimary}
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span>Záloha zaplacena</span>
+            </button>
           )}
           {isVatPayer && !isAdvance && onUpdateContract && (
             <div role="group" aria-label="Sazba DPH" className="flex items-center gap-2">
@@ -568,7 +624,11 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
                           Odpočet uhrazené zálohy
                         </strong>
                         <span className="text-emerald-700 text-[10px] block mt-0.5">
-                          {advanceNumberForDeduction ? `Zálohová faktura ZAL-${advanceNumberForDeduction}` : 'Záloha podle smlouvy'}
+                          {advanceTaxDoc
+                            ? `Daňový doklad k přijaté platbě DP-${contract.advanceTaxDocNumber} ze dne ${formatDateCs(contract.advancePaidDate!)}`
+                            : advanceNumberForDeduction
+                              ? `Zálohová faktura ZAL-${advanceNumberForDeduction}`
+                              : 'Záloha podle smlouvy'}
                         </span>
                       </td>
                       <td className="py-2.5 px-3 text-center font-medium">-1 kpl.</td>
@@ -588,11 +648,11 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
 
         {/* Rozpis DPH (jen konečná faktura plátce) */}
         {isVatPayer && !isAdvance && (
-          <div className="mb-8 ml-auto w-full sm:w-2/3 overflow-hidden rounded-xl border border-slate-200">
-            <table className="w-full text-xs">
+          <div className={`mb-8 ml-auto w-full ${advanceTax ? '' : 'sm:w-2/3'} overflow-x-auto rounded-xl border border-slate-200`}>
+            <table className="w-full text-xs [&_td]:px-2 [&_th]:px-2 sm:[&_td]:px-3 sm:[&_th]:px-3 sm:[&_td:not(:first-child)]:whitespace-nowrap">
               <thead className="bg-slate-100 text-slate-700 uppercase font-bold text-[10px] border-b border-slate-200">
                 <tr>
-                  <th className="py-2 px-3 text-left">Sazba DPH</th>
+                  <th className="py-2 px-3 text-left">{advanceTax ? `Sazba ${vat.rate} %` : 'Sazba DPH'}</th>
                   <th className="py-2 px-3 text-right">Základ daně</th>
                   <th className="py-2 px-3 text-right">DPH</th>
                   <th className="py-2 px-3 text-right">{reverseCharge ? 'Celkem' : 'Celkem s DPH'}</th>
@@ -600,11 +660,28 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
               </thead>
               <tbody>
                 <tr>
-                  <td className="py-2.5 px-3 font-medium">{vat.rate} %</td>
+                  <td className="py-2.5 px-3 font-medium">{advanceTax ? 'Celkem za dílo' : `${vat.rate} %`}</td>
                   <td className="py-2.5 px-3 text-right font-medium">{formatHalere(vat.base)}</td>
                   <td className="py-2.5 px-3 text-right font-medium">{reverseCharge ? 'daň odvede zákazník' : formatHalere(vat.vat)}</td>
-                  <td className="py-2.5 px-3 text-right font-bold text-slate-900">{formatHalere(vat.gross)}</td>
+                  <td className={`py-2.5 px-3 text-right ${advanceTax ? 'font-medium' : 'font-bold text-slate-900'}`}>{formatHalere(vat.gross)}</td>
                 </tr>
+                {/* Záloha už zdaněná dokladem k přijaté platbě se odečítá i s daní */}
+                {advanceTax && (
+                  <>
+                    <tr className="border-t border-slate-200">
+                      <td className="py-2.5 px-3 font-medium">Zdaněno zálohou DP-{contract.advanceTaxDocNumber}</td>
+                      <td className="py-2.5 px-3 text-right font-medium">−{formatHalere(advanceTax.base)}</td>
+                      <td className="py-2.5 px-3 text-right font-medium">−{formatHalere(advanceTax.vat)}</td>
+                      <td className="py-2.5 px-3 text-right font-medium">−{formatHalere(advanceTax.gross)}</td>
+                    </tr>
+                    <tr className="border-t border-slate-200 font-bold text-slate-900">
+                      <td className="py-2.5 px-3">Zbývá</td>
+                      <td className="py-2.5 px-3 text-right">{formatHalere(Math.round((vat.base - advanceTax.base) * 100) / 100)}</td>
+                      <td className="py-2.5 px-3 text-right">{formatHalere(Math.round((vat.vat - advanceTax.vat) * 100) / 100)}</td>
+                      <td className="py-2.5 px-3 text-right">{formatHalere(Math.round((vat.gross - advanceTax.gross) * 100) / 100)}</td>
+                    </tr>
+                  </>
+                )}
               </tbody>
             </table>
             {reverseCharge && (
@@ -672,6 +749,56 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
           </div>
         </div>
       </div>
+      {paidDialog && (
+        <Dialog title="Záloha zaplacena" onClose={() => setPaidDialog(null)}>
+          <div className="space-y-4 text-[15px]">
+            <p>
+              Z přijaté zálohy se přiznává DPH ke dni platby. Aplikace vystaví daňový doklad k přijaté platbě
+              {' '}<strong>DP-{pendingTaxDocNumber}</strong>; konečná faktura pak zálohu odečte i s daní.
+            </p>
+            <div>
+              <label htmlFor="zaloha-prijata" className="block font-semibold text-slate-900 dark:text-slate-100 mb-1.5">
+                Kdy záloha přišla
+              </label>
+              <input
+                id="zaloha-prijata"
+                type="date"
+                value={paidDialog.date}
+                max={todayIso()}
+                onChange={(e) => setPaidDialog({ ...paidDialog, date: e.target.value })}
+                aria-invalid={!!paidDateError}
+                aria-describedby={paidDateError ? 'zaloha-prijata-chyba' : undefined}
+                className="w-full max-w-xs min-h-11 px-3 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+              />
+              {paidDateError && (
+                <p id="zaloha-prijata-chyba" role="alert" className="mt-1.5 text-rose-700 dark:text-rose-300 font-semibold">
+                  {paidDateError}
+                </p>
+              )}
+            </div>
+            <div>
+              <div className="font-semibold text-slate-900 dark:text-slate-100 mb-1.5">Jak</div>
+              <div role="group" aria-label="Způsob platby zálohy" className="flex gap-2">
+                <button type="button" aria-pressed={paidDialog.method === 'transfer'} onClick={() => setPaidDialog({ ...paidDialog, method: 'transfer' })} className={docChip(paidDialog.method === 'transfer')}>
+                  Na účet
+                </button>
+                <button type="button" aria-pressed={paidDialog.method === 'cash'} onClick={() => setPaidDialog({ ...paidDialog, method: 'cash' })} className={docChip(paidDialog.method === 'cash')}>
+                  Hotově
+                </button>
+              </div>
+            </div>
+            <p className="text-slate-600 dark:text-slate-400">Vystavený doklad už nejde změnit a zakázku pak nepůjde smazat.</p>
+            <div className="flex flex-wrap justify-end gap-2.5">
+              <button type="button" onClick={() => setPaidDialog(null)} className={docButton}>
+                Zpět
+              </button>
+              <button type="button" onClick={handleIssueAdvanceTaxDoc} disabled={!!paidDateError} className={docButtonPrimary}>
+                Vystavit doklad DP-{pendingTaxDocNumber}
+              </button>
+            </div>
+          </div>
+        </Dialog>
+      )}
       {confirm && (
         <Dialog
           title={confirm === 'issue' ? 'Vystavit fakturu?' : 'Stornovat fakturu?'}

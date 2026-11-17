@@ -113,6 +113,43 @@ test('přenesení daňové povinnosti: bez DPH, kód 4 a DIČ odběratele, platn
   assert.doesNotMatch(adv, /LocalReverseCharge/);
 });
 
+test('doklad k přijaté záloze (typ 5) a konečná faktura se zdaněnou zálohou: platné podle schématu', async () => {
+  const payer = base({
+    hasVat: true,
+    contractor: { ...base().contractor, dic: 'CZ8503120000' },
+    advancePaidDate: '2026-11-10',
+    advancePaidMethod: 'transfer',
+    advanceTaxDocNumber: '2026001',
+    advanceTaxDocIssuedAt: '2026-11-11T09:00:00.000Z',
+  } as Partial<Contract>);
+  const dp = buildIsdoc(payer, 'advance_tax');
+  await expectValid(dp);
+  assert.equal(tag(dp, 'DocumentType'), '5');
+  assert.equal(tag(dp, 'ID'), 'DP-2026001');
+  assert.equal(tag(dp, 'TaxPointDate'), '2026-11-10');
+  // 8 000 Kč s DPH 21 %: základ 6 611,57, daň 1 388,43; zaplaceno, k úhradě nic
+  assert.equal(dp.match(/<LegalMonetaryTotal><TaxExclusiveAmount>([^<]*)/)![1], '6611.57');
+  assert.equal(dp.match(/<\/TaxSubTotal><TaxAmount>([^<]*)/)![1], '1388.43');
+  assert.equal(tag(dp, 'PayableAmount'), '0.00');
+  assert.doesNotMatch(dp, /PaymentMeans/);
+  assert.equal(isdocFileName(payer, 'advance_tax'), 'DP-2026001.isdoc');
+
+  const fa = buildIsdoc(payer);
+  await expectValid(fa);
+  assert.match(fa, /<TaxedDeposits><TaxedDeposit><ID>DP-2026001<\/ID>/);
+  assert.doesNotMatch(fa, /NonTaxedDeposits/);
+  assert.equal(tag(fa, 'AlreadyClaimedTaxAmount'), '1388.43');
+  // Daň celkem 5 349,27 − zdaněno zálohou 1 388,43 = 3 960,84; k úhradě doplatek 22 822
+  assert.equal(fa.match(/<\/TaxSubTotal><TaxAmount>([^<]*)/)![1], '3960.84');
+  assert.equal(tag(fa, 'PayableAmount'), '22822.00');
+
+  // Při přenesení daňové povinnosti se doklad k záloze neuplatní – záloha zůstává nedaňová
+  const rc = buildIsdoc({ ...payer, reverseCharge: true });
+  await expectValid(rc);
+  assert.doesNotMatch(rc, /<TaxedDeposits>/);
+  assert.match(rc, /NonTaxedDeposits/);
+});
+
 test('zálohová faktura, faktura bez smlouvy a klient bez IČO jsou platné', async () => {
   const adv = buildIsdoc(base(), 'advance');
   await expectValid(adv);

@@ -120,6 +120,10 @@ export interface Contract {
   advanceInvoiceNumber?: string;         // Číslo zálohové faktury (jen numbering 2; dřív stejné jako invoiceNumber)
   invoiceIssuedAt?: string;              // Kdy byla konečná faktura vystavena v aplikaci (ISO)
   advanceInvoiceIssuedAt?: string;       // Kdy byla vystavena zálohová faktura (ISO)
+  advancePaidDate?: string;              // Kdy zákazník zálohu zaplatil (YYYY-MM-DD) – den přijetí úplaty pro DPH
+  advancePaidMethod?: 'transfer' | 'cash'; // Jak záloha přišla
+  advanceTaxDocNumber?: string;          // Číslo daňového dokladu k přijaté platbě (řada DP-, jen plátce)
+  advanceTaxDocIssuedAt?: string;        // Kdy byl doklad k přijaté platbě vystaven (ISO)
   invoiceCancelledAt?: string;           // Storno faktury (ISO): zakázka pak není pohledávkou ani tržbou
   variableSymbol: string;
   contractor: ContractorProfile;

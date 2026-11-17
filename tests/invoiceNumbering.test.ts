@@ -6,6 +6,7 @@ import {
   nextDocumentSequence,
   getAdvanceInvoiceNumber,
   hasIssuedInvoice,
+  nextAdvanceTaxDocNumber,
 } from '../src/utils/invoiceNumbering';
 
 test('další číslo faktury je nejvyšší v roce + 1, ne počet zakázek', () => {
@@ -33,4 +34,11 @@ test('zakázku s vystavenou fakturou nejde smazat', () => {
   assert.equal(hasIssuedInvoice({}), false);
   assert.equal(hasIssuedInvoice({ invoiceIssuedAt: '2026-11-17T10:00:00Z' }), true);
   assert.equal(hasIssuedInvoice({ advanceInvoiceIssuedAt: '2026-11-17T10:00:00Z' }), true);
+});
+
+test('doklady k přijaté záloze mají vlastní řadu DP- a zakázku s nimi nejde smazat', () => {
+  const contracts = [{ advanceTaxDocNumber: '2026002' }, { advanceTaxDocNumber: '2025009' }, { invoiceNumber: '2026005' }];
+  assert.equal(nextAdvanceTaxDocNumber(contracts, 2026), '2026003');
+  assert.equal(nextAdvanceTaxDocNumber([], 2026), '2026001');
+  assert.equal(hasIssuedInvoice({ advanceTaxDocIssuedAt: '2026-11-11T09:00:00.000Z' }), true);
 });

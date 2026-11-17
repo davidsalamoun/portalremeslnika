@@ -15,7 +15,7 @@ dál se vyvíjí mimo něj.
    protokol…) mají vlastní střízlivý papírový vzhled (viz Dokumenty) a neupravují se bez pokynu.
 3. **Právní texty šablon neměnit bez výslovného pokynu.** Týká se znění smluv, dodatků, protokolů, záručních
    listů, faktur a dokladů v `src/components/ContractPreview.tsx`, `AmendmentView.tsx`, `HandoverProtocolView.tsx`,
-   `WarrantyCertificateView.tsx`, `InvoiceView.tsx`, `CashReceiptView.tsx`, `PriceQuoteView.tsx`,
+   `WarrantyCertificateView.tsx`, `InvoiceView.tsx`, `AdvanceTaxDocView.tsx`, `CashReceiptView.tsx`, `PriceQuoteView.tsx`,
    `ContractBody.tsx` (znění smlouvy), `TechnicalProtocolsModal.tsx`, `src/utils/exportDocx.ts` a `src/data/craftTemplates.ts`.
    Náhled (HTML/PDF) a export do Wordu obsahují tentýž text dvakrát – při schválené změně upravit obě místa.
 4. **Žádná tajemství v prohlížeči ani v repozitáři.** `STRIPE_SECRET_KEY` jen na serveru.
@@ -301,6 +301,15 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
   Faktura: DIČ odběratele, rozpis s „daň odvede zákazník“, věta o režimu podle § 92e, „Částka je bez DPH, daň odvede
   zákazník.“; smlouva čl. 3.1 má schválené znění (náhled i Word přes `contractPriceVatSentence`). ISDOC: daň 0,
   řádky s `LocalReverseChargeCode` 4, `LocalReverseChargeFlag`; podklady pro účetní: DPH 0 a „přenesení (kód 4)“.
+- **Daňový doklad k přijaté platbě (záloze)** (`AdvanceTaxDocView.tsx`; `canHaveAdvanceTaxDoc`, `hasAdvanceTaxDoc`,
+  `getAdvanceTaxBreakdown` v `invoiceMath.ts`; § 28 odst. 1 písm. d) a odst. 3): jen plátce se sjednanou zálohou, ne při
+  přenesení daňové povinnosti. Tlačítko „Záloha zaplacena“ v liště zálohové faktury (okno: datum přijetí, nejpozději
+  dnes; na účet / hotově, předvyplní se z pokladního dokladu na zálohu) vystaví doklad s vlastní řadou DP-
+  (`nextAdvanceTaxDocNumber`; pole `advancePaidDate`, `advancePaidMethod`, `advanceTaxDocNumber`,
+  `advanceTaxDocIssuedAt`). Doklad se už nemění a zakázku s ním nejde smazat (`hasIssuedInvoice`). Konečná faktura
+  pak zálohu odečítá i s daní (řádky Celkem za dílo / Zdaněno zálohou DP- / Zbývá); ISDOC: doklad typ 5, konečná
+  faktura `TaxedDeposits` a `AlreadyClaimed…`; podklady pro účetní: doklad jako samostatný řádek ke dni přijetí,
+  konečná faktura jen se zbytkem. V náhledu je doklad jako třetí druh faktury („Doklad k záloze“).
 - **DIČ klienta** (`client.dic`, nepovinné): okno klienta, doplní ho ARES; smlouva a faktura ho uvádějí, když je vyplněné.
 - Částka slovy vždy přes `amountInWordsCzk` (rod a tvar měny), vícepráce/méněpráce přes `formatSignedCurrency`.
 - Předání díla (`handoverData`) se ukládá podpisem předávacího protokolu; čte ho záruční list, faktura i složka zakázky.
@@ -327,6 +336,6 @@ odstraněny včetně serverových endpointů a závislosti na Gemini. Nepřidáv
   Novou obrazovku nebo doklad přidat i do průchodů.
 - PDF je obrázek stránky (nejde v něm hledat text). Strany se dělí v mezeře mezi řádky (`computePageSlices`
   v `exportPdf.ts`), ne podle odstavců nebo bloků – nadpis tak může zůstat na konci strany bez svého textu.
-- DPH: aplikace nevystavuje daňový doklad k přijaté záloze; sazba i přenesení daňové povinnosti platí pro celou
-  zakázku (nejde kombinovat řádky v různém režimu). Zda jde o stavební práce podle CZ-CPA 41–43, posuzuje uživatel.
+- DPH: doklad k přijaté záloze jde vystavit jen jeden na zakázku (na celou sjednanou zálohu) a nejde opravit
+  (opravný daňový doklad aplikace nemá); sazba i přenesení daňové povinnosti platí pro celou zakázku (nejde kombinovat řádky v různém režimu). Zda jde o stavební práce podle CZ-CPA 41–43, posuzuje uživatel.
 - Po startu se všechny obrázky účtu načtou do paměti; u tisíců fotek bude potřeba načítání na vyžádání.
