@@ -1094,7 +1094,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
                             <button
                               type="button"
                               onClick={() => setSignatureModalRole('client')}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs font-mono"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs font-sans"
                             >
                               <PenTool className="w-3.5 h-3.5 text-amber-400" />
                               <span>Podepsat na tomto zařízení</span>
@@ -1103,7 +1103,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
                               type="button"
                               onClick={handleManualCheckSignature}
                               disabled={isCheckingSignature}
-                              className="inline-flex items-center gap-1 text-[11px] text-slate-700 dark:text-slate-300 hover:text-amber-500 font-mono font-bold cursor-pointer"
+                              className="inline-flex items-center gap-1 text-[11px] text-slate-700 hover:text-blue-700 hover:underline font-sans font-semibold cursor-pointer"
                             >
                               <RefreshCw className={`w-3 h-3 ${isCheckingSignature ? 'animate-spin' : ''}`} />
                               <span>Ověřit podpis z mobilu</span>
@@ -1122,7 +1122,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
                       <button
                         type="button"
                         onClick={() => setSignatureModalRole('client')}
-                        className="no-print text-[11px] text-amber-600 hover:underline mt-1 cursor-pointer font-mono"
+                        className="no-print text-[11px] text-blue-600 hover:underline mt-1 cursor-pointer font-sans"
                       >
                         Změnit podpis
                       </button>
@@ -1161,10 +1161,10 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
                             <button
                               type="button"
                               onClick={() => setSignatureModalRole('contractor')}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition-colors cursor-pointer shadow-xs font-mono"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs font-sans"
                             >
-                              <PenTool className="w-3.5 h-3.5 text-slate-950" />
-                              <span>Vložit podpis mistra</span>
+                              <PenTool className="w-3.5 h-3.5 text-amber-400" />
+                              <span>Vložit můj podpis</span>
                             </button>
                           </div>
                         </>
@@ -1180,7 +1180,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
                       <button
                         type="button"
                         onClick={() => setSignatureModalRole('contractor')}
-                        className="no-print text-[11px] text-blue-600 hover:underline mt-1 cursor-pointer z-10"
+                        className="no-print text-[11px] text-blue-600 hover:underline mt-1 cursor-pointer font-sans z-10"
                       >
                         Změnit podpis
                       </button>

@@ -177,7 +177,8 @@ export default function App() {
 
   const addToast = (type: 'success' | 'error' | 'info', text: string) => {
     const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-    setToasts((prev) => [...prev, { id, type, text }]);
+    // Stejná hláška se neukazuje dvakrát pod sebou; najednou jsou vidět nejvýš tři
+    setToasts((prev) => (prev.some((t) => t.type === type && t.text === text) ? prev : [...prev, { id, type, text }].slice(-3)));
   };
 
   const removeToast = (id: string) => {
@@ -329,7 +330,7 @@ export default function App() {
     if (previewContract?.id === contract.id) {
       setPreviewContract(contract);
     }
-    addToast('success', 'Smlouva uložena');
+    addToast('success', 'Uloženo');
   };
 
   const handleUpdateContract = (updated: Contract) => {
@@ -1030,10 +1031,16 @@ export default function App() {
       </Suspense>
 
       {/* Footer */}
-      <footer className="no-print border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 mb-16 lg:mb-0 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
+      <footer className="no-print border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 py-3 mb-16 lg:mb-0 text-center text-[13px] text-slate-600 dark:text-slate-400 transition-colors">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p>© {new Date().getFullYear()} Řemeslník PRO · Komplexní systém řemeslníka pro smlouvy, faktury, kalendář a poptávky</p>
-          <p className="text-slate-400 dark:text-slate-500">Všechna data se ukládají lokálně i do cloudu.</p>
+          <p>© {new Date().getFullYear()} Řemeslník PRO</p>
+          <button
+            type="button"
+            onClick={() => setIsCloudModalOpen(true)}
+            className="min-h-11 inline-flex items-center underline underline-offset-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+          >
+            Kde jsou moje data?
+          </button>
         </div>
       </footer>
     </div>

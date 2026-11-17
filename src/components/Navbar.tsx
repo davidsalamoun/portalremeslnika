@@ -210,7 +210,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="mt-auto flex flex-col gap-3 pt-4 border-t border-white/20 text-sm">
           {contractor?.name && (
             <div className="px-2 leading-snug">
-              <div className="font-semibold truncate">{contractor.name}</div>
+              <div className="font-semibold line-clamp-2" title={contractor.name}>{contractor.name}</div>
               <div className="text-blue-100 dark:text-slate-400">
                 {contractor.ico ? `IČO ${contractor.ico}` : ''}
                 {isAresVerified(contractor) ? `${contractor.ico ? ', ' : ''}ověřeno v ARES` : ''}

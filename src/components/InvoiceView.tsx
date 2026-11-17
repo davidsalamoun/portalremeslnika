@@ -246,7 +246,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
         <div className="flex justify-between items-start border-b-2 border-slate-900 pb-4 mb-6">
           <div>
             <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500 block mb-0.5">
-              {isAdvance ? 'ZÁLOHOVÁ FAKTURA' : 'FAKTURA – DAŇOVÝ DOKLAD'}
+              {isAdvance ? 'ZÁLOHOVÁ FAKTURA' : isVatPayer ? 'FAKTURA – DAŇOVÝ DOKLAD' : 'FAKTURA'}
             </span>
             <h1 className="text-2xl font-black text-slate-950 tracking-tight">
               {invoiceNumber}
@@ -513,7 +513,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
                 <CheckCircle className="w-3 h-3" />
                 <span>QR Platba</span>
               </div>
-              <h4 className="font-bold text-slate-900 text-xs">Blesková platba mobilem</h4>
+              <h4 className="font-bold text-slate-900 text-xs">Platba QR kódem</h4>
               <p className="text-[11px] text-slate-500 leading-tight mt-0.5">
                 Naskenujte v bankovní aplikaci v mobilu. Číslo účtu, přesná částka {formatCurrency(rawAmount)} i variabilní symbol se načtou automaticky.
               </p>

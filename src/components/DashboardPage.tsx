@@ -65,6 +65,8 @@ const smallAction =
   'min-h-11 px-3 inline-flex items-center justify-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-medium hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors';
 const textLink = 'min-h-11 inline-flex items-center font-medium text-blue-600 dark:text-blue-300 underline underline-offset-2 cursor-pointer';
 const bigNumber = 'font-display font-semibold tabular-nums';
+// Rychlé akce v hlavičce: na mobilu tři vedle sebe s ikonou nad krátkým popiskem, jinak běžná tlačítka
+const quickAction = 'max-sm:flex-col max-sm:gap-1 max-sm:px-1.5 max-sm:py-2 max-sm:text-[14px] max-sm:leading-tight';
 
 interface DashboardPageProps {
   contracts: Contract[];
@@ -273,21 +275,24 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           <div className="text-slate-500 dark:text-slate-400">{formattedToday}</div>
           <h1 className="text-4xl sm:text-[44px] font-bold leading-[1.05] text-slate-900 dark:text-white">{greeting}</h1>
         </div>
-        <div className="w-full sm:w-auto flex flex-wrap gap-2.5">
-          <button type="button" onClick={onOpenReceiptScan} className={`${outlineButton} w-full sm:w-auto`}>
+        <div className="w-full sm:w-auto grid grid-flow-col auto-cols-fr sm:flex sm:flex-wrap gap-2 sm:gap-2.5">
+          <button type="button" onClick={onOpenReceiptScan} aria-label="Vyfotit účtenku" className={`${outlineButton} ${quickAction}`}>
             <Receipt className="w-[18px] h-[18px]" />
-            <span>Vyfotit účtenku</span>
+            <span className="sm:hidden">Účtenka</span>
+            <span className="hidden sm:inline">Vyfotit účtenku</span>
           </button>
           {onOpenEstimateCalculator && (
-            <button type="button" onClick={onOpenEstimateCalculator} className={`${outlineButton} w-full sm:w-auto`}>
+            <button type="button" onClick={onOpenEstimateCalculator} aria-label="Kalkulačka na obhlídce" className={`${outlineButton} ${quickAction}`}>
               <Calculator className="w-[18px] h-[18px]" />
-              <span>Kalkulačka na obhlídce</span>
+              <span className="sm:hidden">Kalkulačka</span>
+              <span className="hidden sm:inline">Kalkulačka na obhlídce</span>
             </button>
           )}
           {isPro && onOpenAccountantModal && (
-            <button type="button" onClick={onOpenAccountantModal} className={`${outlineButton} w-full sm:w-auto`}>
+            <button type="button" onClick={onOpenAccountantModal} aria-label="Podklady pro účetní" className={`${outlineButton} ${quickAction}`}>
               <FolderArchive className="w-[18px] h-[18px]" />
-              <span>Podklady pro účetní</span>
+              <span className="sm:hidden">Pro účetní</span>
+              <span className="hidden sm:inline">Podklady pro účetní</span>
             </button>
           )}
         </div>
