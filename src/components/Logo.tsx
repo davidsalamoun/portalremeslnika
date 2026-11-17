@@ -25,7 +25,7 @@ export const Logo: React.FC<{ size?: number; className?: string }> = ({ size = 3
 );
 
 /**
- * „Metr“ – pruh rozdělený na úseky, jeden na fázi zakázky. Hotové fáze jsou žluté, aktuální má dole tmavý pruh.
+ * „Metr“ – pruh rozdělený na úseky, jeden na fázi zakázky. Hotové fáze jsou žluté, aktuální je celá tmavá.
  * @param animate úseky se jednou postupně vybarví
  * @param onDark varianta na tmavém / modrém podkladu
  */
@@ -36,7 +36,7 @@ export const Metr: React.FC<{
   steps?: number;
   /** Vše hotovo: všechny úseky žluté, žádný není označen jako aktuální */
   done?: boolean;
-  /** Označit poslední žlutý úsek tmavým pruhem jako aktuální (výchozí); bez toho metr jen počítá hotové úseky */
+  /** Označit aktuální úsek (celý tmavý se žlutými ryskami; výchozí); bez toho metr jen počítá hotové úseky */
   markCurrent?: boolean;
   label: string;
   animate?: boolean;
@@ -55,10 +55,10 @@ export const Metr: React.FC<{
     <div
       role="img"
       aria-label={label}
-      className={`grid h-[18px] rounded-sm overflow-hidden ${className}`}
+      // Rámeček: na tmavém pozadí aplikace světlý, jinak by tmavý aktuální úsek splynul s pozadím
+      className={`grid h-[18px] rounded-sm overflow-hidden border ${onDark ? 'border-white' : 'border-slate-900 dark:border-slate-300'} ${className}`}
       style={{
         gridTemplateColumns: `repeat(${steps}, minmax(0, 1fr))`,
-        border: `1px solid ${line}`,
         backgroundColor: onDark ? 'transparent' : '#FFFFFF',
       }}
     >
@@ -71,10 +71,10 @@ export const Metr: React.FC<{
             className={animate && filled ? 'animate-metr' : undefined}
             style={{
               borderRight: i < steps - 1 ? `1.5px solid ${line}` : undefined,
-              backgroundColor: filled ? '#F5C400' : undefined,
-              boxShadow: current ? 'inset 0 -4px 0 #1A1D21' : undefined,
+              // Hotové fáze žluté, aktuální celá tmavá („tady jste“), zbylé prázdné
+              backgroundColor: current ? '#1A1D21' : filled ? '#F5C400' : undefined,
               animationDelay: animate ? `${0.3 + i * 0.55}s` : undefined,
-              ...ticks(filled ? 'rgba(26,29,33,0.4)' : onDark ? 'rgba(255,255,255,0.55)' : 'rgba(26,29,33,0.22)'),
+              ...ticks(current ? '#F5C400' : filled ? 'rgba(26,29,33,0.4)' : onDark ? 'rgba(255,255,255,0.55)' : 'rgba(26,29,33,0.22)'),
             }}
           />
         );
