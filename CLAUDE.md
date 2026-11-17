@@ -242,7 +242,7 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
   a vyčistí zařízení. Nová tabulka s daty uživatele proto musí mít `user_id … references auth.users on delete cascade`.
 - **Informace o datech** jsou v modálu účtu („Kde jsou moje data?“) a v zásadách ochrany osobních údajů
   (`components/PrivacyPolicy.tsx`, okno otevře odkaz `#ochrana-osobnich-udaju` odkudkoli – úvodní stránka, registrace,
-  patička aplikace, účet, portál podpisu). Když se změní, kde nebo jak se data ukládají nebo komu se posílají, upravit
+  patička aplikace, účet, portál podpisu; text je formální, členěný podle čl. 13 GDPR). Když se změní, kde nebo jak se data ukládají nebo komu se posílají, upravit
   oba texty a posunout `PRIVACY_POLICY_DATE` – nesmí slibovat nic, co neplatí. Údaje provozovatele jsou v
   `src/config/operator.ts` a jsou **zatím provizorní** (vymyšlený název, bez adresy a IČO) – před spuštěním pro skutečné
   uživatele je nahradit skutečnými.

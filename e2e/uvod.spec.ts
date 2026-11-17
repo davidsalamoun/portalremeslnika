@@ -52,7 +52,7 @@ test('zásady ochrany osobních údajů z úvodní stránky, registrace i přím
   const dialog = page.getByRole('dialog', { name: 'Ochrana osobních údajů' });
   await expect(dialog).toContainText('Řemeslník PRO s.r.o.');
   await expect(dialog).toContainText('info@portalremeslnika.cz');
-  await expect(dialog).toContainText('Úřadu pro ochranu osobních údajů');
+  await expect(dialog).toContainText('Úřad pro ochranu osobních údajů');
   await expectNoOverflow(page);
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);

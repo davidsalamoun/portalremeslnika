@@ -11,134 +11,162 @@ const h = 'font-display font-semibold text-xl text-slate-900 dark:text-white mt-
 const p = 'mb-2.5';
 const ul = 'list-disc pl-5 space-y-1.5 mb-2.5';
 
+const ol = 'list-[lower-alpha] pl-6 space-y-1.5 mb-2.5';
+const mail = 'text-blue-600 dark:text-blue-300 underline underline-offset-2';
+
 export const PrivacyPolicyText: React.FC = () => (
   <div className="text-[15px] leading-relaxed text-slate-800 dark:text-slate-200">
-    <p className={`${p} text-slate-600 dark:text-slate-400`}>Platí od {formatDateCs(PRIVACY_POLICY_DATE)}.</p>
+    <p className={`${p} text-slate-600 dark:text-slate-400`}>Účinné od {formatDateCs(PRIVACY_POLICY_DATE)}.</p>
     <p className={p}>
-      Tady popisujeme, jaké osobní údaje aplikace Řemeslník PRO zpracovává, proč, komu je předává, jak dlouho je
-      uchovává a jaká máte práva. Snažíme se psát srozumitelně a jen to, co aplikace opravdu dělá.
+      Tyto zásady ochrany osobních údajů (dále jen „zásady“) informují v souladu s čl. 13 a 14 nařízení Evropského
+      parlamentu a Rady (EU) 2016/679, obecného nařízení o ochraně osobních údajů (dále jen „GDPR“), o zpracování
+      osobních údajů v souvislosti s provozem webové aplikace Řemeslník PRO (dále jen „aplikace“).
     </p>
 
-    <h3 className={h}>1. Kdo údaje zpracovává</h3>
+    <h3 className={h}>1. Správce osobních údajů</h3>
     <p className={p}>
       Správcem osobních údajů uživatelů aplikace je <strong>{OPERATOR.name}</strong>
       {OPERATOR.ico ? `, IČO ${OPERATOR.ico}` : ''}
-      {OPERATOR.address ? `, ${OPERATOR.address}` : ''}
-      {/* Za názvem končícím tečkou („s.r.o.“) už druhá tečka nepatří */}
-      {OPERATOR.address || !OPERATOR.name.endsWith('.') ? '.' : ''} Kontakt pro všechny dotazy k osobním údajům:{' '}
-      <a className="text-blue-600 dark:text-blue-300 underline underline-offset-2" href={`mailto:${OPERATOR.email}`}>
+      {OPERATOR.address ? `, se sídlem ${OPERATOR.address}` : ''} (dále jen „správce“).
+    </p>
+    <p className={p}>
+      Ve věcech ochrany osobních údajů lze správce kontaktovat na e-mailové adrese{' '}
+      <a className={mail} href={`mailto:${OPERATOR.email}`}>
         {OPERATOR.email}
       </a>
-      .
+      . Správce nejmenoval pověřence pro ochranu osobních údajů, neboť mu tato povinnost nevzniká.
     </p>
 
-    <h3 className={h}>2. Jaké údaje zpracováváme a proč</h3>
-    <p className={p}>
-      <strong>Účet.</strong> E-mail a heslo k přihlášení. Heslo neznáme – služba pro přihlášení ho ukládá jen v podobě,
-      ze které nejde zpětně zjistit. Důvod: abyste mohli aplikaci používat (plnění smlouvy, čl. 6 odst. 1 písm. b GDPR).
-    </p>
-    <p className={p}>
-      <strong>Údaje, které do aplikace zapíšete.</strong> Váš profil (jméno nebo název, IČO, DIČ, adresa, bankovní účet,
-      telefon, e-mail, podpis), klienti, zakázky, smlouvy, nabídky, faktury a další doklady, fotky, náklady, kniha jízd
-      a kalendář. Ukládají se ve vašem zařízení a ve vašem účtu, abyste je měli na všech svých zařízeních. Důvod: plnění
-      smlouvy.
-    </p>
-    <p className={p}>
-      <strong>Technické údaje.</strong> Při používání webu se u poskytovatelů hostingu a databáze krátkodobě zaznamenává IP
-      adresa, čas a druh požadavku. Důvod: zabezpečení a provoz služby (oprávněný zájem, čl. 6 odst. 1 písm. f GDPR).
-    </p>
-    <p className={p}>
-      Nepoužíváme reklamu ani nástroje na sledování návštěvnosti a údaje nikomu neprodáváme. O ničem nerozhodujeme
-      automaticky a nevytváříme profily.
-    </p>
-
-    <h3 className={h}>3. Údaje vašich zákazníků</h3>
-    <p className={p}>
-      Údaje zákazníků (jména, adresy, telefony, e-maily, podpisy) do aplikace zapisuje řemeslník. Za ně je správcem on
-      a my je pro něj jen ukládáme a zobrazujeme (jsme zpracovatel). Řemeslník odpovídá za to, že je smí zpracovávat,
-      a zákazníka o tom informuje.
-    </p>
-    <p className={p}>
-      <strong>Online podpis.</strong> Když řemeslník pošle zákazníkovi odkaz k podpisu, uloží se k odkazu smlouva (smluvní
-      strany, předmět, cena, položky, termíny a celé znění) – ne náklady, fotky ani deník. Zákazník se nepřihlašuje; odkaz
-      obsahuje náhodný tajný kód. Při podpisu se uloží jméno podepisujícího, podpis a čas. Nepodepsaný odkaz po 90 dnech
-      přestane platit. Údaje z odkazu se smažou spolu s účtem řemeslníka.
-    </p>
-
-    <h3 className={h}>4. Komu údaje předáváme</h3>
-    <ul className={ul}>
+    <h3 className={h}>2. Rozsah, účel a právní základ zpracování</h3>
+    <p className={p}>Správce zpracovává tyto kategorie osobních údajů:</p>
+    <ol className={ol}>
       <li>
-        <strong>Supabase</strong> (Supabase Inc.) – přihlášení, databáze a úložiště fotek. Data jsou na serverech v EU
-        (Paříž).
+        <strong>Údaje o uživatelském účtu</strong> – e-mailová adresa a přihlašovací heslo. Heslo je uloženo výhradně
+        v jednosměrně zašifrované podobě a správce k němu nemá přístup. Účelem je zřízení a vedení uživatelského účtu;
+        právním základem je plnění smlouvy (čl. 6 odst. 1 písm. b) GDPR).
       </li>
       <li>
-        <strong>Vercel</strong> (Vercel Inc.) – hosting webu; vidí technické údaje o přístupu.
+        <strong>Údaje vložené uživatelem do aplikace</strong> – identifikační a kontaktní údaje uživatele (jméno nebo
+        obchodní firma, IČO, DIČ, adresa, číslo bankovního účtu, telefon, e-mail, vlastnoruční podpis) a údaje o jeho
+        činnosti (klienti, zakázky, smlouvy, cenové nabídky, faktury a jiné doklady, fotografie, náklady, kniha jízd,
+        kalendář). Účelem je poskytování funkcí aplikace a synchronizace mezi zařízeními uživatele; právním základem
+        je plnění smlouvy (čl. 6 odst. 1 písm. b) GDPR).
       </li>
       <li>
-        <strong>ARES</strong> (Ministerstvo financí ČR) – jen když dohledáváte firmu podle IČO; posílá se zadané IČO.
+        <strong>Provozní údaje</strong> – IP adresa, datum a čas a druh požadavku, zaznamenávané poskytovateli hostingu
+        a databáze. Účelem je zajištění bezpečnosti a provozu aplikace; právním základem je oprávněný zájem správce
+        (čl. 6 odst. 1 písm. f) GDPR).
+      </li>
+    </ol>
+    <p className={p}>
+      Správce nepoužívá osobní údaje k marketingovým účelům, neprovádí měření návštěvnosti, nezpřístupňuje údaje
+      reklamním sítím, údaje neprodává a neprovádí automatizované rozhodování ani profilování ve smyslu čl. 22 GDPR.
+    </p>
+
+    <h3 className={h}>3. Osobní údaje zákazníků uživatele</h3>
+    <p className={p}>
+      Osobní údaje zákazníků uživatele (zejména jméno, adresa, telefon, e-mail a podpis) vkládá do aplikace uživatel.
+      Ve vztahu k těmto údajům je správcem uživatel a provozovatel aplikace je jejich zpracovatelem ve smyslu čl. 28
+      GDPR; zpracovává je pouze v rozsahu nezbytném pro poskytování funkcí aplikace. Uživatel odpovídá za to, že má
+      ke zpracování těchto údajů právní základ, a za splnění informační povinnosti vůči svým zákazníkům.
+    </p>
+    <p className={p}>
+      <strong>Elektronický podpis smlouvy zákazníkem.</strong> Vytvoří-li uživatel odkaz k podpisu smlouvy, uloží se
+      k odkazu obsah smlouvy (smluvní strany, předmět, cena, položky, termíny a úplné znění smlouvy); náklady,
+      fotografie a stavební deník se k odkazu neukládají. Odkaz je chráněn náhodně vygenerovaným kódem a zákazník se
+      do aplikace nepřihlašuje. Při podpisu se zaznamená jméno podepisující osoby, podpis a čas podpisu. Nepodepsaný
+      odkaz pozbývá platnosti uplynutím 90 dnů od vytvoření. Údaje uložené k odkazu se vymažou současně se
+      zrušením účtu uživatele.
+    </p>
+
+    <h3 className={h}>4. Příjemci osobních údajů</h3>
+    <p className={p}>Osobní údaje jsou zpřístupněny těmto příjemcům, a to pouze v rozsahu nezbytném pro daný účel:</p>
+    <ol className={ol}>
+      <li>
+        <strong>Supabase Inc.</strong> – poskytovatel služby přihlašování, databáze a úložiště souborů (zpracovatel);
+        data jsou uložena na serverech v Evropské unii (Paříž, Francie);
       </li>
       <li>
-        <strong>Open-Meteo</strong> – kvůli předpovědi počasí u rozpracované zakázky se posílá název obce z adresy stavby
-        (bez jména a ulice) a tím i IP adresa vašeho zařízení.
+        <strong>Vercel Inc.</strong> – poskytovatel hostingu webové aplikace (zpracovatel), který zpracovává provozní
+        údaje;
       </li>
-    </ul>
+      <li>
+        <strong>Ministerstvo financí ČR</strong>, registr ARES – při dohledání subjektu podle IČO je předáno pouze
+        zadané IČO;
+      </li>
+      <li>
+        <strong>služba Open-Meteo</strong> – pro zobrazení předpovědi počasí u rozpracované zakázky je předán název
+        obce z adresy stavby (bez jména a ulice) a v rámci technického spojení IP adresa zařízení.
+      </li>
+    </ol>
     <p className={p}>
-      Supabase a Vercel jsou americké společnosti. Pokud by se údaje dostaly mimo EU, děje se to na základě záruk podle
-      GDPR (standardní smluvní doložky Evropské komise nebo rámec EU–USA pro ochranu osobních údajů).
+      Společnosti Supabase Inc. a Vercel Inc. mají sídlo ve Spojených státech amerických. Případné předání osobních
+      údajů do třetí země se uskutečňuje na základě vhodných záruk podle čl. 45 a 46 GDPR, zejména rozhodnutí
+      Evropské komise o odpovídající ochraně v rámci EU–USA (Data Privacy Framework) nebo standardních smluvních
+      doložek přijatých Evropskou komisí.
     </p>
     <p className={p}>
-      Když doklad pošlete přes WhatsApp, SMS nebo e-mail, posíláte ho svou aplikací a vaším účtem u dané služby – tam
-      už platí její pravidla.
-    </p>
-
-    <h3 className={h}>5. Jak dlouho údaje uchováváme</h3>
-    <ul className={ul}>
-      <li>Údaje v aplikaci, dokud máte účet. Účet můžete kdykoli smazat v aplikaci (Účet → Smazat účet); smažou se i fotky a podpisy.</li>
-      <li>Při odhlášení se data smažou z daného zařízení, ve vašem účtu zůstanou.</li>
-      <li>Fotky, na které už nic v aplikaci neodkazuje, se mažou po 30 dnech.</li>
-      <li>Technické záznamy uchovávají poskytovatelé jen po dobu nutnou pro provoz a bezpečnost.</li>
-    </ul>
-    <p className={p}>
-      Účetní doklady musíte jako podnikatel archivovat po dobu stanovenou zákonem. Před smazáním účtu si proto stáhněte
-      zálohu (Nastavení → Záloha) nebo doklady v PDF či ISDOC.
+      Odešle-li uživatel doklad prostřednictvím aplikace WhatsApp, SMS nebo e-mailu, činí tak prostřednictvím
+      vlastního účtu u příslušné služby; na takové předání se vztahují podmínky dané služby.
     </p>
 
-    <h3 className={h}>6. Cookies a úložiště v prohlížeči</h3>
+    <h3 className={h}>5. Doba uložení</h3>
+    <ol className={ol}>
+      <li>
+        Údaje o účtu a údaje vložené uživatelem se uchovávají po dobu trvání uživatelského účtu. Uživatel může účet
+        kdykoli zrušit v aplikaci; tím se vymažou veškeré údaje včetně fotografií a podpisů.
+      </li>
+      <li>Při odhlášení se údaje vymažou z daného zařízení; v uživatelském účtu zůstávají zachovány.</li>
+      <li>Fotografie, na které již žádný záznam v aplikaci neodkazuje, se vymažou po uplynutí 30 dnů.</li>
+      <li>Provozní údaje uchovávají poskytovatelé hostingu a databáze po dobu nezbytnou pro zajištění provozu a bezpečnosti.</li>
+    </ol>
     <p className={p}>
-      Aplikace nepoužívá reklamní ani analytické cookies. Do úložiště prohlížeče ukládá jen to, bez čeho nefunguje:
-      přihlášení, vaše data a fotky (aby šlo pracovat i bez signálu), soubory aplikace pro práci bez signálu a drobná
-      nastavení (světlý nebo tmavý režim, skrytí průvodce). K tomu souhlas není potřeba.
+      Povinnost archivovat účetní a daňové doklady podle příslušných právních předpisů nese uživatel. Před zrušením
+      účtu doporučujeme pořídit zálohu dat (Nastavení → Záloha) nebo si doklady uložit ve formátu PDF či ISDOC.
+    </p>
+
+    <h3 className={h}>6. Soubory cookies a úložiště prohlížeče</h3>
+    <p className={p}>
+      Aplikace nepoužívá reklamní ani analytické soubory cookies. V úložišti prohlížeče uchovává pouze údaje nezbytné
+      pro poskytování služby: údaje o přihlášení, data a fotografie uživatele (pro práci bez připojení k internetu),
+      soubory aplikace a nastavení zobrazení. K tomuto ukládání se v souladu s § 89 odst. 3 zákona č. 127/2005 Sb.,
+      o elektronických komunikacích, nevyžaduje souhlas.
     </p>
 
     <h3 className={h}>7. Zabezpečení</h3>
     <p className={p}>
-      Spojení je šifrované (HTTPS). Data v databázi jsou oddělená podle účtu – každý vidí jen svá. Fotky jsou v neveřejném
-      úložišti. Heslo nikdo z nás nevidí.
+      Komunikace mezi zařízením uživatele a servery je šifrována (HTTPS). Data v databázi jsou přístupná výhradně
+      uživateli, kterému patří; soubory jsou uloženy v neveřejném úložišti. Správce přijal přiměřená technická
+      a organizační opatření k ochraně osobních údajů.
     </p>
 
-    <h3 className={h}>8. Vaše práva</h3>
-    <ul className={ul}>
-      <li>získat přístup k údajům a jejich kopii,</li>
-      <li>opravit nepřesné údaje (většinu můžete sami přímo v aplikaci),</li>
-      <li>výmaz (smazáním účtu nebo na požádání),</li>
-      <li>omezení zpracování a vznést námitku proti zpracování z oprávněného zájmu,</li>
-      <li>přenositelnost – zálohu všech dat si stáhnete v aplikaci jako soubor JSON,</li>
+    <h3 className={h}>8. Práva subjektu údajů</h3>
+    <p className={p}>Subjekt údajů má právo:</p>
+    <ol className={ol}>
+      <li>na přístup k osobním údajům (čl. 15 GDPR),</li>
+      <li>na opravu nepřesných osobních údajů (čl. 16 GDPR),</li>
+      <li>na výmaz osobních údajů (čl. 17 GDPR),</li>
+      <li>na omezení zpracování (čl. 18 GDPR),</li>
+      <li>na přenositelnost údajů (čl. 20 GDPR) – zálohu dat lze stáhnout v aplikaci ve strojově čitelném formátu JSON,</li>
+      <li>vznést námitku proti zpracování založenému na oprávněném zájmu (čl. 21 GDPR),</li>
       <li>
-        podat stížnost u Úřadu pro ochranu osobních údajů (Pplk. Sochora 27, 170 00 Praha 7,{' '}
-        <a className="text-blue-600 dark:text-blue-300 underline underline-offset-2" href="https://uoou.gov.cz" target="_blank" rel="noopener noreferrer">
+        podat stížnost u dozorového úřadu, kterým je Úřad pro ochranu osobních údajů, Pplk. Sochora 27, 170 00 Praha 7,{' '}
+        <a className={mail} href="https://uoou.gov.cz" target="_blank" rel="noopener noreferrer">
           uoou.gov.cz
         </a>
-        ).
+        .
       </li>
-    </ul>
+    </ol>
     <p className={p}>
-      Žádost pošlete na {OPERATOR.email}. Odpovíme bez zbytečného odkladu, nejpozději do jednoho měsíce. Zákazník
-      řemeslníka se se žádostí obrací nejdřív na řemeslníka.
+      Žádost lze zaslat na adresu {OPERATOR.email}. Správce ji vyřídí bez zbytečného odkladu, nejpozději do jednoho
+      měsíce od jejího obdržení. Zákazníci uživatele uplatňují svá práva primárně u uživatele jako správce jejich
+      osobních údajů.
     </p>
 
-    <h3 className={h}>9. Změny</h3>
+    <h3 className={h}>9. Změny zásad</h3>
     <p className={p}>
-      Když se změní, jak s údaji zacházíme, upravíme tyto zásady a datum nahoře a podstatné změny oznámíme v aplikaci.
+      Správce je oprávněn tyto zásady měnit, zejména v návaznosti na změny aplikace nebo právních předpisů. Aktuální
+      znění je vždy dostupné v aplikaci; o podstatných změnách správce uživatele informuje v aplikaci.
     </p>
   </div>
 );
