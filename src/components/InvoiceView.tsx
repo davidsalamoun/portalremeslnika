@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { buildIsdoc, isdocFileName } from '../utils/isdoc';
+import { downloadFile } from '../utils/zipStore';
 import { docBar, docBarTitle, docBarNote, docBarActions, docButton, docButtonPrimary, docButtonDanger, docChip } from './docBar';
 import { Dialog } from './Dialog';
 import { getStoredContracts } from '../utils/storage';
@@ -23,6 +25,7 @@ import {
   FilePlus2,
   Banknote,
   Ban,
+  FileCode2,
   FileCheck2,
 } from 'lucide-react';
 import { Contract } from '../types/contract';
@@ -88,7 +91,8 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
   // Plátce DPH: konečná faktura rozepisuje základ, sazbu a daň (ceny jsou včetně DPH)
   const isVatPayer = !!contract.contractor.dic;
   const vatRate = getVatRate(contract);
-  const vat = getVatBreakdown(rawAmount, vatRate);
+  // Konečná faktura zdaňuje celou cenu díla; sjednaná záloha se odečítá jako nedaňová (stejně jako v exportu ISDOC)
+  const vat = getVatBreakdown(isAdvance ? rawAmount : totalContractPriceWithAmendments, vatRate);
   const setVatRate = (rate: VatRate) => {
     if (rate === vatRate || !onUpdateContract) return;
     onUpdateContract({ ...contract, vatRate: rate });
@@ -279,6 +283,20 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
                 <span>E-mail</span>
               </a>
             </>
+          )}
+          {isIssued && !isCancelled && (
+            <button
+              type="button"
+              onClick={() => {
+                downloadFile(isdocFileName(contract, isAdvance ? 'advance' : 'final'), buildIsdoc(contract, isAdvance ? 'advance' : 'final'), 'application/xml');
+                onToast?.('success', 'Faktura je stažená ve formátu ISDOC pro účetní program.');
+              }}
+              className={docButton}
+              title="Elektronická faktura, kterou načtou účetní programy (Pohoda, Money, ABRA…)"
+            >
+              <FileCode2 className="w-4 h-4" />
+              <span>ISDOC</span>
+            </button>
           )}
           {isIssued && !isAdvance && !isCancelled && onUpdateContract && (
             <button type="button" onClick={() => setConfirm('cancel')} className={docButtonDanger}>
