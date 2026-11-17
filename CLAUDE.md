@@ -90,11 +90,15 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   `getSiteAddress`, ne přímo z `client.address`. Ve smlouvě je v čl. 2.1 jako místo provedení díla (`ContractBody.tsx`
   i `exportDocx.ts`); bez ní platí původní věta o adrese objednatele. Jiné doklady ji neuvádějí.
 - **E-mail klienta** je nepovinný: doklady řádek s e-mailem vynechají, když chybí.
+- **Kalendář** (`CalendarPage.tsx`): měsíc s filtry druhů a vybraný den. Na úzké obrazovce je vybraný den nad
+  měsícem (pod dneškem „Další dny“ s nejbližšími událostmi), filtry jsou v jednom posuvném řádku a výběr dne
+  v měsíci posune stránku k přehledu dne.
 - **Archiv** (`HistoryPage.tsx`): seznam všech dokumentů s hledáním; fáze se tu jen zobrazuje, mění se v Zakázkách.
-- **Nastavení** (`SettingsPage.tsx`): údaje zhotovitele, podpis, razítko, ceník a záloha. Potvrzení (smazání položky,
+- **Nastavení** (`SettingsPage.tsx`): záložky Vaše údaje (údaje zhotovitele, podpis, razítko), Ceník a Záloha dat. Potvrzení (smazání položky,
   obnova ceníku, obnova ze zálohy) jdou přes `Dialog`, ne přes `window.confirm`.
 - **Náhled dokumentů** (`ContractPreview.tsx`): nahoře přilepená lišta (zpět, název, Odeslat, Uložit PDF, další možnosti,
-  záložky dokumentů; na mobilu výběr), pod ní řádek zakázky (fáze přes `moveJobStage`, podpis, náklady, nástroje stavby).
+  záložky dokumentů; na mobilu výběr), pod ní řádek zakázky (fáze přes `moveJobStage`, podpis, náklady, adresa stavby,
+  nástroje stavby; pod šířkou `md` jen fáze a nabídka „Další“ s ostatním, aby dokument začínal výš).
   Na mobilu je lišta pod horní lištou aplikace (`top-[57px]`) a hlavní akce nad spodní nabídkou (`bottom-[75px]`) –
   při změně výšky těch lišt upravit i tyto hodnoty. Blok papíru se při úpravách lišty nemění.
 - **Lišty dokladů** (faktura, dodatky, pokladní doklad, protokol, záruční list, nabídka) se skládají z `components/docBar.ts`.

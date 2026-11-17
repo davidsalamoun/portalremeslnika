@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { getSiteAddress } from '../utils/siteAddress';
 import { ChevronLeft, ChevronRight, Plus, Trash2, Check, Phone, MapPin, FileText } from 'lucide-react';
 import { Contract, CalendarEvent, CalendarEventType, Client } from '../types/contract';
@@ -6,6 +6,10 @@ import { formatDateCs } from '../utils/numberToWordsCs';
 import { todayIso } from '../utils/invoiceMath';
 import { getJobStage } from '../utils/jobStage';
 import { Dialog } from './Dialog';
+
+/** Krátké datum s dnem v týdnu, např. „st 18. 11.“ */
+const shortDay = (iso: string) =>
+  new Date(`${iso}T00:00:00`).toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'numeric' });
 
 const TYPE_LABELS: Record<CalendarEventType, string> = {
   obhlidka: 'Obhlídka',
@@ -229,6 +233,29 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
       .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
   }, [filteredEvents, selectedDateStr]);
 
+  // Nejbližší události po dnešku (na mobilu pod dnešním dnem)
+  const upcomingEvents = useMemo(() => {
+    const t = todayIso();
+    return filteredEvents
+      .filter((e) => e.date > t && !e.done)
+      .sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')))
+      .slice(0, 5);
+  }, [filteredEvents]);
+
+  const dayRef = useRef<HTMLElement>(null);
+  /** Výběr dne; na úzké obrazovce je přehled dne nad měsícem, proto se k němu stránka posune. */
+  const selectDay = (dateStr: string, fromList = false) => {
+    setSelectedDateStr(dateStr);
+    if (fromList) {
+      const d = new Date(`${dateStr}T00:00:00`);
+      setCurrentDate(new Date(d.getFullYear(), d.getMonth(), 1));
+    }
+    if (window.matchMedia('(max-width: 1023px)').matches) {
+      const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      requestAnimationFrame(() => dayRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' }));
+    }
+  };
+
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formTitle.trim()) return;
@@ -284,34 +311,33 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
         </button>
       </header>
 
-      {/* Měsíc a výběr druhu */}
-      <div className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-[30px] leading-tight font-semibold text-slate-900 dark:text-white">{monthName}</h2>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={handlePrevMonth} aria-label="Předchozí měsíc" className={smallAction}>
-              <ChevronLeft className="w-[18px] h-[18px]" />
-            </button>
-            <button type="button" onClick={handleToday} className={smallAction}>
-              Dnes
-            </button>
-            <button type="button" onClick={handleNextMonth} aria-label="Další měsíc" className={smallAction}>
-              <ChevronRight className="w-[18px] h-[18px]" />
-            </button>
-          </div>
-        </div>
-        <div role="group" aria-label="Druh událostí" className="flex flex-wrap gap-2">
-          {filterOptions.map((f) => (
-            <button key={f.id} type="button" aria-pressed={typeFilter === f.id} onClick={() => setTypeFilter(f.id)} className={chip(typeFilter === f.id)}>
-              {f.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-7 items-start">
         {/* Mřížka měsíce */}
         <div className="lg:col-span-8 min-w-0">
+          {/* Měsíc a výběr druhu */}
+          <div className="space-y-3 mb-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-[30px] leading-tight font-semibold text-slate-900 dark:text-white">{monthName}</h2>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={handlePrevMonth} aria-label="Předchozí měsíc" className={smallAction}>
+                  <ChevronLeft className="w-[18px] h-[18px]" />
+                </button>
+                <button type="button" onClick={handleToday} className={smallAction}>
+                  Dnes
+                </button>
+                <button type="button" onClick={handleNextMonth} aria-label="Další měsíc" className={smallAction}>
+                  <ChevronRight className="w-[18px] h-[18px]" />
+                </button>
+              </div>
+            </div>
+            <div role="group" aria-label="Druh událostí" className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 sm:mx-0 sm:px-0 sm:pb-0 sm:flex-wrap sm:overflow-visible">
+              {filterOptions.map((f) => (
+                <button key={f.id} type="button" aria-pressed={typeFilter === f.id} onClick={() => setTypeFilter(f.id)} className={`${chip(typeFilter === f.id)} shrink-0`}>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="grid grid-cols-7 text-center text-slate-600 dark:text-slate-400 font-medium pb-1.5">
             {WEEKDAYS.map((d) => (
               <span key={d}>{d}</span>
@@ -326,7 +352,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
                 <button
                   key={cell.dateStr}
                   type="button"
-                  onClick={() => setSelectedDateStr(cell.dateStr)}
+                  onClick={() => selectDay(cell.dateStr)}
                   aria-pressed={isSelected}
                   aria-label={`${formatDateCs(cell.dateStr)}${dayEvents.length ? `, událostí: ${dayEvents.length}` : ''}`}
                   className={`relative min-h-[58px] sm:min-h-[92px] p-1.5 text-left align-top flex flex-col gap-1 border-r border-b border-slate-300 dark:border-slate-700 cursor-pointer transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 ${
@@ -373,7 +399,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
         </div>
 
         {/* Vybraný den */}
-        <section aria-labelledby="kalendar-den" className="lg:col-span-4 space-y-2.5 min-w-0">
+        <section ref={dayRef} aria-labelledby="kalendar-den" className="order-first lg:order-none lg:col-span-4 lg:pt-[3px] space-y-2.5 min-w-0 scroll-mt-20">
           <div className="flex items-baseline justify-between gap-3">
             <h2 id="kalendar-den" className={sectionTitle}>
               {selectedDateStr === today ? 'Dnes' : formatDateCs(selectedDateStr)}
@@ -475,6 +501,29 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
               );
             })}
           </div>
+
+          {/* Mobil: co je v dalších dnech (měsíc je až pod tímto přehledem) */}
+          {selectedDateStr === today && upcomingEvents.length > 0 && (
+            <div className="lg:hidden pt-4 space-y-2.5">
+              <h3 className="font-display font-semibold text-xl text-slate-900 dark:text-white">Další dny</h3>
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md divide-y divide-slate-100 dark:divide-slate-800">
+                {upcomingEvents.map((ev) => (
+                  <button
+                    key={ev.id}
+                    type="button"
+                    onClick={() => selectDay(ev.date, true)}
+                    className="w-full min-h-11 px-4 py-2.5 flex items-baseline gap-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                  >
+                    <span className="w-24 shrink-0 text-slate-600 dark:text-slate-400">{shortDay(ev.date)}</span>
+                    <span className="flex-1 min-w-0 truncate text-slate-900 dark:text-white">
+                      {ev.time && <span className="font-display tabular-nums text-[17px] mr-1.5">{ev.time}</span>}
+                      {ev.title}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
       </div>
 

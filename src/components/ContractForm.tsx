@@ -619,11 +619,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             />
 
             {pricingType === 'fixed' ? (
-              <div className="max-w-sm">
+              <div>
                 <label htmlFor="price-input" className={fieldLabel}>
                   Cena díla{contractor?.dic ? ' včetně DPH' : ''}
                 </label>
-                <div className="relative">
+                <div className="relative max-w-sm">
                   <input
                     id="price-input"
                     type="text"
