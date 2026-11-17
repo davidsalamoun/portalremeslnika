@@ -64,7 +64,7 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
 - **Tvary:** rohy 4 px (`rounded-md` až `rounded-3xl`), `rounded-full` jen pro odznaky. Plochy oddělují linky 1 px;
   stín mají jen okna nad obsahem (`shadow-xl`, `shadow-2xl`).
 - **Značka a metr:** `components/Logo.tsx` (`LogoMark`, `Logo`, `Metr`). Metr má šest úseků, jeden na fázi: hotové fáze
-  jsou žluté, aktuální má dole tmavý pruh; krátké rysky jsou jen uvnitř úseků, ne na jejich hranicích. Popisky pod
+  jsou žluté, aktuální je celá tmavá se žlutými ryskami; krátké rysky jsou jen uvnitř úseků, ne na jejich hranicích. Popisky pod
   metrem se sázejí do stejné mřížky (`grid-cols-6`). Animace `animate-metr` proběhne jednou. Razítko
   (`CraftsmanStamp.tsx`) je obyčejné firemní: rámeček, jméno, adresa, telefon, pod linkou IČO a DIČ. V dokladech má vlastní místo
   nad podpisem (na faktuře a nabídce vedle jména) – nepokládat ho absolutně přes podpis, jméno ani částku.
