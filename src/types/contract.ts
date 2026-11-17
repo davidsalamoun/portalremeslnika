@@ -30,6 +30,7 @@ export interface Client {
   id: string;
   name: string;          // Jméno a příjmení / Firma
   ico?: string;          // IČO (nepovinné)
+  dic?: string;          // DIČ (nepovinné) – u plátce DPH na smlouvě a faktuře
   address: string;       // Adresa bydliště / sídlo
   email: string;         // E-mail
   phone: string;         // Telefon
@@ -132,6 +133,7 @@ export interface Contract {
   siteAddress?: string;                  // Adresa stavby, když se liší od adresy klienta (jinak platí adresa klienta)
   hasVat: boolean;
   vatRate?: 21 | 12;                     // Sazba DPH u plátce; chybí = 21 % (12 % stavební práce na dokončené stavbě pro bydlení)
+  reverseCharge?: boolean;               // Přenesení daňové povinnosti (§ 92e): cena je bez DPH, daň odvede zákazník (jen u plátce)
   status?: ContractStatus;               // Stav workflow zakázky
   leadStage?: LeadStage;                 // Fáze v CRM pipeline poptávek
   nextStepDate?: string;                 // Datum příštího kroku (obhlídka, zavolat, poslat nabídku)

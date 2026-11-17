@@ -81,7 +81,7 @@ export const ContractArchiveModal: React.FC<ContractArchiveModalProps> = ({
     </div>
     <div style="text-align: right;">
       <h2 style="border: none; margin: 0; color: #1e3a78;">${formatCurrency(contract.price)}</h2>
-      <span style="font-size: 12px; color: #64748b;">${contract.hasVat ? 'včetně DPH' : 'neplátce DPH'}</span>
+      <span style="font-size: 12px; color: #64748b;">${contract.hasVat ? (contract.reverseCharge ? 'bez DPH, daň odvede zákazník' : 'včetně DPH') : 'neplátce DPH'}</span>
     </div>
   </div>
 

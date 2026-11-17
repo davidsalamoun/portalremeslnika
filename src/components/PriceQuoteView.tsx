@@ -269,7 +269,7 @@ export const PriceQuoteView: React.FC<PriceQuoteViewProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider block">
-                Celková kalkulovaná cena {contract.hasVat ? 'včetně DPH' : 'k úhradě'}:
+                Celková kalkulovaná cena {contract.hasVat ? (contract.reverseCharge ? 'bez DPH (daň odvede zákazník)' : 'včetně DPH') : 'k úhradě'}:
               </span>
               <div className="text-2xl sm:text-3xl font-black text-amber-400 font-mono tabular-nums mt-0.5">
                 {formatCurrency(contract.price)}

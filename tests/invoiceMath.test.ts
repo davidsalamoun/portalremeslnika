@@ -10,6 +10,10 @@ import {
   getInvoiceStatus,
   isInvoiceable,
   vatIncludedInGross,
+  getContractVatBreakdown,
+  isReverseCharge,
+  contractPriceVatSentence,
+  priceVatNote,
 } from '../src/utils/invoiceMath.ts';
 
 const contract = (over: Record<string, unknown> = {}): any => ({
@@ -70,4 +74,18 @@ test('DPH obsažená v ceně včetně daně', () => {
   assert.equal(vatIncludedInGross(121000), 21000);
   assert.equal(vatIncludedInGross(112000, 12), 12000);
   assert.equal(vatIncludedInGross(0), 0);
+});
+
+test('přenesení daňové povinnosti platí jen u plátce; částka je pak základem bez daně', () => {
+  const payer = { contractor: { dic: 'CZ8503120000' }, reverseCharge: true, vatRate: 21 as const };
+  const nonPayer = { contractor: { dic: '' }, reverseCharge: true };
+  assert.equal(isReverseCharge(payer), true);
+  assert.equal(isReverseCharge(nonPayer), false);
+  assert.equal(isReverseCharge({ ...payer, reverseCharge: undefined }), false);
+  assert.deepEqual(getContractVatBreakdown(payer, 120000), { base: 120000, vat: 0, gross: 120000, rate: 21 });
+  assert.deepEqual(getContractVatBreakdown({ ...payer, reverseCharge: false }, 121000), { base: 100000, vat: 21000, gross: 121000, rate: 21 });
+  assert.match(contractPriceVatSentence(payer), /^Uvedená cena je bez DPH\. .*§ 92e .*daň přizná a zaplatí objednatel/);
+  assert.equal(contractPriceVatSentence({ ...payer, reverseCharge: false }), 'Uvedená cena je včetně DPH.');
+  assert.equal(contractPriceVatSentence(nonPayer), 'Zhotovitel není plátcem DPH.');
+  assert.equal(priceVatNote(payer), 'bez DPH, daň odvede zákazník');
 });

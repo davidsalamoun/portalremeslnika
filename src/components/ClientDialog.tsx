@@ -18,6 +18,9 @@ const fieldBad = 'border-rose-700 dark:border-rose-400';
 const errorText = 'mt-1.5 font-medium text-rose-700 dark:text-rose-400';
 const optional = <span className="font-normal text-slate-600 dark:text-slate-400">(nepovinné)</span>;
 
+/** DIČ bez mezer, velkými písmeny (cz 123 456 78 → CZ12345678). */
+const normalizeDic = (v: string) => v.replace(/\s+/g, '').toUpperCase();
+
 export const ClientDialog: React.FC<ClientDialogProps> = ({
   isOpen,
   onClose,
@@ -26,6 +29,7 @@ export const ClientDialog: React.FC<ClientDialogProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [ico, setIco] = useState('');
+  const [dic, setDic] = useState('');
   const [address, setAddress] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -38,12 +42,14 @@ export const ClientDialog: React.FC<ClientDialogProps> = ({
     if (clientToEdit) {
       setName(clientToEdit.name);
       setIco(clientToEdit.ico || '');
+      setDic(clientToEdit.dic || '');
       setAddress(clientToEdit.address);
       setEmail(clientToEdit.email);
       setPhone(clientToEdit.phone);
     } else {
       setName('');
       setIco('');
+      setDic('');
       setAddress('');
       setEmail('');
       setPhone('');
@@ -67,6 +73,8 @@ export const ClientDialog: React.FC<ClientDialogProps> = ({
       const data = await fetchCompanyByIco(icoToQuery);
       if (data.name) setName(data.name);
       if (data.address) setAddress(data.address);
+      // DIČ má v ARES jen plátce DPH (a další registrovaní); jinak pole nechat, jak je
+      if (data.dic) setDic(data.dic);
       setAresMessage(`Načteno z ARES: ${data.name}`);
       setErrors((prev) => {
         const next = { ...prev };
@@ -91,6 +99,10 @@ export const ClientDialog: React.FC<ClientDialogProps> = ({
 
     if (ico.trim() && !/^\d{8}$/.test(ico.trim())) {
       newErrors.ico = 'IČO má 8 číslic.';
+    }
+
+    if (dic.trim() && !/^[A-Z]{2}[0-9A-Z]{2,12}$/.test(normalizeDic(dic))) {
+      newErrors.dic = 'DIČ má tvar CZ a 8 až 10 číslic, například CZ12345678.';
     }
 
     if (!address.trim()) {
@@ -118,6 +130,7 @@ export const ClientDialog: React.FC<ClientDialogProps> = ({
       {
         name: name.trim(),
         ico: ico.trim() || undefined,
+        dic: normalizeDic(dic) || undefined,
         address: address.trim(),
         email: email.trim(),
         phone: phone.trim(),
@@ -214,6 +227,11 @@ export const ClientDialog: React.FC<ClientDialogProps> = ({
           )}
         </div>
 
+        {field('klient-dic', <>DIČ <span className="font-normal text-slate-600 dark:text-slate-400">(nepovinné, jen u plátce DPH)</span></>, dic, setDic, errors.dic, {
+          type: 'text',
+          placeholder: 'např. CZ12345678',
+          autoCapitalize: 'characters',
+        })}
         {field('klient-jmeno', 'Jméno a příjmení nebo firma', name, setName, errors.name, {
           type: 'text',
           placeholder: 'např. Petr Svoboda nebo Nova Real s.r.o.',

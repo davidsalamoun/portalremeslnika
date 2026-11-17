@@ -289,6 +289,14 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
 - U plátců (profil má DIČ) jsou ceny včetně DPH. Sazbu zakázky určuje `getVatRate` (`contract.vatRate`, výchozí 21 %,
   volba 12 % v liště konečné faktury); konečná faktura plátce rozepisuje základ, sazbu a daň z celé ceny díla přes `getVatBreakdown`
   a stejnou sazbu používá export pro účetní. Zálohová faktura rozpis nemá.
+- **Přenesení daňové povinnosti** (`contract.reverseCharge`, jen u plátce; `isReverseCharge`, `getContractVatBreakdown`,
+  `contractPriceVatSentence`, `priceVatNote` v `invoiceMath.ts`): stavební a montážní práce pro jiného plátce (§ 92e).
+  Cena zakázky je pak bez DPH a zákazník platí jen ji. Volba „Kdo odvede daň“ je ve formuláři smlouvy (vedle sazby)
+  a v liště konečné faktury, dokud není vystavená; aplikace ji sama nezapíná, jen ji nabídne u klienta s DIČ.
+  Faktura: DIČ odběratele, rozpis s „daň odvede zákazník“, věta o režimu podle § 92e, „Částka je bez DPH, daň odvede
+  zákazník.“; smlouva čl. 3.1 má schválené znění (náhled i Word přes `contractPriceVatSentence`). ISDOC: daň 0,
+  řádky s `LocalReverseChargeCode` 4, `LocalReverseChargeFlag`; podklady pro účetní: DPH 0 a „přenesení (kód 4)“.
+- **DIČ klienta** (`client.dic`, nepovinné): okno klienta, doplní ho ARES; smlouva a faktura ho uvádějí, když je vyplněné.
 - Částka slovy vždy přes `amountInWordsCzk` (rod a tvar měny), vícepráce/méněpráce přes `formatSignedCurrency`.
 - Předání díla (`handoverData`) se ukládá podpisem předávacího protokolu; čte ho záruční list, faktura i složka zakázky.
 - Pod náhledem dokumentů je upozornění, že vzory nenahrazují právní poradenství (jen na obrazovce, třída `no-print`).
@@ -314,6 +322,6 @@ odstraněny včetně serverových endpointů a závislosti na Gemini. Nepřidáv
   Novou obrazovku nebo doklad přidat i do průchodů.
 - PDF je obrázek stránky (nejde v něm hledat text). Strany se dělí v mezeře mezi řádky (`computePageSlices`
   v `exportPdf.ts`), ne podle odstavců nebo bloků – nadpis tak může zůstat na konci strany bez svého textu.
-- DPH: aplikace nevystavuje daňový doklad k přijaté záloze ani neřeší přenesení daňové povinnosti mezi plátci;
-  sazba je jedna na celou zakázku (21 % nebo 12 %).
+- DPH: aplikace nevystavuje daňový doklad k přijaté záloze; sazba i přenesení daňové povinnosti platí pro celou
+  zakázku (nejde kombinovat řádky v různém režimu). Zda jde o stavební práce podle CZ-CPA 41–43, posuzuje uživatel.
 - Po startu se všechny obrázky účtu načtou do paměti; u tisíců fotek bude potřeba načítání na vyžádání.

@@ -87,6 +87,32 @@ test('konečná faktura plátce 21 % a 12 %: základ a daň sedí na halíře', 
   assert.match(xml12, /<Percent>12<\/Percent>/);
 });
 
+test('přenesení daňové povinnosti: bez DPH, kód 4 a DIČ odběratele, platné podle schématu', async () => {
+  const payer = base({
+    hasVat: true,
+    reverseCharge: true,
+    contractor: { ...base().contractor, dic: 'CZ8503120000' },
+    client: { ...base().client, name: 'Stavby Novotný s.r.o.', ico: '27074358', dic: 'CZ27074358' },
+  } as Partial<Contract>);
+  const xml = buildIsdoc(payer);
+  await expectValid(xml);
+  // Celá cena díla je základem, daň je nulová, platí se cena bez DPH minus záloha
+  assert.equal(xml.match(/<LegalMonetaryTotal><TaxExclusiveAmount>([^<]*)/)![1], '30822.00');
+  assert.equal(xml.match(/<\/TaxSubTotal><TaxAmount>([^<]*)/)![1], '0.00');
+  assert.equal(tag(xml, 'PayableAmount'), '22822.00');
+  assert.equal([...xml.matchAll(/<LocalReverseChargeCode>4<\/LocalReverseChargeCode>/g)].length, 3);
+  assert.match(xml, /<LocalReverseChargeFlag>true<\/LocalReverseChargeFlag>/);
+  assert.match(xml, /<CompanyID>CZ27074358<\/CompanyID>/);
+  // Bez plátcovství zhotovitele se přenesení neuplatní
+  const nonPayer = buildIsdoc(base({ reverseCharge: true }));
+  await expectValid(nonPayer);
+  assert.doesNotMatch(nonPayer, /LocalReverseCharge/);
+  // Zálohová faktura není daňový doklad – beze změny
+  const adv = buildIsdoc(payer, 'advance');
+  await expectValid(adv);
+  assert.doesNotMatch(adv, /LocalReverseCharge/);
+});
+
 test('zálohová faktura, faktura bez smlouvy a klient bez IČO jsou platné', async () => {
   const adv = buildIsdoc(base(), 'advance');
   await expectValid(adv);

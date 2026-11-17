@@ -57,6 +57,8 @@ export function toSharedContract(contract: Contract): Partial<Contract> {
     workDescription: contract.workDescription,
     price: contract.price,
     hasVat: contract.hasVat,
+    vatRate: contract.vatRate,
+    reverseCharge: contract.reverseCharge,
     advanceAmount: contract.advanceAmount,
     deliveryDate: contract.deliveryDate,
     conclusionDate: contract.conclusionDate,
@@ -78,6 +80,7 @@ export function toSharedContract(contract: Contract): Partial<Contract> {
       phone: contract.client?.phone,
       email: contract.client?.email,
       ico: contract.client?.ico,
+      dic: contract.client?.dic,
     } as Contract['client'],
     // Dodatky jen v rozsahu, který zmiňuje text smlouvy (počet a vliv na cenu)
     amendments: (contract.amendments || []).map((a) => ({ id: a.id, priceDifference: a.priceDifference })) as Contract['amendments'],

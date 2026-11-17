@@ -16,6 +16,7 @@ import { PhotoDocumentation } from './PhotoDocumentation';
 import { getContractorProfile, saveContractorProfile } from '../utils/storage';
 import { triggerHaptic } from '../utils/haptics';
 import { CraftsmanStamp } from './CraftsmanStamp';
+import { priceVatNote } from '../utils/invoiceMath';
 
 interface HandoverProtocolViewProps {
   contract: Contract;
@@ -346,7 +347,7 @@ export const HandoverProtocolView: React.FC<HandoverProtocolViewProps> = ({
               <h3 className="font-bold text-black uppercase text-xs mb-1">4. Finanční ujednání</h3>
               <p className="text-xs">
                 Sjednaná konečná cena za dílo činí <strong>{formatCurrency(contract.price)}</strong>{' '}
-                ({contract.contractor.dic ? 'včetně DPH' : 'zhotovitel není plátcem DPH'}).
+                ({priceVatNote(contract)}).
                 Objednatel se zavazuje uhradit konečnou fakturu vystavenou zhotovitelem ve sjednané lhůtě splatnosti 14 dnů.
               </p>
             </div>

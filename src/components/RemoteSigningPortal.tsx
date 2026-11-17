@@ -267,7 +267,7 @@ export const RemoteSigningPortal: React.FC<RemoteSigningPortalProps> = ({
           <div className="px-4 py-4 border-b-[1.5px] border-slate-900 dark:border-slate-500">
             <div className="font-display font-bold text-[38px] leading-none tabular-nums">{formatCurrency(contract.price)}</div>
             <div className={`mt-1.5 ${muted}`}>
-              {isQuote ? 'nabízená cena' : 'cena díla'}, {contract.hasVat ? 'včetně DPH' : 'zhotovitel není plátce DPH'}
+              {isQuote ? 'nabízená cena' : 'cena díla'}, {contract.hasVat ? (contract.reverseCharge ? 'bez DPH, daň odvede zákazník' : 'včetně DPH') : 'zhotovitel není plátce DPH'}
             </div>
           </div>
           <dl className="divide-y divide-slate-100 dark:divide-slate-800">

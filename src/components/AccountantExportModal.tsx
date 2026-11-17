@@ -24,7 +24,7 @@ import {
 import { Contract, ContractorProfile } from '../types/contract';
 import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
 import { triggerHaptic } from '../utils/haptics';
-import { isInvoiceable, getContractTotal, getFinalInvoiceDates, vatIncludedInGross, getVatRate } from '../utils/invoiceMath';
+import { isInvoiceable, getContractTotal, getFinalInvoiceDates, vatIncludedInGross, getVatRate, isReverseCharge } from '../utils/invoiceMath';
 
 interface AccountantExportModalProps {
   isOpen: boolean;
@@ -122,8 +122,10 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
       dueDate: string;
       clientName: string;
       clientIco?: string;
+      clientDic?: string;
       amount: number;
       vat: number;
+      reverseCharge: boolean;
       isPaid: boolean;
       paidDate?: string;
       description: string;
@@ -169,8 +171,10 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
       // Účetní dostane jen vystavené faktury (s číslem); stornované vylučuje isInvoiceable
       if (isInvoiceable(c) && getFinalInvoiceNumber(c) && baseDate >= dateFrom && baseDate <= dateTo) {
         const totalPrice = getContractTotal(c);
-        // Ceny jsou u plátců uvedené včetně DPH, daň je tedy část ceny (21/121, u snížené sazby 12/112), ne přirážka
-        const vatVal = c.hasVat ? vatIncludedInGross(totalPrice, getVatRate(c)) : 0;
+        // Ceny jsou u plátců uvedené včetně DPH, daň je tedy část ceny (21/121, u snížené sazby 12/112), ne přirážka.
+        // Při přenesení daňové povinnosti je cena bez DPH a daň přizná odběratel (kontrolní hlášení A.1, kód 4).
+        const reverseCharge = isReverseCharge(c);
+        const vatVal = c.hasVat && !reverseCharge ? vatIncludedInGross(totalPrice, getVatRate(c)) : 0;
 
         invoices.push({
           id: c.id,
@@ -181,8 +185,10 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
           dueDate: invoiceDates.dueDate,
           clientName: c.client.name,
           clientIco: c.client.ico,
+          clientDic: c.client.dic,
           amount: totalPrice,
           vat: vatVal,
+          reverseCharge,
           isPaid: c.status === 'paid' || !!c.paidDate,
           paidDate: c.paidDate,
           description: c.workDescription,
@@ -276,11 +282,11 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
 
     // 1. FAKTURY
     csv += `1. VYDANÉ FAKTURY A ZÁLOHY\r\n`;
-    csv += `Číslo faktury;Smlouva;Datum vystavení;Splatnost;Odběratel;IČO;Částka (Kč);DPH;Stav\r\n`;
+    csv += `Číslo faktury;Smlouva;Datum vystavení;Splatnost;Odběratel;IČO;DIČ;Částka (Kč);DPH;Režim DPH;Stav\r\n`;
     filteredData.invoices.forEach((i) => {
-      csv += `"${i.number}";"${i.contractNumber}";"${i.issueDate}";"${i.dueDate}";"${i.clientName}";"${i.clientIco || ''}";${i.amount};${i.vat};"${i.isPaid ? 'Zaplaceno' : 'Neuhrazeno'}"\r\n`;
+      csv += `"${i.number}";"${i.contractNumber}";"${i.issueDate}";"${i.dueDate}";"${i.clientName}";"${i.clientIco || ''}";"${i.clientDic || ''}";${i.amount};${i.vat};"${i.reverseCharge ? 'přenesení daňové povinnosti (kód 4)' : ''}";"${i.isPaid ? 'Zaplaceno' : 'Neuhrazeno'}"\r\n`;
     });
-    csv += `Celkem faktury:;;;;;;${filteredData.sumInvoices};;\r\n\r\n`;
+    csv += `Celkem faktury:;;;;;;;${filteredData.sumInvoices};;;\r\n\r\n`;
 
     // 2. PPD HOTOVOST
     csv += `2. PŘÍJMOVÉ POKLADNÍ DOKLADY (HOTOVOST)\r\n`;
@@ -630,7 +636,10 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
                       <tr key={inv.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                         <td className="p-2.5 font-semibold text-blue-600">{inv.number}</td>
                         <td className="p-2.5">{formatDateCs(inv.issueDate)}</td>
-                        <td className="p-2.5 font-medium">{inv.clientName}</td>
+                        <td className="p-2.5 font-medium">
+                          {inv.clientName}
+                          {inv.reverseCharge && <span className="block text-[13px] font-normal text-slate-600 dark:text-slate-400">daň odvede zákazník</span>}
+                        </td>
                         <td className="p-2.5 text-right font-semibold">{formatCurrency(inv.amount)}</td>
                         <td className="p-2.5 text-center">
                           <span
