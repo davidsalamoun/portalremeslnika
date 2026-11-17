@@ -334,7 +334,7 @@ export const WarrantyCertificateView: React.FC<WarrantyCertificateViewProps> = (
               {contract.client.ico && <div>IČO: {contract.client.ico}</div>}
               <div>{contract.client.address}</div>
               <div className="mt-1 text-slate-600 font-medium">
-                {contract.client.phone} · {contract.client.email}
+                {[contract.client.phone, contract.client.email].filter(Boolean).join(' · ')}
               </div>
             </div>
           </div>

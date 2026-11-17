@@ -305,9 +305,11 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
               <p className="text-[11px]">
                 Tel: {contract.client.phone}
               </p>
-              <p className="text-[11px]">
-                E-mail: {contract.client.email}
-              </p>
+              {contract.client.email && (
+                <p className="text-[11px]">
+                  E-mail: {contract.client.email}
+                </p>
+              )}
             </div>
           </div>
         </div>

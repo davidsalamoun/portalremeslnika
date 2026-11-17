@@ -97,9 +97,8 @@ export const ClientDialog: React.FC<ClientDialogProps> = ({
       newErrors.address = 'Zadejte adresu bydliště nebo sídla.';
     }
 
-    if (!email.trim()) {
-      newErrors.email = 'Zadejte kontaktní e-mail.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    // E-mail je nepovinný; když je vyplněný, musí mít správný tvar
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       newErrors.email = 'E-mail nemá správný tvar, například klient@email.cz.';
     }
 
@@ -225,7 +224,7 @@ export const ClientDialog: React.FC<ClientDialogProps> = ({
           placeholder: 'např. Hlavní 420, 250 01 Brandýs nad Labem',
         })}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {field('klient-email', 'E-mail', email, setEmail, errors.email, { type: 'email', placeholder: 'petr.svoboda@email.cz' })}
+          {field('klient-email', <>E-mail <span className="font-normal text-slate-600 dark:text-slate-400">(nepovinné)</span></>, email, setEmail, errors.email, { type: 'email', placeholder: 'petr.svoboda@email.cz' })}
           {field('klient-telefon', 'Telefon', phone, setPhone, errors.phone, {
             type: 'tel',
             inputMode: 'tel',

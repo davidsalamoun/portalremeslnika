@@ -190,7 +190,7 @@ export const PriceQuoteView: React.FC<PriceQuoteViewProps> = ({
             )}
             <div className="text-xs text-slate-600">{contract.client.address}</div>
             <div className="text-xs text-slate-600 mt-1">Tel: {contract.client.phone}</div>
-            <div className="text-xs text-slate-600">E-mail: {contract.client.email}</div>
+            {contract.client.email && <div className="text-xs text-slate-600">E-mail: {contract.client.email}</div>}
           </div>
         </div>
 

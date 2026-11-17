@@ -63,10 +63,12 @@ export const ContractBody: React.FC<ContractBodyProps> = ({ contract, currentCon
                         <td className="font-semibold text-slate-800 py-0.5">Telefon:</td>
                         <td>{contract.client.phone}</td>
                       </tr>
-                      <tr>
-                        <td className="font-semibold text-slate-800 py-0.5">E-mail:</td>
-                        <td>{contract.client.email}</td>
-                      </tr>
+                      {contract.client.email && (
+                        <tr>
+                          <td className="font-semibold text-slate-800 py-0.5">E-mail:</td>
+                          <td>{contract.client.email}</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                   <p className="text-xs italic text-slate-600 mt-1">
@@ -144,7 +146,14 @@ export const ContractBody: React.FC<ContractBodyProps> = ({ contract, currentCon
                     Článek II – Místo a doba plnění
                   </h3>
                   <p className="mb-2">
-                    <strong>2.1</strong> Místem provedení díla je adresa objednatele uvedená v záhlaví této smlouvy, nedohodnou-li se smluvní strany výslovně písemně jinak.
+                    <strong>2.1</strong>{' '}
+                    {currentContract.siteAddress?.trim() ? (
+                      <>
+                        Místem provedení díla je <strong>{currentContract.siteAddress.trim()}</strong>, nedohodnou-li se smluvní strany výslovně písemně jinak.
+                      </>
+                    ) : (
+                      'Místem provedení díla je adresa objednatele uvedená v záhlaví této smlouvy, nedohodnou-li se smluvní strany výslovně písemně jinak.'
+                    )}
                   </p>
                   <p>
                     <strong>2.2</strong> Zhotovitel se zavazuje zahájit provádění díla bez zbytečného odkladu a celé dílo dokončit a předat objednateli nejpozději do: <strong>{formattedDelivery}</strong>.
