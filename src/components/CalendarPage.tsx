@@ -365,7 +365,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
                         ? 'bg-blue-600 text-white'
                         : cell.isCurrentMonth
                           ? 'text-slate-900 dark:text-white'
-                          : 'text-slate-400 dark:text-slate-600'
+                          : 'text-slate-500 dark:text-slate-400 font-normal'
                     }`}
                   >
                     {cell.dayNum}
@@ -381,7 +381,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
                       <span
                         key={ev.id}
                         className={`block truncate text-[13px] leading-tight ${
-                          ev.done ? 'text-slate-500 line-through' : 'text-slate-900 dark:text-slate-100'
+                          ev.done ? 'text-slate-500 dark:text-slate-400 line-through' : 'text-slate-900 dark:text-slate-100'
                         }`}
                       >
                         {ev.time ? `${ev.time} ` : ''}

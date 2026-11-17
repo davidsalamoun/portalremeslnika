@@ -6,8 +6,6 @@ import { Navbar, TabType } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
 import { DashboardPage } from './components/DashboardPage';
 import type { DocumentType } from './components/ContractPreview';
-import { ClientDialog } from './components/ClientDialog';
-import { CloudAccountModal } from './components/CloudAccountModal';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { OfflineStatusIndicator } from './components/OfflineStatusIndicator';
 import { compressImageFile } from './utils/imageCompression';
@@ -77,6 +75,8 @@ const lazyLoaders = {
   ContractArchiveModal: () => import('./components/ContractArchiveModal'),
   PaywallModal: () => import('./components/PaywallModal'),
   SubscriptionInvoiceModal: () => import('./components/SubscriptionInvoiceModal'),
+  ClientDialog: () => import('./components/ClientDialog'),
+  CloudAccountModal: () => import('./components/CloudAccountModal'),
 };
 const CalendarPage = lazy(() => lazyLoaders.CalendarPage().then((m) => ({ default: m.CalendarPage })));
 const LeadsPipelinePage = lazy(() => lazyLoaders.LeadsPipelinePage().then((m) => ({ default: m.LeadsPipelinePage })));
@@ -102,6 +102,8 @@ const DepartureChecklistModal = lazy(() => lazyLoaders.DepartureChecklistModal()
 const ContractArchiveModal = lazy(() => lazyLoaders.ContractArchiveModal().then((m) => ({ default: m.ContractArchiveModal })));
 const PaywallModal = lazy(() => lazyLoaders.PaywallModal().then((m) => ({ default: m.PaywallModal })));
 const SubscriptionInvoiceModal = lazy(() => lazyLoaders.SubscriptionInvoiceModal().then((m) => ({ default: m.SubscriptionInvoiceModal })));
+const ClientDialog = lazy(() => lazyLoaders.ClientDialog().then((m) => ({ default: m.ClientDialog })));
+const CloudAccountModal = lazy(() => lazyLoaders.CloudAccountModal().then((m) => ({ default: m.CloudAccountModal })));
 
 function preloadLazyChunks() {
   const run = () => {
@@ -668,23 +670,31 @@ export default function App() {
         onOpenPaywall={openPaywallProp}
       />
 
-      {/* Dialog pro přidání/úpravu klienta */}
-      <ClientDialog
-        isOpen={isClientModalOpen}
-        onClose={() => setIsClientModalOpen(false)}
-        onSave={handleSaveClient}
-        clientToEdit={clientToEdit}
-      />
+      {/* Dialog pro přidání/úpravu klienta (načítá se odloženě, jen když je otevřený) */}
+      {isClientModalOpen && (
+        <Suspense fallback={null}>
+          <ClientDialog
+            isOpen={isClientModalOpen}
+            onClose={() => setIsClientModalOpen(false)}
+            onSave={handleSaveClient}
+            clientToEdit={clientToEdit}
+          />
+        </Suspense>
+      )}
 
       {/* Účet řemeslníka a synchronizace */}
-      <CloudAccountModal
-        isOpen={isCloudModalOpen}
-        onClose={() => setIsCloudModalOpen(false)}
-        currentUser={currentUser}
-        clients={clients}
-        contracts={contracts}
-        onToast={addToast}
-      />
+      {isCloudModalOpen && (
+        <Suspense fallback={null}>
+          <CloudAccountModal
+            isOpen={isCloudModalOpen}
+            onClose={() => setIsCloudModalOpen(false)}
+            currentUser={currentUser}
+            clients={clients}
+            contracts={contracts}
+            onToast={addToast}
+          />
+        </Suspense>
+      )}
 
       {/* Hlavní obsah */}
       <main className="flex-1 w-full px-3 sm:px-6 pt-5 sm:pt-7 pb-28 lg:pb-12">

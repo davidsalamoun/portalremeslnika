@@ -1,0 +1,4 @@
+# Úvodní stránka a aplikace smí být v hledání; odkazy k online podpisu (?sign=…) nesou tajný kód, ty ne.
+User-agent: *
+Allow: /
+Disallow: /*?sign=
