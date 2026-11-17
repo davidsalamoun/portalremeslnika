@@ -80,6 +80,9 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   });
 
   const [rawPriceInput, setRawPriceInput] = useState<string>('');
+  // DPH u plátce: sazba a přenesení daňové povinnosti (cena se pak zadává bez DPH)
+  const [vatRate, setVatRate] = useState<21 | 12>(21);
+  const [reverseCharge, setReverseCharge] = useState(false);
   const [rawAdvanceInput, setRawAdvanceInput] = useState<string>('');
   const [advancePreset, setAdvancePreset] = useState<'none' | '30' | '50' | 'custom'>('none');
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
@@ -346,6 +349,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
       executionPlace: cleanPlaceName(contractor.defaultPlace) || 'místě plnění',
       siteAddress: formData.siteAddress?.trim() || undefined,
       hasVat: !!contractor.dic,
+      vatRate: contractor.dic && vatRate === 12 ? 12 : undefined,
+      reverseCharge: contractor.dic && reverseCharge ? true : undefined,
       // Faktura bez smlouvy je za hotovou práci: zakázka je rovnou předaná a čeká na zaplacení
       status: isInvoiceOnly ? 'handover_done' : 'draft',
       leadStage: isInvoiceOnly ? 'completed' : undefined,
@@ -358,6 +363,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   };
 
   const selectedClientObj = clients.find((c) => c.id === formData.clientId);
+  const priceVatSuffix = !contractor?.dic ? '' : reverseCharge ? ' bez DPH' : ' včetně DPH';
   const totalPriceNum = typeof formData.price === 'number' ? formData.price : 0;
   const advancePriceNum = typeof formData.advanceAmount === 'number' ? formData.advanceAmount : 0;
   const remainingPriceNum = Math.max(0, totalPriceNum - advancePriceNum);
@@ -597,6 +603,58 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               </p>
             </div>
 
+            {/* DPH (jen plátce): sazba a kdo daň odvede */}
+            {contractor?.dic && (
+              <div className="space-y-3">
+                <div>
+                  <div className={fieldLabel}>Sazba DPH</div>
+                  <div role="group" aria-label="Sazba DPH" className="flex flex-wrap gap-2">
+                    <button type="button" aria-pressed={vatRate === 21} onClick={() => setVatRate(21)} className={chip(vatRate === 21)}>
+                      21 %
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={vatRate === 12}
+                      onClick={() => setVatRate(12)}
+                      className={chip(vatRate === 12)}
+                      title="Stavební a montážní práce na dokončené stavbě pro bydlení"
+                    >
+                      12 % (bydlení)
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <div className={fieldLabel}>Kdo odvede daň</div>
+                  <div role="group" aria-label="Kdo odvede daň" className="flex flex-wrap gap-2">
+                    <button type="button" aria-pressed={!reverseCharge} onClick={() => setReverseCharge(false)} className={chip(!reverseCharge)}>
+                      Já (běžná faktura)
+                    </button>
+                    <button type="button" aria-pressed={reverseCharge} onClick={() => setReverseCharge(true)} className={chip(reverseCharge)}>
+                      Zákazník (přenesení)
+                    </button>
+                  </div>
+                  {reverseCharge ? (
+                    <p className={hintText}>
+                      Cena se zadává bez DPH. Faktura bude bez daně s textem „daň odvede zákazník“ – jen u stavebních a montážních prací pro plátce DPH.
+                    </p>
+                  ) : (
+                    selectedClientObj?.dic && (
+                      <p className="mt-2 px-3 py-2.5 border-l-[3px] border-blue-600 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                        Klient má DIČ. Když pro něj děláte stavební nebo montážní práce, fakturuje se bez DPH a daň odvede on.{' '}
+                        <button
+                          type="button"
+                          onClick={() => setReverseCharge(true)}
+                          className="min-h-11 inline-flex items-center font-semibold text-blue-600 dark:text-blue-300 underline underline-offset-2 cursor-pointer"
+                        >
+                          Použít
+                        </button>
+                      </p>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+
             <BudgetItemsEditor
               items={budgetItems}
               onChange={handleBudgetItemsChange}
@@ -621,7 +679,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             {pricingType === 'fixed' ? (
               <div>
                 <label htmlFor="price-input" className={fieldLabel}>
-                  Cena díla{contractor?.dic ? ' včetně DPH' : ''}
+                  Cena díla{priceVatSuffix}
                 </label>
                 <div className="relative max-w-sm">
                   <input
@@ -796,7 +854,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
           </h2>
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md divide-y divide-slate-100 dark:divide-slate-800">
             <div className="px-5 py-[18px] !border-b !border-slate-900 dark:!border-slate-500">
-              <div className="text-slate-600 dark:text-slate-400">Cena díla{contractor?.dic ? ' včetně DPH' : ''}</div>
+              <div className="text-slate-600 dark:text-slate-400">Cena díla{priceVatSuffix}</div>
               <div className="text-[40px] leading-none font-display font-bold tabular-nums text-slate-900 dark:text-white mt-1">
                 {formatCurrency(totalPriceNum)}
               </div>

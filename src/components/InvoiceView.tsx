@@ -43,7 +43,7 @@ import { exportContractToPdf } from '../utils/lazyExports';
 import { getWhatsAppShareUrl, getMailtoShareUrl } from '../utils/shareUtils';
 import { triggerHaptic } from '../utils/haptics';
 import { CraftsmanStamp } from './CraftsmanStamp';
-import { getAdvanceInvoiceDates, getFinalInvoiceDates, getVatBreakdown, getVatRate, VatRate } from '../utils/invoiceMath';
+import { getAdvanceInvoiceDates, getContractVatBreakdown, getFinalInvoiceDates, getVatRate, isReverseCharge, VatRate } from '../utils/invoiceMath';
 
 const formatHalere = (amount: number) =>
   `${new Intl.NumberFormat('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount)} Kč`;
@@ -88,14 +88,20 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
   // The actual payable amount on this specific document
   const rawAmount = isAdvance ? advanceAmount : finalBalanceToPay;
 
-  // Plátce DPH: konečná faktura rozepisuje základ, sazbu a daň (ceny jsou včetně DPH)
+  // Plátce DPH: konečná faktura rozepisuje základ, sazbu a daň (ceny jsou včetně DPH; při přenesení daňové
+  // povinnosti bez DPH a daň odvede zákazník)
   const isVatPayer = !!contract.contractor.dic;
+  const reverseCharge = isReverseCharge(contract);
   const vatRate = getVatRate(contract);
   // Konečná faktura zdaňuje celou cenu díla; sjednaná záloha se odečítá jako nedaňová (stejně jako v exportu ISDOC)
-  const vat = getVatBreakdown(isAdvance ? rawAmount : totalContractPriceWithAmendments, vatRate);
+  const vat = getContractVatBreakdown(contract, isAdvance ? rawAmount : totalContractPriceWithAmendments);
   const setVatRate = (rate: VatRate) => {
     if (rate === vatRate || !onUpdateContract) return;
     onUpdateContract({ ...contract, vatRate: rate });
+  };
+  const setReverseCharge = (on: boolean) => {
+    if (on === reverseCharge || !onUpdateContract) return;
+    onUpdateContract({ ...contract, reverseCharge: on });
   };
 
   // Číslo vzniká až při vystavení (utils/invoiceNumbering.ts); do té doby je doklad jen návrh
@@ -250,6 +256,23 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
               </button>
             </div>
           )}
+          {isVatPayer && !isAdvance && onUpdateContract && !isIssued && (
+            <div role="group" aria-label="Kdo odvede daň" className="flex items-center gap-2">
+              <span className={docBarNote}>Daň odvede</span>
+              <button type="button" aria-pressed={!reverseCharge} onClick={() => setReverseCharge(false)} className={docChip(!reverseCharge)}>
+                Já
+              </button>
+              <button
+                type="button"
+                aria-pressed={reverseCharge}
+                onClick={() => setReverseCharge(true)}
+                className={docChip(reverseCharge)}
+                title="Přenesení daňové povinnosti: stavební a montážní práce pro plátce DPH"
+              >
+                Zákazník
+              </button>
+            </div>
+          )}
           {onOpenAmendments && !isAdvance && (
             <button type="button" onClick={onOpenAmendments} className={docButton}>
               <FilePlus2 className="w-4 h-4" />
@@ -379,9 +402,19 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
             <h3 className="font-bold text-sm text-slate-900">{contract.client.name}</h3>
             <p className="text-slate-600">{contract.client.address}</p>
             <div className="pt-2 text-slate-700 space-y-0.5">
-              {contract.client.ico && (
+              {(contract.client.ico || contract.client.dic) && (
                 <p>
-                  <strong>IČO:</strong> {contract.client.ico}
+                  {contract.client.ico && (
+                    <>
+                      <strong>IČO:</strong> {contract.client.ico}
+                    </>
+                  )}
+                  {contract.client.ico && contract.client.dic && ' · '}
+                  {contract.client.dic && (
+                    <>
+                      <strong>DIČ:</strong> {contract.client.dic}
+                    </>
+                  )}
                 </p>
               )}
               <p className="text-[11px]">
@@ -519,7 +552,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
                   {amendments.length > 0 && (
                     <tr className="bg-slate-50 font-semibold text-slate-800">
                       <td colSpan={3} className="py-2 px-3 text-right text-[11px]">
-                        Celková sjednaná hodnota díla včetně víceprací:
+                        Celková sjednaná hodnota díla včetně víceprací{reverseCharge ? ', bez DPH' : ''}:
                       </td>
                       <td className="py-2 px-3 text-right font-bold text-slate-900">
                         {formatCurrency(totalContractPriceWithAmendments)}
@@ -562,18 +595,23 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
                   <th className="py-2 px-3 text-left">Sazba DPH</th>
                   <th className="py-2 px-3 text-right">Základ daně</th>
                   <th className="py-2 px-3 text-right">DPH</th>
-                  <th className="py-2 px-3 text-right">Celkem s DPH</th>
+                  <th className="py-2 px-3 text-right">{reverseCharge ? 'Celkem' : 'Celkem s DPH'}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td className="py-2.5 px-3 font-medium">{vat.rate} %</td>
                   <td className="py-2.5 px-3 text-right font-medium">{formatHalere(vat.base)}</td>
-                  <td className="py-2.5 px-3 text-right font-medium">{formatHalere(vat.vat)}</td>
+                  <td className="py-2.5 px-3 text-right font-medium">{reverseCharge ? 'daň odvede zákazník' : formatHalere(vat.vat)}</td>
                   <td className="py-2.5 px-3 text-right font-bold text-slate-900">{formatHalere(vat.gross)}</td>
                 </tr>
               </tbody>
             </table>
+            {reverseCharge && (
+              <p className="px-3 py-2.5 border-t border-slate-200 text-xs text-slate-800">
+                Daň odvede zákazník. Plnění v režimu přenesení daňové povinnosti podle § 92e zákona č. 235/2004 Sb., o dani z přidané hodnoty.
+              </p>
+            )}
           </div>
         )}
 
@@ -614,7 +652,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
                 {formatCurrency(rawAmount)}
               </span>
               <p className="text-[10px] text-slate-500 italic mt-0.5">
-                {contract.contractor.dic ? 'Částka je uvedena včetně DPH.' : 'Neplátce DPH.'}
+                {!contract.contractor.dic ? 'Neplátce DPH.' : reverseCharge ? 'Částka je bez DPH, daň odvede zákazník.' : 'Částka je uvedena včetně DPH.'}
               </p>
             </div>
 

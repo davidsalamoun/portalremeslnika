@@ -122,6 +122,44 @@ export function getVatBreakdown(gross: number, rate: VatRate = 21): VatBreakdown
   return { base, vat, gross, rate };
 }
 
+/**
+ * Přenesení daňové povinnosti (stavební a montážní práce pro plátce, § 92e zákona o DPH): cena zakázky je bez DPH,
+ * zákazník platí jen základ a daň přizná sám. Platí jen u zhotovitele, který je plátcem (má DIČ).
+ */
+export function isReverseCharge(contract: Pick<Contract, 'reverseCharge'> & { contractor: Pick<Contract['contractor'], 'dic'> }): boolean {
+  return !!contract.reverseCharge && !!contract.contractor?.dic;
+}
+
+/**
+ * Rozpis DPH zakázky: běžně je částka včetně daně (daň shora), při přenesení daňové povinnosti je částka základem
+ * a daň je nulová (odvede ji zákazník).
+ */
+export function getContractVatBreakdown(
+  contract: Pick<Contract, 'vatRate' | 'reverseCharge'> & { contractor: Pick<Contract['contractor'], 'dic'> },
+  amount: number
+): VatBreakdown {
+  const rate = getVatRate(contract);
+  if (isReverseCharge(contract)) return { base: Math.round(amount * 100) / 100, vat: 0, gross: amount, rate };
+  return getVatBreakdown(amount, rate);
+}
+
+/** Jak se k ceně uvádí DPH (smlouva, nabídka, protokol, portál podpisu). */
+export function priceVatNote(contract: Pick<Contract, 'reverseCharge'> & { contractor: Pick<Contract['contractor'], 'dic'> }): string {
+  if (!contract.contractor?.dic) return 'zhotovitel není plátcem DPH';
+  return isReverseCharge(contract) ? 'bez DPH, daň odvede zákazník' : 'včetně DPH';
+}
+
+/** Věta o DPH za cenou v čl. 3.1 smlouvy (náhled i Word – tentýž text). */
+export function contractPriceVatSentence(contract: Pick<Contract, 'reverseCharge'> & { contractor: Pick<Contract['contractor'], 'dic'> }): string {
+  if (!contract.contractor?.dic) return 'Zhotovitel není plátcem DPH.';
+  if (!isReverseCharge(contract)) return 'Uvedená cena je včetně DPH.';
+  return (
+    'Uvedená cena je bez DPH. Na plnění se vztahuje režim přenesení daňové povinnosti podle § 92e zákona č. 235/2004 Sb., ' +
+    'o dani z přidané hodnoty; daň přizná a zaplatí objednatel. Objednatel prohlašuje, že je plátcem DPH a dílo přijímá ' +
+    'v rámci své ekonomické činnosti.'
+  );
+}
+
 /** DPH obsažená v ceně uvedené včetně daně (ceny v aplikaci jsou u plátců včetně DPH). */
 export function vatIncludedInGross(gross: number, ratePercent = 21): number {
   return Math.round((gross * ratePercent) / (100 + ratePercent));

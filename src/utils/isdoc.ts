@@ -1,5 +1,5 @@
 import { Contract } from '../types/contract';
-import { getAdvanceInvoiceDates, getContractTotal, getFinalInvoiceDates, getVatBreakdown, getVatRate } from './invoiceMath';
+import { getAdvanceInvoiceDates, getContractTotal, getFinalInvoiceDates, getVatBreakdown, getVatRate, isReverseCharge } from './invoiceMath';
 import { getAdvanceInvoiceNumber, getFinalInvoiceNumber } from './invoiceNumbering';
 import { czAccountToIban } from './spayd';
 
@@ -7,7 +7,8 @@ import { czAccountToIban } from './spayd';
  * Faktura ve formátu ISDOC 6.0.2 (český standard elektronické faktury, který načtou účetní programy jako Pohoda,
  * Money nebo ABRA). Soubor `.isdoc` je XML; jeho platnost proti oficiálnímu schématu hlídá tests/isdoc.test.ts.
  *
- * Částky odpovídají dokladu v aplikaci: ceny jsou u plátce včetně DPH (daň = cena × sazba / (100 + sazba)),
+ * Částky odpovídají dokladu v aplikaci: ceny jsou u plátce včetně DPH (daň = cena × sazba / (100 + sazba)); při přenesení
+ * daňové povinnosti jsou bez DPH, daň je 0 a řádky mají kód předmětu plnění 4 (poskytnutí stavebních nebo montážních prací),
  * neplátce má DPH 0 a `VATApplicable` false. Konečná faktura zdaňuje celou cenu díla a sjednanou zálohu odečítá
  * jako nedaňovou zálohu (aplikace daňový doklad k přijaté záloze nevystavuje). Zálohová faktura je nedaňový
  * zálohový list (typ 4).
@@ -138,6 +139,8 @@ export function buildIsdoc(contract: Contract, kind: IsdocKind = 'final'): strin
   const documentId = `${isAdvance ? 'ZAL' : 'FA'}-${number}`;
   const isVatPayer = !!contract.contractor?.dic && !isAdvance;
   const rate = isVatPayer ? getVatRate(contract) : 0;
+  // Přenesení daňové povinnosti: částky jsou základem, daň 0, řádky nesou kód předmětu plnění 4 (stavební práce)
+  const reverseCharge = isVatPayer && isReverseCharge(contract);
   const dates = isAdvance ? getAdvanceInvoiceDates(contract) : getFinalInvoiceDates(contract);
   const advance = contract.advanceAmount && contract.advanceAmount > 0 ? contract.advanceAmount : 0;
   const amendments = contract.amendments || [];
@@ -162,12 +165,12 @@ export function buildIsdoc(contract: Contract, kind: IsdocKind = 'final'): strin
       ];
 
   const computed = lines.map((line) => {
-    const { base, vat } = rate ? getVatBreakdown(line.gross, rate as 21 | 12) : { base: line.gross, vat: 0 };
+    const { base, vat } = rate && !reverseCharge ? getVatBreakdown(line.gross, rate as 21 | 12) : { base: line.gross, vat: 0 };
     return { ...line, base, vat };
   });
   // Daň se počítá shora z celkové ceny (stejně jako na dokladu v aplikaci); případný haléřový rozdíl po zaokrouhlení
   // jednotlivých řádků se připíše k největšímu řádku, aby součet řádků seděl s celkem
-  if (rate) {
+  if (rate && !reverseCharge) {
     const grossTotal = computed.reduce((s, l) => s + l.gross, 0);
     const totalVat = getVatBreakdown(grossTotal, rate as 21 | 12).vat;
     const diff = Math.round((totalVat - computed.reduce((s, l) => s + l.vat, 0)) * 100) / 100;
@@ -196,7 +199,9 @@ export function buildIsdoc(contract: Contract, kind: IsdocKind = 'final'): strin
         el('LineExtensionTaxAmount', money(line.vat)) +
         el('UnitPrice', money(line.base)) +
         el('UnitPriceTaxInclusive', money(line.gross)) +
-        `<ClassifiedTaxCategory>${el('Percent', rate)}<VATCalculationMethod>1</VATCalculationMethod>${el('VATApplicable', isVatPayer)}</ClassifiedTaxCategory>` +
+        `<ClassifiedTaxCategory>${el('Percent', rate)}<VATCalculationMethod>${reverseCharge ? 0 : 1}</VATCalculationMethod>${el('VATApplicable', isVatPayer)}` +
+        (reverseCharge ? '<LocalReverseCharge><LocalReverseChargeCode>4</LocalReverseChargeCode></LocalReverseCharge>' : '') +
+        '</ClassifiedTaxCategory>' +
         (line.note ? el('Note', line.note) : '') +
         `<Item>${el('Description', line.description)}</Item>` +
         '</InvoiceLine>'
@@ -262,7 +267,7 @@ export function buildIsdoc(contract: Contract, kind: IsdocKind = 'final'): strin
     el('DifferenceTaxableAmount', money(totalBase)) +
     el('DifferenceTaxAmount', money(totalVat)) +
     el('DifferenceTaxInclusiveAmount', money(totalGross)) +
-    `<TaxCategory>${el('Percent', rate)}${el('VATApplicable', isVatPayer)}</TaxCategory>` +
+    `<TaxCategory>${el('Percent', rate)}${el('VATApplicable', isVatPayer)}${reverseCharge ? el('LocalReverseChargeFlag', true) : ''}</TaxCategory>` +
     '</TaxSubTotal>' +
     el('TaxAmount', money(totalVat)) +
     '</TaxTotal>' +

@@ -13,6 +13,7 @@ import {
 } from 'docx';
 import { Contract } from '../types/contract';
 import { generateContractFilename } from './exportNames';
+import { contractPriceVatSentence } from './invoiceMath';
 import { formatContractPriceWithWords, formatDateCs, formatPlaceWithPreposition } from './numberToWordsCs';
 
 export async function exportContractToDocx(contract: Contract): Promise<void> {
@@ -101,6 +102,10 @@ export async function exportContractToDocx(contract: Contract): Promise<void> {
               ...(contract.client.ico ? [
                 new TextRun({ text: `IČO: `, bold: true }),
                 new TextRun({ text: `${contract.client.ico}\n` }),
+              ] : []),
+              ...(contract.client.dic ? [
+                new TextRun({ text: `DIČ: `, bold: true }),
+                new TextRun({ text: `${contract.client.dic}\n` }),
               ] : []),
               new TextRun({ text: `Telefon: `, bold: true }),
               new TextRun({ text: `${contract.client.phone}${contract.client.email ? ' | ' : '\n'}` }),
@@ -196,7 +201,7 @@ export async function exportContractToDocx(contract: Contract): Promise<void> {
             spacing: { after: 80 },
             children: [
               new TextRun({
-                text: `3.1 Celková cena za provedení díla byla stanovena dohodou smluvních stran a činí: ${formattedPrice}. ${contract.contractor.dic ? 'Uvedená cena je včetně DPH.' : 'Zhotovitel není plátcem DPH.'}`,
+                text: `3.1 Celková cena za provedení díla byla stanovena dohodou smluvních stran a činí: ${formattedPrice}. ${contractPriceVatSentence(contract)}`,
               }),
             ],
           }),

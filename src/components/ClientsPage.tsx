@@ -118,6 +118,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
                 <div className="min-w-0">
                   <span className="text-[17px] font-semibold text-slate-900 dark:text-white">{client.name}</span>
                   {client.ico && <span className="text-slate-600 dark:text-slate-400">, IČO {client.ico}</span>}
+                  {client.dic && <span className="text-slate-600 dark:text-slate-400">, DIČ {client.dic}</span>}
                 </div>
                 <div className="text-slate-600 dark:text-slate-400">
                   {stats ? (

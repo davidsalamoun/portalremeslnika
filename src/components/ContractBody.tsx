@@ -1,5 +1,6 @@
 import React from 'react';
 import { Contract } from '../types/contract';
+import { contractPriceVatSentence } from '../utils/invoiceMath';
 import { formatCurrency, formatContractPriceWithWords, formatDateCs, formatSignedCurrency } from '../utils/numberToWordsCs';
 
 interface ContractBodyProps {
@@ -57,6 +58,12 @@ export const ContractBody: React.FC<ContractBodyProps> = ({ contract, currentCon
                         <tr>
                           <td className="font-semibold text-slate-800 py-0.5">IČO:</td>
                           <td>{contract.client.ico}</td>
+                        </tr>
+                      )}
+                      {contract.client.dic && (
+                        <tr>
+                          <td className="font-semibold text-slate-800 py-0.5">DIČ:</td>
+                          <td>{contract.client.dic}</td>
                         </tr>
                       )}
                       <tr>
@@ -168,7 +175,7 @@ export const ContractBody: React.FC<ContractBodyProps> = ({ contract, currentCon
                   <p className="mb-2">
                     <strong>3.1</strong> Celková cena za provedení díla byla stanovena dohodou smluvních stran a činí:{' '}
                     <strong>{formattedPrice}</strong>.{' '}
-                    {contract.contractor.dic ? 'Uvedená cena je včetně DPH.' : 'Zhotovitel není plátcem DPH.'}
+                    {contractPriceVatSentence(contract)}
                   </p>
 
                   {currentContract.items && currentContract.items.length > 0 && (
