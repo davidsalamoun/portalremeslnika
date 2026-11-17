@@ -47,6 +47,7 @@ import {
 } from '../utils/numberToWordsCs';
 import { exportContractToDocx, exportContractToPdf } from '../utils/lazyExports';
 import { InvoiceView } from './InvoiceView';
+import { AdvanceTaxDocView } from './AdvanceTaxDocView';
 import { HandoverProtocolView } from './HandoverProtocolView';
 import { PriceQuoteView } from './PriceQuoteView';
 import { AmendmentView } from './AmendmentView';
@@ -62,7 +63,7 @@ import { DepartureChecklistModal } from './DepartureChecklistModal';
 import { ContractArchiveModal } from './ContractArchiveModal';
 import { ShareModal } from './ShareModal';
 import { getJobStage, moveJobStage, JOB_STAGE_LABELS, JobStageKey } from '../utils/jobStage';
-import { todayIso } from '../utils/invoiceMath';
+import { hasAdvanceTaxDoc, todayIso } from '../utils/invoiceMath';
 import { SignatureModal } from './SignatureModal';
 import { SiteLogbookModal } from './SiteLogbookModal';
 import { ScheduleModal } from './ScheduleModal';
@@ -110,6 +111,7 @@ export type DocumentType =
   | 'protokol'
   | 'faktura'
   | 'zaloha'
+  | 'doklad_zalohy'
   | 'zaruka';
 
 export const ContractPreview: React.FC<ContractPreviewProps> = ({
@@ -161,12 +163,14 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
 
   const [isCheckingSignature, setIsCheckingSignature] = useState(false);
 
-  // Zálohová faktura dává smysl jen se sjednanou zálohou; jinak se zobrazí konečná faktura
+  // Zálohová faktura dává smysl jen se sjednanou zálohou a doklad k záloze jen vystavený; jinak se zobrazí konečná faktura
+  const hasTaxDoc = hasAdvanceTaxDoc(currentContract);
   useEffect(() => {
     if (activeDocType === 'zaloha' && !(currentContract.advanceAmount && currentContract.advanceAmount > 0)) {
       setActiveDocType('faktura');
     }
-  }, [activeDocType, currentContract.advanceAmount]);
+    if (activeDocType === 'doklad_zalohy' && !hasTaxDoc) setActiveDocType('faktura');
+  }, [activeDocType, currentContract.advanceAmount, hasTaxDoc]);
 
   // Sync if parent updates contract prop
   useEffect(() => {
@@ -373,6 +377,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
       protokol: 'Predavaci_protokol',
       faktura: 'Faktura',
       zaloha: 'Zalohova_faktura',
+      doklad_zalohy: 'Danovy_doklad_k_zaloze',
       zaruka: 'Zarucni_list',
     };
     try {
@@ -572,18 +577,19 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
                 </option>
               ))}
               {currentContract.advanceAmount ? <option value="zaloha">Zálohová faktura</option> : null}
+              {hasTaxDoc ? <option value="doklad_zalohy">Doklad k přijaté záloze</option> : null}
             </select>
           </div>
           <div role="tablist" aria-label="Dokumenty zakázky" className="hidden md:flex gap-1 overflow-x-auto -mb-px">
             {docTabs.map((t) => {
-              const active = activeDocType === t.key || (t.key === 'faktura' && activeDocType === 'zaloha');
+              const active = activeDocType === t.key || (t.key === 'faktura' && (activeDocType === 'zaloha' || activeDocType === 'doklad_zalohy'));
               return (
                 <button
                   key={t.key}
                   type="button"
                   role="tab"
                   aria-selected={active}
-                  onClick={() => setActiveDocType(t.key === 'faktura' && activeDocType === 'zaloha' ? 'zaloha' : t.key)}
+                  onClick={() => setActiveDocType(t.key === 'faktura' && (activeDocType === 'zaloha' || activeDocType === 'doklad_zalohy') ? activeDocType : t.key)}
                   className={`min-h-11 px-3.5 inline-flex items-center gap-2 font-semibold whitespace-nowrap cursor-pointer border-b-[3px] transition-colors ${
                     active
                       ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
@@ -592,7 +598,13 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
                 >
                   <span>
                     {t.label}
-                    {t.key === 'faktura' && currentContract.advanceAmount ? (activeDocType === 'zaloha' ? ' (zálohová)' : ' (konečná)') : ''}
+                    {t.key === 'faktura' && currentContract.advanceAmount
+                      ? activeDocType === 'zaloha'
+                        ? ' (zálohová)'
+                        : activeDocType === 'doklad_zalohy'
+                          ? ' (doklad k záloze)'
+                          : ' (konečná)'
+                      : ''}
                   </span>
                   {!!t.count && <span className="font-display tabular-nums text-[17px]">{t.count}</span>}
                 </button>
@@ -819,14 +831,20 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
             }}
             onToast={onToast}
           />
-        ) : activeDocType === 'faktura' || activeDocType === 'zaloha' ? (
+        ) : activeDocType === 'doklad_zalohy' && hasTaxDoc ? (
+          <AdvanceTaxDocView
+            contract={currentContract}
+            onToast={onToast}
+            onChangeInvoiceType={(type) => setActiveDocType(type === 'advance' ? 'zaloha' : type === 'advance_tax' ? 'doklad_zalohy' : 'faktura')}
+          />
+        ) : activeDocType === 'faktura' || activeDocType === 'zaloha' || activeDocType === 'doklad_zalohy' ? (
           <InvoiceView
             contract={currentContract}
             invoiceType={activeDocType === 'zaloha' ? 'advance' : 'final'}
             onToast={onToast}
             onOpenAmendments={handleQuickOpenAmendment}
             onOpenCashReceipt={handleQuickOpenReceipt}
-            onChangeInvoiceType={(type) => setActiveDocType(type === 'advance' ? 'zaloha' : 'faktura')}
+            onChangeInvoiceType={(type) => setActiveDocType(type === 'advance' ? 'zaloha' : type === 'advance_tax' ? 'doklad_zalohy' : 'faktura')}
             onUpdateContract={(updated) => {
               setCurrentContract(updated);
               onSaveToHistory(updated);

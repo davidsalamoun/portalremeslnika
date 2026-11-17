@@ -1,5 +1,5 @@
 import { Contract } from '../types/contract';
-import { getAdvanceInvoiceDates, getContractTotal, getFinalInvoiceDates, getVatBreakdown, getVatRate, isReverseCharge } from './invoiceMath';
+import { getAdvanceInvoiceDates, getAdvanceTaxBreakdown, getContractTotal, getFinalInvoiceDates, getVatBreakdown, getVatRate, hasAdvanceTaxDoc, isReverseCharge } from './invoiceMath';
 import { getAdvanceInvoiceNumber, getFinalInvoiceNumber } from './invoiceNumbering';
 import { czAccountToIban } from './spayd';
 
@@ -14,7 +14,8 @@ import { czAccountToIban } from './spayd';
  * zálohový list (typ 4).
  */
 
-export type IsdocKind = 'final' | 'advance';
+/** final = konečná faktura, advance = zálohová faktura (výzva k platbě), advance_tax = daňový doklad k přijaté platbě */
+export type IsdocKind = 'final' | 'advance' | 'advance_tax';
 
 const ISSUING_SYSTEM = 'Řemeslník PRO';
 
@@ -128,6 +129,7 @@ interface Line {
 
 /** Název souboru: FA-2026007.isdoc */
 export function isdocFileName(contract: Contract, kind: IsdocKind): string {
+  if (kind === 'advance_tax') return `DP-${contract.advanceTaxDocNumber || 'navrh'}.isdoc`;
   const number = kind === 'advance' ? getAdvanceInvoiceNumber(contract) : getFinalInvoiceNumber(contract);
   return `${kind === 'advance' ? 'ZAL' : 'FA'}-${number || 'navrh'}.isdoc`;
 }
@@ -135,18 +137,31 @@ export function isdocFileName(contract: Contract, kind: IsdocKind): string {
 /** XML faktury ve formátu ISDOC. Volat jen pro vystavenou fakturu (s číslem). */
 export function buildIsdoc(contract: Contract, kind: IsdocKind = 'final'): string {
   const isAdvance = kind === 'advance';
-  const number = isAdvance ? getAdvanceInvoiceNumber(contract) : getFinalInvoiceNumber(contract);
-  const documentId = `${isAdvance ? 'ZAL' : 'FA'}-${number}`;
+  const isAdvanceTax = kind === 'advance_tax';
+  const number = isAdvanceTax
+    ? contract.advanceTaxDocNumber || ''
+    : isAdvance
+      ? getAdvanceInvoiceNumber(contract)
+      : getFinalInvoiceNumber(contract);
+  const documentId = `${isAdvanceTax ? 'DP' : isAdvance ? 'ZAL' : 'FA'}-${number}`;
+  // Zálohová faktura je jen výzva k platbě (bez DPH); doklad k přijaté platbě i konečná faktura plátce jsou daňové doklady
   const isVatPayer = !!contract.contractor?.dic && !isAdvance;
   const rate = isVatPayer ? getVatRate(contract) : 0;
   // Přenesení daňové povinnosti: částky jsou základem, daň 0, řádky nesou kód předmětu plnění 4 (stavební práce)
   const reverseCharge = isVatPayer && isReverseCharge(contract);
-  const dates = isAdvance ? getAdvanceInvoiceDates(contract) : getFinalInvoiceDates(contract);
+  const paidDate = contract.advancePaidDate || (contract.advanceTaxDocIssuedAt || '').slice(0, 10);
+  const dates = isAdvanceTax
+    ? { issueDate: (contract.advanceTaxDocIssuedAt || '').slice(0, 10) || paidDate, taxDate: paidDate, dueDate: paidDate }
+    : isAdvance
+      ? getAdvanceInvoiceDates(contract)
+      : getFinalInvoiceDates(contract);
   const advance = contract.advanceAmount && contract.advanceAmount > 0 ? contract.advanceAmount : 0;
   const amendments = contract.amendments || [];
   const amendmentsTotal = amendments.reduce((sum, a) => sum + (a.priceDifference || 0), 0);
 
-  const lines: Line[] = isAdvance
+  const lines: Line[] = isAdvanceTax
+    ? [{ description: 'Přijatá záloha na provedení díla', note: contract.workDescription, gross: advance }]
+    : isAdvance
     ? [{ description: 'Záloha na materiál a zahájení prací', note: contract.workDescription, gross: advance }]
     : [
         {
@@ -184,8 +199,16 @@ export function buildIsdoc(contract: Contract, kind: IsdocKind = 'final'): strin
   const totalBase = sum('base');
   const totalVat = sum('vat');
   const totalGross = sum('gross');
-  const paidDeposits = isAdvance ? 0 : advance;
-  const payable = Math.round((totalGross - paidDeposits) * 100) / 100;
+  // Záloha s dokladem k přijaté platbě je už zdaněná: konečná faktura ji odečítá i s daní (TaxedDeposits, AlreadyClaimed…);
+  // bez dokladu se odečítá jako nedaňová. Doklad k přijaté platbě je zaplacený, k úhradě na něm nic nezbývá.
+  const taxedDeposit = !isAdvance && !isAdvanceTax && hasAdvanceTaxDoc(contract) ? getAdvanceTaxBreakdown(contract) : null;
+  const claimed = taxedDeposit || { base: 0, vat: 0, gross: 0 };
+  const paidDeposits = isAdvance || taxedDeposit ? 0 : isAdvanceTax ? totalGross : advance;
+  const r2 = (n: number) => Math.round(n * 100) / 100;
+  const diffBase = r2(totalBase - claimed.base);
+  const diffVat = r2(totalVat - claimed.vat);
+  const diffGross = r2(totalGross - claimed.gross);
+  const payable = r2(diffGross - paidDeposits);
   const vs = (contract.variableSymbol || number || '').replace(/\D/g, '');
 
   const linesXml = computed
@@ -228,13 +251,22 @@ export function buildIsdoc(contract: Contract, kind: IsdocKind = 'final'): strin
       : '';
 
   const deposits =
-    paidDeposits > 0
+    paidDeposits > 0 && !isAdvanceTax
       ? '<NonTaxedDeposits><NonTaxedDeposit>' +
         el('ID', getAdvanceInvoiceNumber(contract) ? `ZAL-${getAdvanceInvoiceNumber(contract)}` : 'Záloha podle smlouvy') +
         el('VariableSymbol', vs) +
         el('DepositAmount', money(paidDeposits)) +
         '</NonTaxedDeposit></NonTaxedDeposits>'
       : '';
+  const taxedDeposits = taxedDeposit
+    ? '<TaxedDeposits><TaxedDeposit>' +
+      el('ID', `DP-${contract.advanceTaxDocNumber}`) +
+      el('VariableSymbol', vs) +
+      el('TaxableDepositAmount', money(taxedDeposit.base)) +
+      el('TaxInclusiveDepositAmount', money(taxedDeposit.gross)) +
+      `<ClassifiedTaxCategory>${el('Percent', rate)}<VATCalculationMethod>1</VATCalculationMethod>${el('VATApplicable', true)}</ClassifiedTaxCategory>` +
+      '</TaxedDeposit></TaxedDeposits>'
+    : '';
 
   const contractRef =
     contract.contractNumber && contract.docKind !== 'invoice'
@@ -244,39 +276,43 @@ export function buildIsdoc(contract: Contract, kind: IsdocKind = 'final'): strin
   return (
     '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<Invoice xmlns="http://isdoc.cz/namespace/2013" version="6.0.2">' +
-    el('DocumentType', isAdvance ? 4 : 1) +
+    el('DocumentType', isAdvanceTax ? 5 : isAdvance ? 4 : 1) +
     el('ID', documentId) +
     el('UUID', documentUuid(`${contract.id}|${documentId}`)) +
     el('IssuingSystem', ISSUING_SYSTEM) +
     el('IssueDate', dates.issueDate) +
-    (isAdvance ? '' : el('TaxPointDate', dates.taxDate)) +
+    (isAdvance || !dates.taxDate ? '' : el('TaxPointDate', dates.taxDate)) +
     el('VATApplicable', isVatPayer) +
     '<ElectronicPossibilityAgreementReference></ElectronicPossibilityAgreementReference>' +
-    (contract.invoiceCancelledAt && !isAdvance ? el('Note', 'STORNO') : '') +
+    (contract.invoiceCancelledAt && kind === 'final' ? el('Note', 'STORNO') : '') +
     '<LocalCurrencyCode>CZK</LocalCurrencyCode><CurrRate>1</CurrRate><RefCurrRate>1</RefCurrRate>' +
     `<AccountingSupplierParty>${partyXml(contract.contractor)}</AccountingSupplierParty>` +
     `<AccountingCustomerParty>${partyXml(contract.client)}</AccountingCustomerParty>` +
     contractRef +
     `<InvoiceLines>${linesXml}</InvoiceLines>` +
     deposits +
+    taxedDeposits +
     '<TaxTotal><TaxSubTotal>' +
     el('TaxableAmount', money(totalBase)) +
     el('TaxAmount', money(totalVat)) +
     el('TaxInclusiveAmount', money(totalGross)) +
-    '<AlreadyClaimedTaxableAmount>0.00</AlreadyClaimedTaxableAmount><AlreadyClaimedTaxAmount>0.00</AlreadyClaimedTaxAmount><AlreadyClaimedTaxInclusiveAmount>0.00</AlreadyClaimedTaxInclusiveAmount>' +
-    el('DifferenceTaxableAmount', money(totalBase)) +
-    el('DifferenceTaxAmount', money(totalVat)) +
-    el('DifferenceTaxInclusiveAmount', money(totalGross)) +
+    el('AlreadyClaimedTaxableAmount', money(claimed.base)) +
+    el('AlreadyClaimedTaxAmount', money(claimed.vat)) +
+    el('AlreadyClaimedTaxInclusiveAmount', money(claimed.gross)) +
+    el('DifferenceTaxableAmount', money(diffBase)) +
+    el('DifferenceTaxAmount', money(diffVat)) +
+    el('DifferenceTaxInclusiveAmount', money(diffGross)) +
     `<TaxCategory>${el('Percent', rate)}${el('VATApplicable', isVatPayer)}${reverseCharge ? el('LocalReverseChargeFlag', true) : ''}</TaxCategory>` +
     '</TaxSubTotal>' +
-    el('TaxAmount', money(totalVat)) +
+    el('TaxAmount', money(diffVat)) +
     '</TaxTotal>' +
     '<LegalMonetaryTotal>' +
     el('TaxExclusiveAmount', money(totalBase)) +
     el('TaxInclusiveAmount', money(totalGross)) +
-    '<AlreadyClaimedTaxExclusiveAmount>0.00</AlreadyClaimedTaxExclusiveAmount><AlreadyClaimedTaxInclusiveAmount>0.00</AlreadyClaimedTaxInclusiveAmount>' +
-    el('DifferenceTaxExclusiveAmount', money(totalBase)) +
-    el('DifferenceTaxInclusiveAmount', money(totalGross)) +
+    el('AlreadyClaimedTaxExclusiveAmount', money(claimed.base)) +
+    el('AlreadyClaimedTaxInclusiveAmount', money(claimed.gross)) +
+    el('DifferenceTaxExclusiveAmount', money(diffBase)) +
+    el('DifferenceTaxInclusiveAmount', money(diffGross)) +
     '<PayableRoundingAmount>0.00</PayableRoundingAmount>' +
     el('PaidDepositsAmount', money(paidDeposits)) +
     el('PayableAmount', money(payable)) +

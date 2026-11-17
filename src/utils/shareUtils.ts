@@ -11,6 +11,7 @@ export type ShareDocType =
   | 'protokol'
   | 'faktura'
   | 'zaloha'
+  | 'doklad_zalohy'
   | 'nabidka'
   | 'dodatek'
   | 'pokladni_doklad'
@@ -29,6 +30,23 @@ export function buildShareMessage(contract: Contract, docType: ShareDocType): {
   const clientName = contract.client.name;
   const vs = (contract.variableSymbol || contract.invoiceNumber || '2026001').replace(/\D/g, '');
   const bankAccount = contract.contractor.bankAccount;
+
+  if (docType === 'doklad_zalohy') {
+    const number = `DP-${contract.advanceTaxDocNumber || ''}`;
+    const amount = formatCurrency(Number(contract.advanceAmount) || 0);
+    const subject = `Daňový doklad k přijaté platbě ${number} – ${contractorName}`;
+    const body = `Dobrý den, ${clientName},
+
+děkuji za zaplacení zálohy ${amount}${contract.advancePaidDate ? ` (přijato ${formatDateCs(contract.advancePaidDate)})` : ''} na zakázku:
+"${contract.workDescription}"
+
+V příloze zasílám daňový doklad k přijaté platbě ${number}. Záloha bude odečtena v konečné faktuře.
+
+S pozdravem,
+${contractorName}
+Tel.: ${contractorPhone}`;
+    return { subject, body, shortSummary: `Doklad k přijaté záloze ${number} (${amount})` };
+  }
 
   if (docType === 'nabidka') {
     const quoteNum = contract.quoteNumber || `CN-${contract.contractNumber.replace(/[^0-9]/g, '') || '01'}`;

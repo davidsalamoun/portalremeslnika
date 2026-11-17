@@ -14,6 +14,9 @@ import {
   isReverseCharge,
   contractPriceVatSentence,
   priceVatNote,
+  canHaveAdvanceTaxDoc,
+  hasAdvanceTaxDoc,
+  getAdvanceTaxBreakdown,
 } from '../src/utils/invoiceMath.ts';
 
 const contract = (over: Record<string, unknown> = {}): any => ({
@@ -88,4 +91,16 @@ test('přenesení daňové povinnosti platí jen u plátce; částka je pak zák
   assert.equal(contractPriceVatSentence({ ...payer, reverseCharge: false }), 'Uvedená cena je včetně DPH.');
   assert.equal(contractPriceVatSentence(nonPayer), 'Zhotovitel není plátcem DPH.');
   assert.equal(priceVatNote(payer), 'bez DPH, daň odvede zákazník');
+});
+
+test('doklad k přijaté záloze: jen plátce se zálohou, ne při přenesení; daň shora z přijaté částky', () => {
+  const payer = { contractor: { dic: 'CZ8503120000' }, advanceAmount: 30000 };
+  assert.equal(canHaveAdvanceTaxDoc(payer), true);
+  assert.equal(canHaveAdvanceTaxDoc({ ...payer, contractor: { dic: '' } }), false);
+  assert.equal(canHaveAdvanceTaxDoc({ ...payer, advanceAmount: 0 }), false);
+  assert.equal(canHaveAdvanceTaxDoc({ ...payer, reverseCharge: true }), false);
+  assert.equal(hasAdvanceTaxDoc(payer), false);
+  assert.equal(hasAdvanceTaxDoc({ ...payer, advanceTaxDocNumber: '2026001', advancePaidDate: '2026-11-17' }), true);
+  assert.deepEqual(getAdvanceTaxBreakdown(payer), { base: 24793.39, vat: 5206.61, gross: 30000, rate: 21 });
+  assert.deepEqual(getAdvanceTaxBreakdown({ ...payer, vatRate: 12 }).vat, 3214.29);
 });
