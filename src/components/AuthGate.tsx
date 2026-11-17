@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { RefreshCw, CloudOff } from 'lucide-react';
-import { supabase, toCloudUser, CloudUser } from '../utils/supabase';
+import { supabase, toCloudUser, CloudUser, getStoredSessionUser } from '../utils/supabase';
 import { connectAccount, needsAccountConnect, startAutoSync, prepareLocalData } from '../utils/cloudSync';
 import { AuthScreen } from './AuthScreen';
 import { resolveIsDark, applyTheme, watchSystemTheme } from '../utils/theme';
@@ -52,10 +52,18 @@ export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) 
     let active = true;
 
     // Nejdřív připravit lokální data (obrázky do paměti, převod starších dat), teprve pak pustit aplikaci
-    Promise.all([supabase.auth.getSession(), prepareLocalData().catch((err) => console.warn(err))]).then(([{ data }]) => {
+    // Bez signálu se Supabase snaží vypršelý přístupový klíč obnovit až půl minuty. Když je v prohlížeči uložené
+    // přihlášení, aplikace na to nečeká: po krátké chvíli (bez sítě hned) pustí uživatele k datům v zařízení.
+    const storedUser = getStoredSessionUser();
+    const sessionUser = supabase.auth.getSession().then(({ data }) => toCloudUser(data.session?.user));
+    const userOrTimeout: Promise<CloudUser | null | undefined> = storedUser
+      ? Promise.race([sessionUser, new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), navigator.onLine ? 4000 : 0))])
+      : sessionUser;
+    Promise.all([userOrTimeout, prepareLocalData().catch((err) => console.warn(err))]).then(([sessionResult]) => {
       if (!active) return;
       localReady.current = true;
-      const next = toCloudUser(data.session?.user);
+      // Bez signálu nejde obnovit vypršelý přístupový klíč – uložené přihlášení ale platí dál
+      const next = sessionResult ?? getStoredSessionUser();
       setUser(next);
       setPhase((prev) => (prev === 'recovery' ? prev : next ? 'connecting' : 'signed-out'));
     });
@@ -69,6 +77,8 @@ export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) 
         return;
       }
       if (event === 'SIGNED_OUT' || !next) {
+        // Bez signálu Supabase ohlásí „žádné přihlášení“, i když uložené přihlášení trvá – to není odhlášení
+        if (event !== 'SIGNED_OUT' && getStoredSessionUser()) return;
         setUser(null);
         setPhase('signed-out');
         return;

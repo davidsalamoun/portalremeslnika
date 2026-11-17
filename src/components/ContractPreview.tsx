@@ -119,7 +119,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
   const [currentContract, setCurrentContract] = useState<Contract>(contract);
   const isPro = isProUser(getContractorProfile());
   const [activeDocType, setActiveDocType] = useState<DocumentType>(
-    initialDocType || (contract.docKind === 'quote' ? 'nabidka' : 'smlouva')
+    initialDocType || (contract.docKind === 'quote' ? 'nabidka' : contract.docKind === 'invoice' ? 'faktura' : 'smlouva')
   );
   const [isNewAmendmentTriggered, setIsNewAmendmentTriggered] = useState(false);
   const [isNewReceiptTriggered, setIsNewReceiptTriggered] = useState(false);
@@ -402,7 +402,8 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
     onToast?.('info', `Zakázka je ve fázi ${JOB_STAGE_LABELS.find((x) => x.key === target)?.label}.`);
   };
 
-  const docTabs: { key: DocumentType; label: string; count?: number }[] = [
+  const isInvoiceOnly = currentContract.docKind === 'invoice';
+  const allDocTabs: { key: DocumentType; label: string; count?: number }[] = [
     currentContract.docKind === 'quote' ? { key: 'nabidka', label: 'Cenová nabídka' } : { key: 'smlouva', label: 'Smlouva o dílo' },
     { key: 'dodatek', label: 'Dodatky', count: currentContract.amendments?.length },
     { key: 'pokladni_doklad', label: 'Pokladní doklad', count: currentContract.cashReceipts?.length },
@@ -410,6 +411,8 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
     { key: 'faktura', label: 'Faktura' },
     { key: 'zaruka', label: 'Záruční list' },
   ];
+  // Faktura bez smlouvy má jen fakturu a pokladní doklad
+  const docTabs = isInvoiceOnly ? allDocTabs.filter((t) => t.key === 'faktura' || t.key === 'pokladni_doklad') : allDocTabs;
 
   const siteTools: { label: string; icon: React.ComponentType<{ className?: string }>; open: () => void; note?: string; alert?: boolean }[] = [
     { label: 'Stavební deník', icon: FileText, open: () => setIsSiteLogModalOpen(true), note: currentContract.siteLogs?.length ? String(currentContract.siteLogs.length) : '' },
@@ -439,7 +442,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
                   {currentContract.client.name}
                 </div>
                 <div className="text-[13px] text-slate-600 dark:text-slate-400 truncate">
-                  {currentContract.docKind === 'quote' ? `nabídka ${currentContract.quoteNumber || ''}` : `smlouva ${currentContract.contractNumber}`}
+                  {currentContract.docKind === 'quote' ? `nabídka ${currentContract.quoteNumber || ''}` : isInvoiceOnly ? `faktura ${currentContract.invoiceNumber ? 'FA-' + currentContract.invoiceNumber : 'zatím nevystavená'}` : `smlouva ${currentContract.contractNumber}`}
                   {isSaved ? ', uloženo' : ', neuloženo'}
                 </div>
               </div>
@@ -597,7 +600,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
           ))}
         </select>
 
-        {currentContract.clientSignature ? (
+        {isInvoiceOnly ? null : currentContract.clientSignature ? (
           <span className="min-h-11 px-3 inline-flex items-center gap-1.5 rounded-md border-[1.5px] border-blue-600 text-blue-600 dark:border-blue-300 dark:text-blue-300 font-semibold">
             <Check className="w-4 h-4" />
             <span>Podepsáno {formatDateCs(currentContract.clientSignatureDate || currentContract.conclusionDate)}</span>

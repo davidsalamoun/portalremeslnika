@@ -21,6 +21,11 @@ export function daysWordCs(n: number): string {
 
 /** Text upomínky. U faktury před splatností jde jen o připomenutí – o prodlení se v něm nemluví. */
 export function buildReminderText(input: ReminderInput, tone: ReminderTone): string {
+  // Faktura bez čísla (ještě nevystavená): ve větě zůstane jen slovo „faktura“
+  return reminderText(input, tone).replace(/ {2,}/g, ' ');
+}
+
+function reminderText(input: ReminderInput, tone: ReminderTone): string {
   const name = input.contractorName || 'Váš dodavatel';
   const payment = `Číslo účtu: ${input.bankAccount || 'dle faktury'}, VS: ${input.variableSymbol}.`;
   const amount = formatCurrency(input.amount);

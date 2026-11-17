@@ -22,6 +22,8 @@ type FilterStatus = 'open' | 'overdue' | 'pending' | 'paid' | 'all';
 interface InvoiceItem {
   contract: Contract;
   invoiceNumber: string;
+  /** Číslo pro zobrazení; faktura bez čísla ještě není vystavená */
+  invoiceLabel: string;
   variableSymbol: string;
   dueDate: string;
   amount: number;
@@ -71,7 +73,8 @@ export const InvoicesOverviewPage: React.FC<InvoicesOverviewPageProps> = ({
         const { isPaid, isOverdue, daysPastDue } = getInvoiceStatus(c);
         return {
           contract: c,
-          invoiceNumber: c.invoiceNumber || (c.contractNumber ? `FV-${c.contractNumber}` : `FV-${c.id.slice(-6)}`),
+          invoiceNumber: c.invoiceNumber || '',
+          invoiceLabel: c.invoiceNumber || 'zatím nevystavená',
           variableSymbol:
             c.variableSymbol || c.contractNumber.replace(/\D/g, '') || c.id.replace(/\D/g, '').slice(0, 10) || '2026001',
           dueDate,
@@ -135,13 +138,13 @@ export const InvoicesOverviewPage: React.FC<InvoicesOverviewPageProps> = ({
 
   const handleMarkAsPaid = (item: InvoiceItem) => {
     onUpdateContract(moveJobStage(item.contract, 'paid', todayIso()));
-    onToast('success', `Faktura ${item.invoiceNumber} je označená jako zaplacená (${formatCurrency(item.amount)}).`);
+    onToast('success', `Faktura ${item.invoiceLabel} je označená jako zaplacená (${formatCurrency(item.amount)}).`);
   };
 
   const handleMarkAsUnpaid = (item: InvoiceItem) => {
     const { paidDate, ...rest } = item.contract;
     onUpdateContract({ ...rest, status: item.contract.handoverData ? 'handover_done' : 'signed' });
-    onToast('info', `Faktura ${item.invoiceNumber} je zpět mezi nezaplacenými.`);
+    onToast('info', `Faktura ${item.invoiceLabel} je zpět mezi nezaplacenými.`);
   };
 
   const reminderText = (item: InvoiceItem, tone: ReminderTone) =>
@@ -209,7 +212,7 @@ export const InvoicesOverviewPage: React.FC<InvoicesOverviewPageProps> = ({
       account: contractor.bankAccount,
       amount: item.amount,
       vs: item.variableSymbol,
-      message: `Faktura ${item.invoiceNumber}`,
+      message: `Faktura ${item.invoiceLabel}`,
     });
     if (!qrUrl) {
       onToast('error', 'QR platbu se nepodařilo vytvořit. Zkontrolujte číslo účtu v Nastavení.');
@@ -354,7 +357,7 @@ export const InvoicesOverviewPage: React.FC<InvoicesOverviewPageProps> = ({
                     {item.clientName}
                   </button>
                   <div className="text-slate-600 dark:text-slate-400">
-                    Faktura {item.invoiceNumber}, VS {item.variableSymbol}, {item.scope}
+                    Faktura {item.invoiceLabel}, VS {item.variableSymbol}, {item.scope}
                   </div>
                 </div>
                 <div className="text-[22px] whitespace-nowrap text-slate-900 dark:text-white font-display font-semibold tabular-nums">
@@ -393,7 +396,7 @@ export const InvoicesOverviewPage: React.FC<InvoicesOverviewPageProps> = ({
                     type="button"
                     onClick={() => onOpenContract(item.contract, 'faktura')}
                     className={smallAction}
-                    aria-label={`Otevřít fakturu ${item.invoiceNumber}`}
+                    aria-label={`Otevřít fakturu ${item.invoiceLabel}`}
                   >
                     <FileText className="w-4 h-4" />
                     <span className="hidden sm:inline">Doklad</span>
@@ -403,7 +406,7 @@ export const InvoicesOverviewPage: React.FC<InvoicesOverviewPageProps> = ({
                       type="button"
                       onClick={() => handleShowQrModal(item)}
                       className={smallAction}
-                      aria-label={`QR platba faktury ${item.invoiceNumber}`}
+                      aria-label={`QR platba faktury ${item.invoiceLabel}`}
                     >
                       <QrCode className="w-4 h-4" />
                       <span className="hidden sm:inline">QR platba</span>
@@ -441,7 +444,7 @@ export const InvoicesOverviewPage: React.FC<InvoicesOverviewPageProps> = ({
       {reminderItem && (
         <Dialog
           title="Upomínka"
-          subtitle={`${reminderItem.clientName}, faktura ${reminderItem.invoiceNumber}`}
+          subtitle={`${reminderItem.clientName}, faktura ${reminderItem.invoiceLabel}`}
           size="lg"
           onClose={() => setReminderItem(null)}
         >
@@ -514,7 +517,7 @@ export const InvoicesOverviewPage: React.FC<InvoicesOverviewPageProps> = ({
       {qrModalItem && (
         <Dialog
           title="QR platba"
-          subtitle={`${qrModalItem.item.clientName}, faktura ${qrModalItem.item.invoiceNumber}`}
+          subtitle={`${qrModalItem.item.clientName}, faktura ${qrModalItem.item.invoiceLabel}`}
           size="sm"
           onClose={() => setQrModalItem(null)}
         >

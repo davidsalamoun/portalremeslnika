@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { docBar, docBarTitle, docBarNote, docBarActions, docButton, docChip } from './docBar';
+import { docBar, docBarTitle, docBarNote, docBarActions, docButton, docButtonPrimary, docButtonDanger, docChip } from './docBar';
+import { Dialog } from './Dialog';
+import { getStoredContracts } from '../utils/storage';
+import {
+  getAdvanceInvoiceNumber,
+  getFinalInvoiceNumber,
+  nextAdvanceInvoiceNumber,
+  nextFinalInvoiceNumber,
+} from '../utils/invoiceNumbering';
 import {
   Download,
   Printer,
@@ -14,6 +22,8 @@ import {
   Send,
   FilePlus2,
   Banknote,
+  Ban,
+  FileCheck2,
 } from 'lucide-react';
 import { Contract } from '../types/contract';
 import {
@@ -84,11 +94,39 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
     onUpdateContract({ ...contract, vatRate: rate });
   };
 
-  const invoiceNumber = isAdvance
-    ? `ZAL-${contract.invoiceNumber || '2026001'}`
-    : `FA-${contract.invoiceNumber || '2026001'}`;
+  // Číslo vzniká až při vystavení (utils/invoiceNumbering.ts); do té doby je doklad jen návrh
+  const issuedNumber = isAdvance ? getAdvanceInvoiceNumber(contract) : getFinalInvoiceNumber(contract);
+  const isIssued = !!issuedNumber;
+  const isCancelled = !isAdvance && !!contract.invoiceCancelledAt;
+  const isInvoiceOnly = contract.docKind === 'invoice';
+  const invoiceNumber = isIssued ? `${isAdvance ? 'ZAL' : 'FA'}-${issuedNumber}` : '';
+  const advanceNumberForDeduction = getAdvanceInvoiceNumber(contract);
+  const [confirm, setConfirm] = useState<'issue' | 'cancel' | null>(null);
+  const pendingNumber = confirm === 'issue'
+    ? (isAdvance ? nextAdvanceInvoiceNumber : nextFinalInvoiceNumber)(getStoredContracts(), new Date().getFullYear())
+    : '';
 
-  const variableSymbol = (contract.variableSymbol || contract.invoiceNumber || '2026001').replace(/\D/g, '');
+  const handleIssue = () => {
+    if (!onUpdateContract) return;
+    const number = (isAdvance ? nextAdvanceInvoiceNumber : nextFinalInvoiceNumber)(getStoredContracts(), new Date().getFullYear());
+    const now = new Date().toISOString();
+    onUpdateContract(
+      isAdvance
+        ? { ...contract, advanceInvoiceNumber: number, advanceInvoiceIssuedAt: now }
+        : { ...contract, invoiceNumber: number, invoiceIssuedAt: now, variableSymbol: contract.variableSymbol || number }
+    );
+    setConfirm(null);
+    onToast?.('success', `Faktura ${isAdvance ? 'ZAL' : 'FA'}-${number} je vystavená.`);
+  };
+
+  const handleCancel = () => {
+    if (!onUpdateContract) return;
+    onUpdateContract({ ...contract, invoiceCancelledAt: new Date().toISOString() });
+    setConfirm(null);
+    onToast?.('info', `Faktura ${invoiceNumber} je stornovaná. Zakázka už se nepočítá do pohledávek ani tržeb.`);
+  };
+
+  const variableSymbol = (contract.variableSymbol || contract.invoiceNumber || '').replace(/\D/g, '');
 
   // Data dokladu podle jednotných pravidel (utils/invoiceMath): zálohová faktura při uzavření smlouvy,
   // konečná faktura k předání díla; splatnost 14 dnů
@@ -164,13 +202,23 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
       {/* Lišta faktury (jen na obrazovce) */}
       <div className={docBar}>
         <div className="min-w-0">
-          <div className={docBarTitle}>{isAdvance ? 'Zálohová faktura' : 'Konečná faktura'}</div>
+          <div className={docBarTitle}>{isAdvance ? 'Zálohová faktura' : isInvoiceOnly ? 'Faktura' : 'Konečná faktura'}</div>
           <div className={docBarNote}>
-            č. {invoiceNumber}, splatná {formatDateCs(dueDateIso)}
+            {isCancelled
+              ? `č. ${invoiceNumber}, stornovaná`
+              : isIssued
+                ? `č. ${invoiceNumber}, splatná ${formatDateCs(dueDateIso)}`
+                : 'Návrh – číslo dostane při vystavení'}
           </div>
         </div>
 
         <div className={docBarActions}>
+          {!isIssued && onUpdateContract && (
+            <button type="button" onClick={() => setConfirm('issue')} className={docButtonPrimary}>
+              <FileCheck2 className="w-4 h-4" />
+              <span>Vystavit fakturu</span>
+            </button>
+          )}
           {onChangeInvoiceType && hasAdvance && (
             <div role="group" aria-label="Druh faktury" className="flex gap-2">
               <button type="button" aria-pressed={!isAdvance} onClick={() => onChangeInvoiceType('final')} className={docChip(!isAdvance)}>
@@ -210,23 +258,34 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
               <span>Platba v hotovosti</span>
             </button>
           )}
-          <button type="button" onClick={handleCopyPaymentInfo} className={docButton}>
-            <Copy className="w-4 h-4" />
-            <span>Zkopírovat platební údaje</span>
-          </button>
-          <a
-            href={getWhatsAppShareUrl(contract, isAdvance ? 'zaloha' : 'faktura')}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={docButton}
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span>WhatsApp</span>
-          </a>
-          <a href={getMailtoShareUrl(contract, isAdvance ? 'zaloha' : 'faktura')} className={docButton}>
-            <Send className="w-4 h-4" />
-            <span>E-mail</span>
-          </a>
+          {/* Posílat a sdílet jde jen vystavenou fakturu */}
+          {isIssued && !isCancelled && (
+            <>
+              <button type="button" onClick={handleCopyPaymentInfo} className={docButton}>
+                <Copy className="w-4 h-4" />
+                <span>Zkopírovat platební údaje</span>
+              </button>
+              <a
+                href={getWhatsAppShareUrl(contract, isAdvance ? 'zaloha' : 'faktura')}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={docButton}
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>WhatsApp</span>
+              </a>
+              <a href={getMailtoShareUrl(contract, isAdvance ? 'zaloha' : 'faktura')} className={docButton}>
+                <Send className="w-4 h-4" />
+                <span>E-mail</span>
+              </a>
+            </>
+          )}
+          {isIssued && !isAdvance && !isCancelled && onUpdateContract && (
+            <button type="button" onClick={() => setConfirm('cancel')} className={docButtonDanger}>
+              <Ban className="w-4 h-4" />
+              <span>Stornovat</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -246,14 +305,19 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
         <div className="flex justify-between items-start border-b-2 border-slate-900 pb-4 mb-6">
           <div>
             <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500 block mb-0.5">
-              {isAdvance ? 'ZÁLOHOVÁ FAKTURA' : isVatPayer ? 'FAKTURA – DAŇOVÝ DOKLAD' : 'FAKTURA'}
+              {!isIssued ? 'NÁVRH FAKTURY' : isAdvance ? 'ZÁLOHOVÁ FAKTURA' : isVatPayer ? 'FAKTURA – DAŇOVÝ DOKLAD' : 'FAKTURA'}
             </span>
             <h1 className="text-2xl font-black text-slate-950 tracking-tight">
-              {invoiceNumber}
+              {isIssued ? invoiceNumber : 'Bez čísla'}
             </h1>
-            <p className="text-xs text-slate-500 mt-1">
-              K smlouvě o dílo: <strong>{contract.contractNumber}</strong>
-            </p>
+            {isCancelled && (
+              <p className="text-sm font-bold text-slate-900 mt-1">STORNO ze dne {formatDateCs(contract.invoiceCancelledAt!.slice(0, 10))}</p>
+            )}
+            {!isInvoiceOnly && contract.contractNumber && (
+              <p className="text-xs text-slate-500 mt-1">
+                K smlouvě o dílo: <strong>{contract.contractNumber}</strong>
+              </p>
+            )}
           </div>
 
           <div className="text-right">
@@ -394,7 +458,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
                   <tr>
                     <td className="py-3 px-3">
                       <strong className="text-slate-900 block text-xs">
-                        Provedení díla dle Smlouvy o dílo č. {contract.contractNumber}
+                        {isInvoiceOnly ? 'Provedení prací' : `Provedení díla dle Smlouvy o dílo č. ${contract.contractNumber}`}
                       </strong>
                       <span className="text-slate-600 text-[11px] block mt-0.5">
                         {contract.workDescription}
@@ -453,7 +517,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
                           Odpočet uhrazené zálohy
                         </strong>
                         <span className="text-emerald-700 text-[10px] block mt-0.5">
-                          Zálohová faktura ZAL-{contract.invoiceNumber}
+                          {advanceNumberForDeduction ? `Zálohová faktura ZAL-${advanceNumberForDeduction}` : 'Záloha podle smlouvy'}
                         </span>
                       </td>
                       <td className="py-2.5 px-3 text-center font-medium">-1 kpl.</td>
@@ -552,6 +616,38 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
           </div>
         </div>
       </div>
+      {confirm && (
+        <Dialog
+          title={confirm === 'issue' ? 'Vystavit fakturu?' : 'Stornovat fakturu?'}
+          onClose={() => setConfirm(null)}
+        >
+          <div className="space-y-5 text-[15px]">
+            {confirm === 'issue' ? (
+              <p>
+                Faktura dostane číslo <strong>{isAdvance ? 'ZAL' : 'FA'}-{pendingNumber}</strong>. Číslo se pak už nemění
+                a zakázku nepůjde smazat, fakturu půjde jen stornovat.
+              </p>
+            ) : (
+              <p>
+                Faktura <strong>{invoiceNumber}</strong> zůstane v evidenci s označením storno, její číslo se znovu nepoužije
+                a zakázka se přestane počítat do pohledávek a tržeb. Pokud už jste ji zákazníkovi poslali, dejte mu vědět.
+              </p>
+            )}
+            <div className="flex flex-wrap justify-end gap-2.5">
+              <button type="button" onClick={() => setConfirm(null)} className={docButton}>
+                Zpět
+              </button>
+              <button
+                type="button"
+                onClick={confirm === 'issue' ? handleIssue : handleCancel}
+                className={confirm === 'issue' ? docButtonPrimary : docButtonDanger}
+              >
+                {confirm === 'issue' ? 'Vystavit' : 'Stornovat fakturu'}
+              </button>
+            </div>
+          </div>
+        </Dialog>
+      )}
     </div>
   );
 };

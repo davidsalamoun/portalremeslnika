@@ -55,7 +55,8 @@ export function isContractPaid(contract: Contract): boolean {
 
 /** Fakturuje se jen smlouva s cenou – cenová nabídka ani poptávka pohledávkou nejsou. */
 export function isInvoiceable(contract: Contract): boolean {
-  return contract.docKind !== 'quote' && getContractTotal(contract) > 0;
+  // Stornovaná faktura už pohledávkou ani tržbou není
+  return contract.docKind !== 'quote' && !contract.invoiceCancelledAt && getContractTotal(contract) > 0;
 }
 
 export interface InvoiceDates {

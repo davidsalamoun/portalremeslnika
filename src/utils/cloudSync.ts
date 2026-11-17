@@ -236,6 +236,16 @@ function notifyDataChanged() {
 
 let running: Promise<boolean> | null = null;
 let rerun = false;
+// Po neúspěšné synchronizaci (např. těsně po návratu signálu, kdy přihlášení ještě čeká na obnovu) se zkusí
+// znovu za 15, 30 a pak každých 60 s, dokud se nepovede
+let retryTimer: number | undefined;
+let retryDelay = 15_000;
+function scheduleRetry() {
+  if (typeof window === 'undefined' || !navigator.onLine) return;
+  window.clearTimeout(retryTimer);
+  retryTimer = window.setTimeout(() => void syncNow(), retryDelay);
+  retryDelay = Math.min(retryDelay * 2, 60_000);
+}
 
 /** Odešle čekající změny a stáhne novinky. Vrací true při úspěchu. Nikdy nevyhazuje výjimku. */
 export function syncNow(): Promise<boolean> {
@@ -265,15 +275,24 @@ export function syncNow(): Promise<boolean> {
         return false;
       }
       setStatus({ phase: 'idle', lastSyncAt: new Date().toISOString() });
+      window.clearTimeout(retryTimer);
+      retryDelay = 15_000;
       // Úklid nepoužívaných obrázků nesmí synchronizaci shodit; při chybě se zkusí příště
       cleanupUnusedImages().catch((err) => console.warn('Úklid nepoužívaných obrázků se nezdařil:', err));
       return true;
     } catch (err) {
       console.warn('Synchronizace s cloudem se nezdařila:', err);
       setStatus({ phase: 'error' });
+      scheduleRetry();
       return false;
     } finally {
       running = null;
+      // O synchronizaci se požádalo během běhu, který skončil chybou (typicky po návratu signálu, když
+      // předchozí pokus ještě čekal na síť) – zkusí se znovu za chvíli
+      if (rerun && navigator.onLine) {
+        rerun = false;
+        window.setTimeout(() => void syncNow(), 2000);
+      }
     }
   })();
   return running;
@@ -292,6 +311,8 @@ export function trackLocalChange(key: string, oldRaw: string | null, newRaw: str
   // Stav se oznámí až po dokončení právě probíhajícího vykreslení (zápis může přijít i během něj)
   queueMicrotask(() => setStatus({}));
   window.clearTimeout(pushTimer);
+  // Bez signálu se změna jen zařadí do fronty; odešle se po návratu signálu (startAutoSync)
+  if (!navigator.onLine) return;
   pushTimer = window.setTimeout(() => void syncNow(), 1500);
 }
 

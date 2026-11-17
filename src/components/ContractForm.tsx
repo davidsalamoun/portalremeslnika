@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { nextDocumentSequence, NUMBERING_VERSION } from '../utils/invoiceNumbering';
 import { Pencil, UserPlus, Eye, Mic, Check, ArrowRight } from 'lucide-react';
 import { ContractorProfile, Client, Contract, ContractFormData, BudgetItem } from '../types/contract';
 import { formatCurrency, formatDateCs, cleanPlaceName } from '../utils/numberToWordsCs';
@@ -62,7 +63,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   onPreloadSampleData,
   onToast,
 }) => {
-  const [docKind, setDocKind] = useState<'contract' | 'quote'>('contract');
+  const [docKind, setDocKind] = useState<'contract' | 'quote' | 'invoice'>('contract');
+  const isInvoiceOnly = docKind === 'invoice';
   const [pricingType, setPricingType] = useState<'fixed' | 'budget'>('fixed');
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
   const [isListening, setIsListening] = useState(false);
@@ -268,6 +270,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     }
 
     if (
+      docKind !== 'invoice' &&
       formData.advanceAmount !== '' &&
       typeof formData.advanceAmount === 'number' &&
       typeof formData.price === 'number' &&
@@ -277,7 +280,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     }
 
     if (!formData.deliveryDate) {
-      newErrors.deliveryDate = 'Zadejte termín dokončení a předání.';
+      newErrors.deliveryDate = docKind === 'invoice' ? 'Zadejte, kdy byla práce dokončena.' : 'Zadejte termín dokončení a předání.';
     }
 
     setErrors(newErrors);
@@ -308,15 +311,12 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     const today = todayIso();
     const thisYear = new Date().getFullYear();
     const storedContracts = getStoredContracts();
-    const thisYearContracts = storedContracts.filter(
-      (c) => c.contractNumber?.includes(`${thisYear}`) || c.createdAt?.startsWith(`${thisYear}`)
-    );
-    const nextSeqNum = thisYearContracts.length + 1;
-    const paddedSeq = String(nextSeqNum).padStart(3, '0');
+    // Pořadí: nejvyšší použité v roce + 1 (po smazání zakázky se číslo neopakuje). Číslo faktury vznikne až
+    // při jejím vystavení (utils/invoiceNumbering.ts).
+    const paddedSeq = nextDocumentSequence(storedContracts, thisYear);
 
     const quoteNum = `CN-${thisYear}-${paddedSeq}`;
-    const contractNum = `SOD-${thisYear}-${paddedSeq}`;
-    const invoiceNum = `${thisYear}${paddedSeq}`;
+    const contractNum = docKind === 'invoice' ? '' : `SOD-${thisYear}-${paddedSeq}`;
     const vsNum = `${thisYear}${paddedSeq}`;
 
     const validUntilDate = addDaysIso(today, 30);
@@ -329,14 +329,16 @@ export const ContractForm: React.FC<ContractFormProps> = ({
       pricingType: pricingType,
       items: pricingType === 'budget' && budgetItems.length > 0 ? budgetItems : undefined,
       contractNumber: contractNum,
-      invoiceNumber: invoiceNum,
+      invoiceNumber: '',
+      numbering: NUMBERING_VERSION,
+      advanceInvoiceNumber: '',
       variableSymbol: vsNum,
       contractor: contractor,
       client: selectedClient,
       workDescription: formData.workDescription.trim(),
       price: Number(formData.price),
       advanceAmount:
-        typeof formData.advanceAmount === 'number' && formData.advanceAmount > 0
+        !isInvoiceOnly && typeof formData.advanceAmount === 'number' && formData.advanceAmount > 0
           ? formData.advanceAmount
           : undefined,
       deliveryDate: formData.deliveryDate,
@@ -344,7 +346,9 @@ export const ContractForm: React.FC<ContractFormProps> = ({
       executionPlace: cleanPlaceName(contractor.defaultPlace) || 'místě plnění',
       siteAddress: formData.siteAddress?.trim() || undefined,
       hasVat: !!contractor.dic,
-      status: 'draft',
+      // Faktura bez smlouvy je za hotovou práci: zakázka je rovnou předaná a čeká na zaplacení
+      status: isInvoiceOnly ? 'handover_done' : 'draft',
+      leadStage: isInvoiceOnly ? 'completed' : undefined,
       contractorSignature: contractor.signature,
       contractorSignatureDate: contractor.signature ? today : undefined,
       createdAt: new Date().toISOString(),
@@ -379,7 +383,9 @@ export const ContractForm: React.FC<ContractFormProps> = ({
 
   const activeTpl = selectedTemplateId ? CRAFT_TEMPLATES.find((t) => t.id === selectedTemplateId) : undefined;
   const isQuote = docKind === 'quote';
-  const documents = [isQuote ? 'Cenová nabídka' : 'Smlouva o dílo', 'Předávací protokol', 'Faktura s QR platbou'];
+  const documents = isInvoiceOnly
+    ? ['Faktura s QR platbou', 'Pokladní doklad při platbě v hotovosti']
+    : [isQuote ? 'Cenová nabídka' : 'Smlouva o dílo', 'Předávací protokol', 'Faktura s QR platbou'];
 
   return (
     <div className="max-w-[1180px] mx-auto pb-16 space-y-7 text-[15px] leading-snug">
@@ -387,10 +393,12 @@ export const ContractForm: React.FC<ContractFormProps> = ({
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-4xl sm:text-[44px] font-bold leading-[1.05] text-slate-900 dark:text-white">
-            {isQuote ? 'Nová cenová nabídka' : 'Nová smlouva o dílo'}
+            {isInvoiceOnly ? 'Nová faktura' : isQuote ? 'Nová cenová nabídka' : 'Nová smlouva o dílo'}
           </h1>
           <div className="mt-1 text-slate-600 dark:text-slate-400 max-w-2xl">
-            {isQuote
+            {isInvoiceOnly
+              ? 'Faktura za drobnou práci bez smlouvy. Číslo dostane, až ji v dalším kroku vystavíte.'
+              : isQuote
               ? 'Sestavte rozpočet prací a materiálu. Po odsouhlasení nabídku převedete na smlouvu.'
               : 'Vyplňte zakázku. V dalším kroku zkontrolujete smlouvu, předávací protokol a fakturu.'}
           </div>
@@ -403,12 +411,15 @@ export const ContractForm: React.FC<ContractFormProps> = ({
       </header>
 
       {/* Druh dokumentu */}
-      <div role="group" aria-label="Druh dokumentu" className="grid grid-cols-2 gap-2 max-w-md">
-        <button type="button" aria-pressed={!isQuote} onClick={() => setDocKind('contract')} className={chip(!isQuote)}>
+      <div role="group" aria-label="Druh dokumentu" className="grid grid-cols-3 gap-2 max-w-xl">
+        <button type="button" aria-pressed={docKind === 'contract'} onClick={() => setDocKind('contract')} className={chip(docKind === 'contract')}>
           Smlouva o dílo
         </button>
         <button type="button" aria-pressed={isQuote} onClick={() => setDocKind('quote')} className={chip(isQuote)}>
           Cenová nabídka
+        </button>
+        <button type="button" aria-pressed={isInvoiceOnly} onClick={() => setDocKind('invoice')} className={chip(isInvoiceOnly)}>
+          Jen faktura
         </button>
       </div>
 
@@ -678,7 +689,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             </h2>
             <div>
               <label htmlFor="delivery-date" className={fieldLabel}>
-                Dokončení a předání díla
+                {isInvoiceOnly ? 'Práce dokončena dne' : 'Dokončení a předání díla'}
               </label>
               <input
                 id="delivery-date"
@@ -709,7 +720,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             </div>
           </section>
 
-          {/* 4. Záloha */}
+          {/* 4. Záloha (faktura bez smlouvy zálohu nemá) */}
+          {!isInvoiceOnly && (
           <section id="sekce-platba" aria-labelledby="nadpis-platba" className="p-5 sm:p-6 space-y-4 scroll-mt-24">
             <h2 id="nadpis-platba" className={sectionTitle}>
               4. Záloha
@@ -767,6 +779,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             </div>
           </section>
 
+          )}
+
           <div className="p-5 sm:p-6">
             <button type="submit" className={`${primaryButton} w-full sm:w-auto`}>
               <Eye className="w-5 h-5" />
@@ -794,7 +808,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             </div>
             {[
               { label: 'Klient', value: selectedClientObj?.name, missing: 'nevybrán' },
-              { label: 'Termín předání', value: formData.deliveryDate ? formatDateCs(formData.deliveryDate) : '', missing: 'nezadán' },
+              { label: isInvoiceOnly ? 'Práce dokončena' : 'Termín předání', value: formData.deliveryDate ? formatDateCs(formData.deliveryDate) : '', missing: 'nezadán' },
               {
                 label: 'Cena',
                 value: pricingType === 'budget' ? `rozpočet, ${itemsWord(budgetItems.length)}` : 'pevná částka',

@@ -94,7 +94,7 @@ export interface CashReceipt {
 
 export interface ContractFormData {
   clientId: string;
-  docKind?: 'contract' | 'quote';        // 'contract' = Smlouva o dílo, 'quote' = Cenová nabídka
+  docKind?: 'contract' | 'quote' | 'invoice'; // smlouva o dílo, cenová nabídka, nebo jen faktura (bez smlouvy)
   quoteValidUntil?: string;              // Platnost nabídky do YYYY-MM-DD
   pricingType?: 'fixed' | 'budget';      // 'fixed' = paušální cena, 'budget' = položkový rozpočet
   workDescription: string;
@@ -109,12 +109,17 @@ export interface ContractFormData {
 
 export interface Contract {
   id: string;
-  docKind?: 'contract' | 'quote';        // 'contract' = Smlouva o dílo, 'quote' = Cenová nabídka
+  docKind?: 'contract' | 'quote' | 'invoice'; // smlouva o dílo, cenová nabídka, nebo jen faktura (bez smlouvy)
   quoteNumber?: string;                  // Číslo cenové nabídky (např. CN-2026-001)
   quoteValidUntil?: string;              // Platnost nabídky do YYYY-MM-DD
   pricingType?: 'fixed' | 'budget';
   contractNumber: string;
-  invoiceNumber: string;
+  invoiceNumber: string;                 // Číslo konečné faktury (RRRRNNN); u zakázek s numbering 2 prázdné, dokud není vystavená
+  numbering?: 2;                         // 2 = čísla faktur se přidělují až při vystavení (utils/invoiceNumbering.ts)
+  advanceInvoiceNumber?: string;         // Číslo zálohové faktury (jen numbering 2; dřív stejné jako invoiceNumber)
+  invoiceIssuedAt?: string;              // Kdy byla konečná faktura vystavena v aplikaci (ISO)
+  advanceInvoiceIssuedAt?: string;       // Kdy byla vystavena zálohová faktura (ISO)
+  invoiceCancelledAt?: string;           // Storno faktury (ISO): zakázka pak není pohledávkou ani tržbou
   variableSymbol: string;
   contractor: ContractorProfile;
   client: Client;

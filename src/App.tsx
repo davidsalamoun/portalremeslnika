@@ -41,6 +41,10 @@ import { checkAndSyncRemoteSignatures } from './utils/signShares';
 import { useCloudUser } from './components/AuthGate';
 import { resolveIsDark, applyTheme, watchSystemTheme, saveThemeChoice } from './utils/theme';
 import { isInvoiceable, getInvoiceStatus } from './utils/invoiceMath';
+import { nextDocumentSequence, NUMBERING_VERSION, hasIssuedInvoice, getFinalInvoiceNumber, getAdvanceInvoiceNumber } from './utils/invoiceNumbering';
+
+/** Dokument, který se otevře jako první: nabídka, faktura (bez smlouvy), jinak smlouva. */
+const defaultDocFor = (contract: Contract) => (contract.docKind === 'quote' ? 'nabidka' : contract.docKind === 'invoice' ? 'faktura' : 'smlouva');
 import { CLOUD_DATA_CHANGED_EVENT } from './utils/cloudSync';
 import { isProUser, PRO_CONFIG, PAYMENTS_ENABLED } from './utils/subscription';
 
@@ -318,7 +322,7 @@ export default function App() {
   // Open contract preview
   const handleShowPreview = (contract: Contract) => {
     setPreviewContract(contract);
-    setPreviewInitialDoc(contract.docKind === 'quote' ? 'nabidka' : 'smlouva');
+    setPreviewInitialDoc(defaultDocFor(contract));
   };
 
   // Save / update contract
@@ -353,6 +357,12 @@ export default function App() {
 
   // Delete contract
   const handleDeleteContract = (id: string) => {
+    const target = contracts.find((c) => c.id === id);
+    if (target && hasIssuedInvoice(target)) {
+      const number = getFinalInvoiceNumber(target) || getAdvanceInvoiceNumber(target);
+      addToast('error', `Zakázka má vystavenou fakturu ${number}. Smazat ji nejde, fakturu můžete jen stornovat.`);
+      return;
+    }
     deleteStoredContract(id);
     const updated = getStoredContracts();
     setContracts(updated);
@@ -360,7 +370,7 @@ export default function App() {
     if (previewContract?.id === id) {
       setPreviewContract(null);
     }
-    addToast('info', 'Smlouva byla odstraněna z historie');
+    addToast('info', 'Zakázka byla smazána.');
   };
 
   // Save contractor profile
@@ -461,9 +471,15 @@ export default function App() {
 
     const newContract: Contract = {
       id: `contract_${Date.now()}`,
-      contractNumber: `${new Date().getFullYear()}${String(contracts.length + 1).padStart(3, '0')}`,
-      invoiceNumber: `FV-${new Date().getFullYear()}${String(contracts.length + 1).padStart(3, '0')}`,
-      variableSymbol: `${new Date().getFullYear()}${String(contracts.length + 1).padStart(3, '0')}`,
+      // Poptávka: číslo nabídky ze stejné řady jako formulář; číslo faktury až při vystavení
+      ...(() => {
+        const year = new Date().getFullYear();
+        const seq = nextDocumentSequence(contracts, year);
+        return { quoteNumber: `CN-${year}-${seq}`, contractNumber: `SOD-${year}-${seq}`, variableSymbol: `${year}${seq}` };
+      })(),
+      invoiceNumber: '',
+      numbering: NUMBERING_VERSION,
+      advanceInvoiceNumber: '',
       createdAt: today,
       contractor: contractor || {
         name: 'Živnostník',
@@ -687,7 +703,7 @@ export default function App() {
                 onOpenPaywall={openPaywallProp}
                 onOpenContract={(contract) => {
                   setPreviewContract(contract);
-                  setPreviewInitialDoc(contract.docKind === 'quote' ? 'nabidka' : 'smlouva');
+                  setPreviewInitialDoc(defaultDocFor(contract));
                 }}
                 onNewContract={() => {
                   if (!isProUser(contractor) && contracts.length >= PRO_CONFIG.maxFreeContracts) {
@@ -756,7 +772,7 @@ export default function App() {
                 onDeleteEvent={handleDeleteCalendarEvent}
                 onOpenContract={(contract) => {
                   setPreviewContract(contract);
-                  setPreviewInitialDoc(contract.docKind === 'quote' ? 'nabidka' : 'smlouva');
+                  setPreviewInitialDoc(defaultDocFor(contract));
                 }}
                 onNewContract={handleProtectedNewContract}
               />
@@ -770,7 +786,7 @@ export default function App() {
                 onUpdateContract={handleUpdateContract}
                 onOpenContract={(contract) => {
                   setPreviewContract(contract);
-                  setPreviewInitialDoc(contract.docKind === 'quote' ? 'nabidka' : 'smlouva');
+                  setPreviewInitialDoc(defaultDocFor(contract));
                 }}
                 onNewContract={handleProtectedNewContract}
                 onAddQuickLead={handleAddQuickLead}
@@ -824,7 +840,7 @@ export default function App() {
                 contracts={contracts}
                 onOpenContract={(contract, docType) => {
                   setPreviewContract(contract);
-                  setPreviewInitialDoc(docType || (contract.docKind === 'quote' ? 'nabidka' : 'smlouva'));
+                  setPreviewInitialDoc(docType || (defaultDocFor(contract)));
                 }}
                 onUpdateContract={handleUpdateContract}
                 onDeleteContract={handleDeleteContract}

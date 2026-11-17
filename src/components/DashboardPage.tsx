@@ -589,7 +589,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     >
                       {contract.client?.name || 'Klient bez jména'}
                     </button>
-                    <div className="text-slate-600 dark:text-slate-400">Faktura {contract.invoiceNumber || contract.contractNumber}</div>
+                    <div className="text-slate-600 dark:text-slate-400">{contract.invoiceNumber ? `Faktura ${contract.invoiceNumber}` : 'Faktura zatím nevystavená'}</div>
                   </div>
                   <div className={`text-[22px] whitespace-nowrap text-slate-900 dark:text-white ${bigNumber}`}>
                     {formatCurrency(remainingToPay)}

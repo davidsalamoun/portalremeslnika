@@ -33,6 +33,7 @@ npm run dev                      # Express + Vite middleware na http://localhost
 npm run build                    # produkční build frontendu do dist/
 npm run lint                     # tsc --noEmit
 npm test                         # testy (tests/*.test.ts, node:test přes tsx)
+npm run e2e                      # průchody aplikací v prohlížeči (e2e/, Playwright, napodobený Supabase)
 NODE_ENV=production npm start    # lokální produkční běh: Express servíruje dist/ + /api
 ```
 
@@ -142,6 +143,17 @@ Písma se načítají jen dvě (IBM Plex Sans, Barlow Semi Condensed).
 `preloadLazyChunks` dotáhne všechny na pozadí, aby aplikace po načtení fungovala i bez připojení. Novou stránku nebo
 modál přidávat do `lazyLoaders`, ne statickým importem; `exportDocx`/`exportPdf` nikdy neimportovat přímo z komponent.
 
+## Práce bez signálu
+
+`src/sw/serviceWorkerSource.ts` je zdroj service workeru; `vite.config.ts` (plugin `offlineServiceWorker`) z něj při
+buildu vytvoří `dist/sw.js` se seznamem všech souborů aplikace a verzí. `main.tsx` ho registruje jen v produkčním buildu.
+Soubory aplikace se čtou z mezipaměti, stránka ze sítě (po 3 s bez odpovědi z mezipaměti), písma Google se ukládají
+při použití; data (Supabase, `/api`) jdou vždy na síť. Nový soubor v `public/` se do seznamu dostane sám.
+Bez signálu `AuthGate` nečeká na obnovu vypršelého přístupového klíče a pustí uživatele s uloženým přihlášením
+(`getStoredSessionUser`) k datům v zařízení. Změny se zařadí do fronty a odešlou po návratu signálu; když první
+pokus selže (Supabase po neúspěšné obnově klíče minutu čeká), synchronizace se zkouší znovu po 15, 30 a 60 s.
+`vercel.json` posílá `sw.js`, `index.html` a manifest bez dlouhého ukládání v prohlížeči.
+
 ## Technologie
 
 React 19, TypeScript, Vite 8, Tailwind CSS 4 (`@tailwindcss/vite`), `motion`, `lucide-react`,
@@ -236,6 +248,13 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
 Částky, data a stav faktur se počítají jen v `utils/invoiceMath.ts` – používá je doklad faktury, přehled pohledávek,
 úvodní stránka, počítadlo po splatnosti i export pro účetní. Nepočítat je znovu v komponentách.
 - Cena díla = `contract.price` + dodatky (vícepráce i méněpráce); doplatek = cena − sjednaná záloha.
+- **Čísla faktur** (`utils/invoiceNumbering.ts`): u zakázek s `numbering: 2` vzniká číslo až tlačítkem „Vystavit fakturu“
+  (další = nejvyšší v roce + 1; FA- a ZAL- mají každá svou řadu). Do té doby je doklad „Návrh faktury“ bez čísla a nejde
+  poslat. Starší zakázky mají číslo z doby založení a platí jako vystavené. Zakázku s vystavenou fakturou
+  (`hasIssuedInvoice`) nejde smazat, jen stornovat (`invoiceCancelledAt`: storno na faktuře, mimo pohledávky a tržby).
+  Pořadí smluv a nabídek (`nextDocumentSequence`) je taky nejvyšší + 1, ne počet zakázek.
+- **Jen faktura** (`docKind: 'invoice'`): faktura bez smlouvy z formuláře Nová smlouva; náhled má jen fakturu a pokladní
+  doklad, zakázka je rovnou ve fázi Předáno.
 - Konečná faktura se vystavuje k předání díla (`handoverData.handoverDate`, jinak `deliveryDate`), DUZP je stejné,
   splatnost 14 dnů. Zálohová faktura se vystavuje k datu uzavření smlouvy a jen na zálohu sjednanou ve smlouvě
   (`advanceAmount`); bez ní se nenabízí a žádná částka se nedomýšlí.
@@ -261,7 +280,11 @@ odstraněny včetně serverových endpointů a závislosti na Gemini. Nepřidáv
   a bannery PRO, paywall i doklad k licenci se nezobrazují. Nezapínat, dokud platbu neověřuje server a v `PRO_CONFIG`
   nejsou skutečné údaje provozovatele – současné IČO a číslo účtu jsou vymyšlené, stejně jako platební formulář
   v `PaywallModal.tsx` (jen napodobuje Stripe). Aktivace PRO parametrem v adrese byla odstraněna.
-- Testy pokrývají synchronizaci, odkazy na obrázky, výpočty faktur a české pomocné funkce; přihlášení a UI se ověřují ručně.
+- Testy (`tests/`) pokrývají synchronizaci, odkazy na obrázky, výpočty faktur a české pomocné funkce. Průchody aplikací
+  (`e2e/`, Playwright) běží proti produkčnímu buildu s napodobeným Supabase (`e2e/support/mock.ts`, data v `seed.ts`)
+  na počítači, mobilu a v tmavém režimu; každý test končí kontrolou, že v konzoli nejsou chyby. GitHub je spouští
+  u každé změny (`.github/workflows/ci.yml`). Ostrý Supabase, ARES a počasí se tak neověřují – ty jen ručně.
+  Novou obrazovku nebo doklad přidat i do průchodů.
 - PDF je obrázek stránky (nejde v něm hledat text). Strany se dělí v mezeře mezi řádky (`computePageSlices`
   v `exportPdf.ts`), ne podle odstavců nebo bloků – nadpis tak může zůstat na konci strany bez svého textu.
 - DPH: aplikace nevystavuje daňový doklad k přijaté záloze ani neřeší přenesení daňové povinnosti mezi plátci;
