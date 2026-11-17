@@ -1,6 +1,7 @@
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import {AuthGate} from './components/AuthGate.tsx';
+import {PrivacyPolicyHost} from './components/PrivacyPolicy.tsx';
 import './fonts.css';
 import './index.css';
 
@@ -12,7 +13,10 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <AuthGate>
-    <App />
-  </AuthGate>
+  <>
+    <AuthGate>
+      <App />
+    </AuthGate>
+    <PrivacyPolicyHost />
+  </>
 );

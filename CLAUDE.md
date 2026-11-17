@@ -240,8 +240,12 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
 - **Smazání účtu** (`deleteAccount` v `cloudSync.ts`, tlačítko v modálu účtu): po ověření hesla smaže soubory uživatele
   v bucketu `photos`, pak zavolá databázovou funkci `delete_own_account` (smaže uživatele, řádky zmizí kaskádou)
   a vyčistí zařízení. Nová tabulka s daty uživatele proto musí mít `user_id … references auth.users on delete cascade`.
-- **Informace o datech** jsou v modálu účtu („Kde jsou moje data?“). Když se změní, kde nebo jak se data ukládají
-  nebo komu se posílají, upravit i tento text – nesmí slibovat nic, co neplatí.
+- **Informace o datech** jsou v modálu účtu („Kde jsou moje data?“) a v zásadách ochrany osobních údajů
+  (`components/PrivacyPolicy.tsx`, okno otevře odkaz `#ochrana-osobnich-udaju` odkudkoli – úvodní stránka, registrace,
+  patička aplikace, účet, portál podpisu). Když se změní, kde nebo jak se data ukládají nebo komu se posílají, upravit
+  oba texty a posunout `PRIVACY_POLICY_DATE` – nesmí slibovat nic, co neplatí. Údaje provozovatele jsou v
+  `src/config/operator.ts` a jsou **zatím provizorní** (vymyšlený název, bez adresy a IČO) – před spuštěním pro skutečné
+  uživatele je nahradit skutečnými.
 - Změna schématu = úprava `supabase/schema.sql` (musí jít spustit opakovaně) a její nasazení v Supabase.
 - **Online podpis** (`utils/signShares.ts`, tabulka `sign_shares`): řemeslník založí odkaz `?sign=<token>` s náhodným
   tajným kódem (uložen u smlouvy jako `signToken`). Zákazník se nepřihlašuje a k tabulce přístup nemá – smlouvu čte

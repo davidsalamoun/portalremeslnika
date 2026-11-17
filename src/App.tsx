@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
+import { PrivacyLink } from './components/PrivacyPolicy';
 import { preloadExportLibraries } from './utils/lazyExports';
 import { Navbar, TabType } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
@@ -1056,6 +1057,7 @@ export default function App() {
       <footer className="no-print border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 py-3 mb-16 lg:mb-0 text-center text-[13px] text-slate-600 dark:text-slate-400 transition-colors">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p>© {new Date().getFullYear()} Řemeslník PRO</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-5">
           <button
             type="button"
             onClick={() => setIsCloudModalOpen(true)}
@@ -1063,6 +1065,8 @@ export default function App() {
           >
             Kde jsou moje data?
           </button>
+          <PrivacyLink className="min-h-11 inline-flex items-center underline underline-offset-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white" />
+          </div>
         </div>
       </footer>
     </div>

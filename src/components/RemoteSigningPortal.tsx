@@ -6,6 +6,7 @@ import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
 import { getStoredContracts, addStoredContract } from '../utils/storage';
 import { Dialog } from './Dialog';
 import { ContractBody } from './ContractBody';
+import { PrivacyLink } from './PrivacyPolicy';
 
 interface RemoteSigningPortalProps {
   shareId: string;
@@ -397,6 +398,11 @@ export const RemoteSigningPortal: React.FC<RemoteSigningPortalProps> = ({
             </p>
           </section>
         )}
+
+        <p className={`text-[13px] ${muted}`}>
+          Jak se zachází s vašimi údaji:{' '}
+          <PrivacyLink className="text-blue-600 dark:text-blue-300 underline underline-offset-2">ochrana osobních údajů</PrivacyLink>
+        </p>
 
         {onBackToApp && (
           <p className="pt-2">

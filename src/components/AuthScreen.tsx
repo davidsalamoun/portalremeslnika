@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { PrivacyLink } from './PrivacyPolicy';
 import { Mail, Lock, LogIn, UserPlus, ArrowLeft, MailCheck, KeyRound, ShieldCheck } from 'lucide-react';
 import { supabase, authErrorToCzech } from '../utils/supabase';
 import { Logo, Metr } from './Logo';
@@ -297,7 +298,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ initialMode = 'login', o
                   <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>
                     Pokud už v tomto prohlížeči máte rozpracované smlouvy nebo klienty, po registraci se přenesou do
-                    vašeho účtu.
+                    vašeho účtu. Jak s údaji zacházíme, popisují{' '}
+                    <PrivacyLink className="font-semibold text-blue-600 dark:text-blue-300 underline underline-offset-2">zásady ochrany osobních údajů</PrivacyLink>.
                   </span>
                 </p>
                 <p className="text-base text-slate-600 dark:text-slate-300">
