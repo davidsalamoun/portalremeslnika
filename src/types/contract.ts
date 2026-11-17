@@ -367,7 +367,7 @@ export interface TechnicalProtocol {
 export interface PriceListTemplateItem {
   id: string;
   type: 'prace' | 'material' | 'ostatni';
-  category: string;                      // např. "Zednické práce", "Sádrokartony", "Elektro", "Obklady & Dlažby", "Instalatérství", "Doprava & Ostatní"
+  category: string;                      // např. "Zednické práce", "Sádrokartony", "Elektro", "Obklady a dlažby", "Instalatérství", "Doprava a ostatní"
   title: string;                         // Název položky
   unit: string;                          // m², hod, ks, bm, kpl, den, km
   unitPrice: number;                     // Jednotková cena v Kč

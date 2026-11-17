@@ -1,4 +1,4 @@
-import { test, expect } from './support/fixtures';
+import { test, expect, jobAction } from './support/fixtures';
 import { SUPABASE } from './support/mock';
 
 // Práce bez signálu: aplikace se po prvním načtení otevře z mezipaměti service workeru
@@ -34,7 +34,7 @@ test.describe('bez signálu', () => {
 
     // Změna bez signálu
     await app.getByRole('button', { name: /Zateplení fasády/ }).first().click();
-    await app.getByRole('button', { name: 'Adresa stavby' }).click();
+    await jobAction(app, 'Adresa stavby');
     await app.locator('#nahled-adresa-stavby').fill('Bez signálu 1, Beroun');
     await app.getByRole('dialog').getByRole('button', { name: 'Uložit' }).click();
     expect(JSON.stringify(backend.rows.get('contracts/contract_6') ?? {})).not.toContain('Bez signálu 1');

@@ -155,13 +155,16 @@ export const FinancialRadarPage: React.FC<FinancialRadarPageProps> = ({
         </div>
       </header>
 
-      <div role="group" aria-label="Rok" className="flex flex-wrap gap-2 no-print">
-        {availableYears.map((yr) => (
-          <button key={yr} type="button" aria-pressed={selectedYear === yr} onClick={() => setSelectedYear(yr)} className={chip(selectedYear === yr)}>
-            {yr}
-          </button>
-        ))}
-      </div>
+      {/* Výběr roku, jen když je z čeho vybírat */}
+      {availableYears.length > 1 && (
+        <div role="group" aria-label="Rok" className="flex flex-wrap gap-2 no-print">
+          {availableYears.map((yr) => (
+            <button key={yr} type="button" aria-pressed={selectedYear === yr} onClick={() => setSelectedYear(yr)} className={chip(selectedYear === yr)}>
+              {yr}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-9 items-start">
         <div className="lg:col-span-7 space-y-9 min-w-0">

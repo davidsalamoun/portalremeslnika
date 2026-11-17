@@ -40,6 +40,13 @@ const chip = (active: boolean) =>
 const countWord = (n: number, one: string, few: string, many: string) => `${n} ${n === 1 ? one : n >= 2 && n <= 4 ? few : many}`;
 const textLink = 'min-h-11 inline-flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-300 underline underline-offset-2 cursor-pointer';
 
+const SETTINGS_TABS = [
+  { key: 'udaje', label: 'Vaše údaje' },
+  { key: 'cenik', label: 'Ceník' },
+  { key: 'zaloha', label: 'Záloha dat' },
+] as const;
+type SettingsTab = (typeof SETTINGS_TABS)[number]['key'];
+
 interface SettingsPageProps {
   initialProfile: ContractorProfile | null;
   onSave: (profile: ContractorProfile) => void;
@@ -59,6 +66,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   onOpenPaywall,
   onOpenInvoiceModal,
 }) => {
+  const [tab, setTab] = useState<SettingsTab>('udaje');
   const [name, setName] = useState('');
   const [ico, setIco] = useState('');
   const [dic, setDic] = useState('');
@@ -329,7 +337,38 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-9 items-start">
+      {/* Záložky: dlouhý ceník nepřebije údaje na dokumentech */}
+      <div role="tablist" aria-label="Části nastavení" className="flex gap-1 overflow-x-auto border-b border-slate-300 dark:border-slate-700 -mt-3">
+        {SETTINGS_TABS.map((t, idx) => (
+          <button
+            key={t.key}
+            id={`nastaveni-zalozka-${t.key}`}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.key}
+            aria-controls={`nastaveni-panel-${t.key}`}
+            tabIndex={tab === t.key ? 0 : -1}
+            onClick={() => setTab(t.key)}
+            onKeyDown={(e) => {
+              if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+              e.preventDefault();
+              const next = SETTINGS_TABS[(idx + (e.key === 'ArrowRight' ? 1 : SETTINGS_TABS.length - 1)) % SETTINGS_TABS.length];
+              setTab(next.key);
+              document.getElementById(`nastaveni-zalozka-${next.key}`)?.focus();
+            }}
+            className={`min-h-11 px-3.5 -mb-px whitespace-nowrap font-semibold border-b-[3px] cursor-pointer transition-colors ${
+              tab === t.key
+                ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'udaje' && (
+      <div id="nastaveni-panel-udaje" role="tabpanel" aria-labelledby="nastaveni-zalozka-udaje" className="grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-9 items-start">
         {/* Údaje zhotovitele */}
         <section aria-labelledby="nastaveni-udaje" className="lg:col-span-8 space-y-2.5 min-w-0">
           <h2 id="nastaveni-udaje" className={sectionTitle}>
@@ -527,11 +566,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           </div>
         </aside>
       </div>
+      )}
 
-      <PriceListSettingsSection onToast={onToast} />
+      {tab === 'cenik' && (
+        <div id="nastaveni-panel-cenik" role="tabpanel" aria-labelledby="nastaveni-zalozka-cenik">
+          <PriceListSettingsSection onToast={onToast} />
+        </div>
+      )}
 
       {/* Záloha a obnova */}
-      <section aria-labelledby="nastaveni-zaloha" className="space-y-2.5">
+      {tab === 'zaloha' && (
+      <section id="nastaveni-panel-zaloha" role="tabpanel" aria-labelledby="nastaveni-zalozka-zaloha" className="space-y-2.5">
         <h2 id="nastaveni-zaloha" className={sectionTitle}>
           Záloha dat
         </h2>
@@ -568,6 +613,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           </div>
         </div>
       </section>
+      )}
 
       <SignatureModal
         isOpen={isSignatureModalOpen}

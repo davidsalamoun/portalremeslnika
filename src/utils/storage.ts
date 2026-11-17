@@ -240,14 +240,14 @@ export function seedSampleData(): { contractor: ContractorProfile; client: Clien
 // Výchozí ceník pro české živnostníky
 export const DEFAULT_PRICE_LIST_ITEMS: Omit<import('../types/contract').PriceListTemplateItem, 'id'>[] = [
   // Práce
-  { category: 'Hodinové sazby & Doprava', type: 'prace', title: 'Hodinová sazba řemeslníka', unit: 'hod', unitPrice: 550, description: 'Běžné montážní a servisní práce' },
-  { category: 'Hodinové sazby & Doprava', type: 'prace', title: 'Havarijní výjezd / víkendový příplatek', unit: 'hod', unitPrice: 850, description: 'Práce mimo běžnou pracovní dobu' },
-  { category: 'Hodinové sazby & Doprava', type: 'ostatni', title: 'Doprava na stavbu', unit: 'km', unitPrice: 12, description: 'Paušální sazba za km tam i zpět' },
-  { category: 'Obklady & Dlažby', type: 'prace', title: 'Pokládka keramického obkladu / dlažby', unit: 'm²', unitPrice: 650, description: 'Standardní formát do 60x60 cm' },
-  { category: 'Obklady & Dlažby', type: 'prace', title: 'Pokládka velkoformátové dlažby', unit: 'm²', unitPrice: 950, description: 'Formáty nad 60x120 cm včetně manipulace' },
-  { category: 'Obklady & Dlažby', type: 'prace', title: 'Penetrace podkladu', unit: 'm²', unitPrice: 40, description: 'Hloubková penetrace podlah a stěn' },
-  { category: 'Obklady & Dlažby', type: 'prace', title: 'Dvousložková hydroizolace včetně pásek', unit: 'm²', unitPrice: 140, description: '2x vrstva hydroizolační stěrky' },
-  { category: 'Obklady & Dlažby', type: 'prace', title: 'Spárování a silikonování koutů', unit: 'bm', unitPrice: 65, description: 'Elastické silikonování styčných spár' },
+  { category: 'Hodinové sazby a doprava', type: 'prace', title: 'Hodinová sazba řemeslníka', unit: 'hod', unitPrice: 550, description: 'Běžné montážní a servisní práce' },
+  { category: 'Hodinové sazby a doprava', type: 'prace', title: 'Havarijní zásah / víkendový příplatek', unit: 'hod', unitPrice: 850, description: 'Práce mimo běžnou pracovní dobu' },
+  { category: 'Hodinové sazby a doprava', type: 'ostatni', title: 'Doprava na stavbu', unit: 'km', unitPrice: 12, description: 'Paušální sazba za km tam i zpět' },
+  { category: 'Obklady a dlažby', type: 'prace', title: 'Pokládka keramického obkladu / dlažby', unit: 'm²', unitPrice: 650, description: 'Standardní formát do 60x60 cm' },
+  { category: 'Obklady a dlažby', type: 'prace', title: 'Pokládka velkoformátové dlažby', unit: 'm²', unitPrice: 950, description: 'Formáty nad 60x120 cm včetně manipulace' },
+  { category: 'Obklady a dlažby', type: 'prace', title: 'Penetrace podkladu', unit: 'm²', unitPrice: 40, description: 'Hloubková penetrace podlah a stěn' },
+  { category: 'Obklady a dlažby', type: 'prace', title: 'Dvousložková hydroizolace včetně pásek', unit: 'm²', unitPrice: 140, description: '2x vrstva hydroizolační stěrky' },
+  { category: 'Obklady a dlažby', type: 'prace', title: 'Spárování a silikonování koutů', unit: 'bm', unitPrice: 65, description: 'Elastické silikonování styčných spár' },
   { category: 'Sádrokartony', type: 'prace', title: 'Montáž SDK příčky (jednoduché opláštění)', unit: 'm²', unitPrice: 480, description: 'Konstrukce CW/UW včetně minerální izolace' },
   { category: 'Sádrokartony', type: 'prace', title: 'Montáž SDK podhledu', unit: 'm²', unitPrice: 520, description: 'Závěsný rošt CD/UD s deskou RB 12.5mm' },
   { category: 'Sádrokartony', type: 'prace', title: 'Tmelení a broušení spár (stupeň Q2-Q3)', unit: 'm²', unitPrice: 95, description: 'Tmelení s výztužnou páskou a přebroušení' },

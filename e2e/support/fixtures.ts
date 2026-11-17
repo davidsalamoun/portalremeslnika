@@ -95,3 +95,15 @@ export async function openDoc(page: Page, value: string, tab: RegExp) {
   if (await select.isVisible()) await select.selectOption(value);
   else await page.getByRole('tab', { name: tab }).click();
 }
+
+/** Akce zakázky v náhledu (na počítači tlačítko v řádku zakázky, na mobilu v nabídce „Další“). */
+export async function jobAction(page: Page, name: string) {
+  await page.locator('#nahled-faze').waitFor();
+  const direct = page.getByRole('button', { name, exact: true });
+  if (await direct.isVisible()) {
+    await direct.click();
+    return;
+  }
+  await page.getByRole('button', { name: 'Další', exact: true }).click();
+  await page.getByRole('menuitem', { name }).click();
+}

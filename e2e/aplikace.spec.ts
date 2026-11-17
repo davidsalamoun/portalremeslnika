@@ -1,4 +1,4 @@
-import { test, expect, openTab, openDoc } from './support/fixtures';
+import { test, expect, openTab, openDoc, jobAction } from './support/fixtures';
 import { expectNoOverflow } from './support/mock';
 
 test.describe('stránky aplikace', () => {
@@ -66,7 +66,7 @@ test.describe('dokumenty zakázky', () => {
 
   test('adresa stavby se propíše do čl. 2.1 smlouvy a odešle do účtu', async ({ app, backend }) => {
     await app.getByRole('button', { name: /Zateplení fasády/ }).first().click();
-    await app.getByRole('button', { name: 'Adresa stavby' }).click();
+    await jobAction(app, 'Adresa stavby');
     await app.locator('#nahled-adresa-stavby').fill('Na Výsluní 12, 251 01 Říčany');
     await app.getByRole('dialog').getByRole('button', { name: 'Uložit' }).click();
     await expect(app.locator('.contract-page')).toContainText('Místem provedení díla je Na Výsluní 12, 251 01 Říčany');
@@ -119,4 +119,32 @@ test.describe('export ISDOC', () => {
     const bytes = await fs.readFile((await zip.path())!);
     expect(bytes.readUInt32LE(0)).toBe(0x04034b50);
   });
+});
+
+test('nastavení: záložky údaje, ceník a záloha', async ({ app }) => {
+  await openTab(app, 'Nastavení');
+  await expect(app.getByRole('tab', { name: 'Vaše údaje' })).toHaveAttribute('aria-selected', 'true');
+  await expect(app.locator('#nastaveni-podpis')).toBeVisible();
+  await app.getByRole('tab', { name: 'Ceník' }).click();
+  await expect(app.getByRole('heading', { name: 'Ceník prací a materiálu' })).toBeVisible();
+  await expect(app.getByRole('heading', { name: 'Vaše údaje' })).toHaveCount(0);
+  // Šipkou na další záložku
+  await app.getByRole('tab', { name: 'Ceník' }).press('ArrowRight');
+  await expect(app.getByRole('tab', { name: 'Záloha dat' })).toBeFocused();
+  await expect(app.getByRole('button', { name: 'Stáhnout zálohu' })).toBeVisible();
+});
+
+test('kalendář na mobilu: dnešek nad měsícem a další dny', async ({ app }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobil', 'jen na mobilu');
+  await openTab(app, 'Kalendář');
+  const today = app.getByRole('heading', { name: 'Dnes', exact: true });
+  const month = app.getByRole('heading', { name: /\d{4}$/ });
+  expect((await today.boundingBox())!.y).toBeLessThan((await month.boundingBox())!.y);
+  const next = app.getByRole('heading', { name: 'Další dny' });
+  await expect(next).toBeVisible();
+  // Výběr události z dalších dnů ukáže její den
+  const item = app.locator('button', { hasText: 'Předání' }).filter({ hasText: /\d+\. \d+\./ }).first();
+  await item.click();
+  await expect(today).toHaveCount(0);
+  await expect(next).toHaveCount(0);
 });

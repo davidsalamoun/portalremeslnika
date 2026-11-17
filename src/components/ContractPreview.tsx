@@ -34,6 +34,7 @@ import {
   MapPin,
   ChevronDown,
   ChevronUp,
+  MoreHorizontal,
 } from 'lucide-react';
 import { Contract, ContractStatus } from '../types/contract';
 import {
@@ -138,6 +139,8 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
 
   const [signatureModalRole, setSignatureModalRole] = useState<'contractor' | 'client' | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  // Na mobilu jsou akce zakázky schované v nabídce „Další“, aby dokument začínal výš
+  const [isJobMenuOpen, setIsJobMenuOpen] = useState(false);
   const [isExpensesModalOpen, setIsExpensesModalOpen] = useState(false);
   const [siteAddressDraft, setSiteAddressDraft] = useState<string | null>(null);
   const [isLogbookModalOpen, setIsLogbookModalOpen] = useState(false);
@@ -583,7 +586,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
       </div>
 
       {/* Zakázka: fáze, podpis, náklady a nástroje (neposouvá se s lištou) */}
-      <div className="no-print max-w-6xl mx-auto px-3 sm:px-4 pt-4 flex flex-wrap items-center gap-2 text-[15px] leading-snug">
+      <div className="no-print max-w-6xl mx-auto px-3 sm:px-4 pt-4 flex md:flex-wrap items-center gap-2 text-[15px] leading-snug">
         <label htmlFor="nahled-faze" className="text-slate-600 dark:text-slate-400">
           Fáze
         </label>
@@ -591,7 +594,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
           id="nahled-faze"
           value={jobStage.key}
           onChange={(e) => handleStageChange(e.target.value as JobStageKey)}
-          className="min-h-11 px-3 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-semibold cursor-pointer"
+          className="min-h-11 min-w-0 flex-1 md:flex-none px-3 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-semibold cursor-pointer"
         >
           {JOB_STAGE_LABELS.map((st, idx) => (
             <option key={st.key} value={st.key} disabled={!!currentContract.handoverData && idx < 4}>
@@ -601,29 +604,29 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
         </select>
 
         {isInvoiceOnly ? null : currentContract.clientSignature ? (
-          <span className="min-h-11 px-3 inline-flex items-center gap-1.5 rounded-md border-[1.5px] border-blue-600 text-blue-600 dark:border-blue-300 dark:text-blue-300 font-semibold">
+          <span className="min-h-11 px-3 hidden md:inline-flex items-center gap-1.5 rounded-md border-[1.5px] border-blue-600 text-blue-600 dark:border-blue-300 dark:text-blue-300 font-semibold">
             <Check className="w-4 h-4" />
             <span>Podepsáno {formatDateCs(currentContract.clientSignatureDate || currentContract.conclusionDate)}</span>
           </span>
         ) : (
-          <button type="button" onClick={handleManualCheckSignature} disabled={isCheckingSignature} className={tbButton}>
+          <button type="button" onClick={handleManualCheckSignature} disabled={isCheckingSignature} className={`${tbButton} !hidden md:!inline-flex`}>
             <RefreshCw className={`w-[18px] h-[18px] ${isCheckingSignature ? 'animate-spin' : ''}`} />
             <span>{isCheckingSignature ? 'Ověřuji…' : 'Ověřit online podpis'}</span>
           </button>
         )}
 
-        <button type="button" onClick={() => setIsExpensesModalOpen(true)} className={tbButton}>
+        <button type="button" onClick={() => setIsExpensesModalOpen(true)} className={`${tbButton} !hidden md:!inline-flex`}>
           <TrendingUp className="w-[18px] h-[18px]" />
           <span>Náklady a zisk</span>
         </button>
 
-        <button type="button" onClick={() => setSiteAddressDraft(currentContract.siteAddress || '')} className={tbButton}>
+        <button type="button" onClick={() => setSiteAddressDraft(currentContract.siteAddress || '')} className={`${tbButton} !hidden md:!inline-flex`}>
           <MapPin className="w-[18px] h-[18px]" />
           <span>Adresa stavby</span>
         </button>
 
         {isPro && (
-          <div className="relative">
+          <div className="relative hidden md:block">
             <button type="button" onClick={() => setIsSiteToolsMenuOpen(!isSiteToolsMenuOpen)} aria-expanded={isSiteToolsMenuOpen} className={tbButton}>
               <Wrench className="w-[18px] h-[18px]" />
               <span>Nástroje stavby</span>
@@ -661,6 +664,100 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
             )}
           </div>
         )}
+
+        {/* Mobil: podpis, náklady, adresa stavby a nástroje v jedné nabídce */}
+        <div className="relative md:hidden shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsJobMenuOpen(!isJobMenuOpen)}
+            aria-expanded={isJobMenuOpen}
+            aria-haspopup="menu"
+            className={tbButton}
+          >
+            <MoreHorizontal className="w-[18px] h-[18px]" />
+            <span>Další</span>
+            {hasUnreturnedTools && <span className="w-2 h-2 rounded-full bg-rose-600 shrink-0" title="Nevrácené nářadí" />}
+          </button>
+          {isJobMenuOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setIsJobMenuOpen(false)} />
+              <div role="menu" className={`${tbMenu} right-0 w-72 max-w-[calc(100vw-1.5rem)] max-h-[60vh] overflow-y-auto`}>
+                {isInvoiceOnly ? null : currentContract.clientSignature ? (
+                  <div className="min-h-11 px-3.5 flex items-center gap-2.5 font-semibold text-blue-600 dark:text-blue-300">
+                    <Check className="w-[18px] h-[18px] shrink-0" />
+                    <span>Podepsáno {formatDateCs(currentContract.clientSignatureDate || currentContract.conclusionDate)}</span>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    disabled={isCheckingSignature}
+                    onClick={() => {
+                      setIsJobMenuOpen(false);
+                      handleManualCheckSignature();
+                    }}
+                    className={tbMenuItem}
+                  >
+                    <RefreshCw className="w-[18px] h-[18px] shrink-0" />
+                    <span>Ověřit online podpis</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsJobMenuOpen(false);
+                    setIsExpensesModalOpen(true);
+                  }}
+                  className={tbMenuItem}
+                >
+                  <TrendingUp className="w-[18px] h-[18px] shrink-0" />
+                  <span>Náklady a zisk</span>
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsJobMenuOpen(false);
+                    setSiteAddressDraft(currentContract.siteAddress || '');
+                  }}
+                  className={tbMenuItem}
+                >
+                  <MapPin className="w-[18px] h-[18px] shrink-0" />
+                  <span>Adresa stavby</span>
+                </button>
+                {isPro && (
+                  <>
+                    <div className="px-3.5 pt-3 pb-1.5 text-sm font-semibold text-slate-600 dark:text-slate-400">Nástroje stavby</div>
+                    {siteTools.map((tool) => {
+                      const Icon = tool.icon;
+                      return (
+                        <button
+                          key={tool.label}
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            setIsJobMenuOpen(false);
+                            tool.open();
+                          }}
+                          className={tbMenuItem}
+                        >
+                          <Icon className="w-[18px] h-[18px] shrink-0" />
+                          <span className="flex-1">{tool.label}</span>
+                          {tool.note && (
+                            <span className={tool.alert ? 'font-semibold text-rose-700 dark:text-rose-400' : 'text-slate-600 dark:text-slate-400 tabular-nums'}>
+                              {tool.note}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Contract Preview Page Wrapper */}
