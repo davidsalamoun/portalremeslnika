@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { hasIssuedInvoice } from '../utils/invoiceNumbering';
 import { FileText, FilePlus, Trash2, Download, Search, MessageSquare, RefreshCw, X } from 'lucide-react';
 import { Contract } from '../types/contract';
 import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
@@ -225,7 +226,8 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
               const total = getContractTotal(contract);
               const hasContractorSign = !!contract.contractorSignature;
               const hasClientSign = !!contract.clientSignature;
-              const signText = isQuote || stage.key === 'inquiry'
+              const isInvoiceOnly = contract.docKind === 'invoice';
+              const signText = isQuote || isInvoiceOnly || stage.key === 'inquiry'
                 ? ''
                 : hasContractorSign && hasClientSign
                   ? 'podepsáno oběma stranami'
@@ -241,7 +243,11 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                 contract.siteLogs?.length ? plural(contract.siteLogs.length, 'zápis v deníku', 'zápisy v deníku', 'zápisů v deníku') : '',
                 contract.warranty ? `záruka ${contract.warranty.warrantyPeriodMonths} měsíců` : '',
               ].filter(Boolean);
-              const number = isQuote ? contract.quoteNumber || 'nabídka' : contract.contractNumber;
+              const number = isQuote
+                ? contract.quoteNumber || 'nabídka'
+                : isInvoiceOnly
+                  ? contract.invoiceNumber ? `FA-${contract.invoiceNumber}` : 'zatím nevystavená'
+                  : contract.contractNumber;
               return (
                 <div key={contract.id} className="px-5 py-[18px] space-y-2.5">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -254,7 +260,8 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                         {contract.client?.name || 'Klient bez jména'}
                       </button>
                       <div className="text-slate-600 dark:text-slate-400 line-clamp-2">
-                        {stage.key === 'inquiry' ? 'Poptávka' : isQuote ? 'Nabídka' : 'Smlouva'} {number}, {contract.workDescription}
+                        {stage.key === 'inquiry' ? 'Poptávka' : isQuote ? 'Nabídka' : isInvoiceOnly ? 'Faktura' : 'Smlouva'} {number}, {contract.workDescription}
+                        {contract.invoiceCancelledAt ? ', faktura stornovaná' : ''}
                       </div>
                     </div>
                     <div className="w-full sm:w-auto flex sm:block items-baseline justify-between gap-3 sm:text-right">
@@ -283,6 +290,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                         <FileText className="w-4 h-4" />
                         <span>Otevřít</span>
                       </button>
+                      {!isInvoiceOnly && (
                       <button
                         type="button"
                         onClick={() => handleDownloadDocx(contract)}
@@ -293,6 +301,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                         <Download className="w-4 h-4" />
                         <span className="hidden sm:inline">{exportingId === contract.id ? 'Připravuji…' : 'Word'}</span>
                       </button>
+                      )}
                       <a
                         href={getWhatsAppShareUrl(contract, 'smlouva')}
                         target="_blank"
@@ -322,7 +331,24 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
       )}
 
       {contractToDelete && (
-        <Dialog title={contractToDelete.docKind === 'quote' ? 'Smazat nabídku?' : 'Smazat smlouvu?'} onClose={() => setContractToDelete(null)}>
+        <Dialog
+          title={hasIssuedInvoice(contractToDelete) ? 'Zakázku nejde smazat' : contractToDelete.docKind === 'quote' ? 'Smazat nabídku?' : 'Smazat zakázku?'}
+          onClose={() => setContractToDelete(null)}
+        >
+          {hasIssuedInvoice(contractToDelete) ? (
+          <div className="space-y-5">
+            <p className="text-slate-900 dark:text-slate-100">
+              K zakázce pro klienta <span className="font-semibold">{contractToDelete.client?.name}</span> je vystavená faktura.
+              Vystavené faktury musí zůstat v evidenci, aby řada čísel neměla díry. Pokud se zakázka nekoná, otevřete fakturu
+              a zvolte Stornovat.
+            </p>
+            <div className="flex flex-wrap justify-end gap-2.5">
+              <button type="button" onClick={() => setContractToDelete(null)} className={outlineButton}>
+                Rozumím
+              </button>
+            </div>
+          </div>
+          ) : (
           <div className="space-y-5">
             <p className="text-slate-900 dark:text-slate-100">
               Zakázka pro klienta <span className="font-semibold">{contractToDelete.client?.name}</span> zmizí i se vším, co k ní
@@ -345,6 +371,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
               </button>
             </div>
           </div>
+          )}
         </Dialog>
       )}
     </div>

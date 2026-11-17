@@ -1,4 +1,5 @@
 import { Contract } from '../types/contract';
+import { getFinalInvoiceNumber, getAdvanceInvoiceNumber } from './invoiceNumbering';
 import {
   formatCurrency,
   formatDateCs,
@@ -111,8 +112,9 @@ Tel.: ${contractorPhone}`;
   }
 
   if (docType === 'zaloha') {
-    const advance = contract.advanceAmount || Math.round(contract.price * 0.4);
-    const subject = `Zálohová faktura ZAL-${contract.invoiceNumber} – ${contractorName}`;
+    const advance = contract.advanceAmount || 0;
+    const advanceNo = getAdvanceInvoiceNumber(contract);
+    const subject = `Zálohová faktura${advanceNo ? ` ZAL-${advanceNo}` : ''} – ${contractorName}`;
     const body = `Dobrý den, ${clientName},
 
 zasílám podklady k úhradě sjednané zálohy na zakázku:
@@ -139,7 +141,8 @@ ${contractorName}`;
   }
 
   if (docType === 'faktura') {
-    const subject = `Konečná faktura FA-${contract.invoiceNumber} – ${contractorName}`;
+    const finalNo = getFinalInvoiceNumber(contract);
+    const subject = `${contract.docKind === 'invoice' ? 'Faktura' : 'Konečná faktura'}${finalNo ? ` FA-${finalNo}` : ''} – ${contractorName}`;
     const body = `Dobrý den, ${clientName},
 
 dílo bylo úspěšně dokončeno a předáno. Zasílám konečnou fakturu za provedené práce:

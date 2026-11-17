@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { getFinalInvoiceNumber } from '../utils/invoiceNumbering';
 import { getSiteAddress } from '../utils/siteAddress';
 import { Dialog } from './Dialog';
 import QRCode from 'qrcode';
@@ -83,7 +84,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   const clientName = contract.client.name;
   const contractorName = contract.contractor.name;
   const contractorPhone = contract.contractor.phone;
-  const invoiceNum = `FA-${contract.invoiceNumber || '2026001'}`;
+  const invoiceNum = getFinalInvoiceNumber(contract) ? `FA-${getFinalInvoiceNumber(contract)}` : 'faktura';
 
   // Formatted date with weekday in Czech (např. pondělí 18. 5.)
   const formattedStartWithWeekday = useMemo(() => {

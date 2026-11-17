@@ -67,12 +67,15 @@ export const expect = base.expect;
 
 /** Přechod na záložku aplikace (boční nabídka na počítači, spodní lišta nebo „Více“ na mobilu). */
 export async function openTab(page: Page, label: string) {
-  const aside = page.locator('aside');
+  // Boční nabídka (na stránce může být i jiný <aside>, např. souhrn formuláře)
+  const aside = page.locator('aside').filter({ has: page.getByRole('button', { name: /^Přehled/ }) });
   if (await aside.isVisible()) {
     await aside.getByRole('button', { name: new RegExp('^' + label) }).click();
     return;
   }
-  const direct = page.locator('nav').last().getByRole('button', { name: new RegExp(label) });
+  // Na mobilu je „Nová smlouva“ prostřední tlačítko „+ Smlouva“ ve spodní liště
+  const name = label === 'Nová smlouva' ? /Smlouva/ : new RegExp(label);
+  const direct = page.locator('nav').last().getByRole('button', { name });
   if (await direct.count()) await direct.first().click();
   else {
     await page.getByRole('button', { name: /Více/ }).last().click();

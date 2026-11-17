@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { getFinalInvoiceNumber } from '../utils/invoiceNumbering';
 import { Dialog } from './Dialog';
 import {
   X,
@@ -162,14 +163,15 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
       // Jen skutečné smlouvy (ne nabídky); data a částky podle jednotných pravidel (utils/invoiceMath)
       const invoiceDates = getFinalInvoiceDates(c);
       const baseDate = invoiceDates.issueDate;
-      if (isInvoiceable(c) && baseDate >= dateFrom && baseDate <= dateTo) {
+      // Účetní dostane jen vystavené faktury (s číslem); stornované vylučuje isInvoiceable
+      if (isInvoiceable(c) && getFinalInvoiceNumber(c) && baseDate >= dateFrom && baseDate <= dateTo) {
         const totalPrice = getContractTotal(c);
         // Ceny jsou u plátců uvedené včetně DPH, daň je tedy část ceny (21/121, u snížené sazby 12/112), ne přirážka
         const vatVal = c.hasVat ? vatIncludedInGross(totalPrice, getVatRate(c)) : 0;
 
         invoices.push({
           id: c.id,
-          number: c.invoiceNumber || `FV-${c.contractNumber}`,
+          number: `FA-${getFinalInvoiceNumber(c)}`,
           contractNumber: c.contractNumber,
           issueDate: baseDate,
           taxDate: invoiceDates.taxDate,

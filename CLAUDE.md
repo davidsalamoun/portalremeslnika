@@ -248,6 +248,13 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
 Částky, data a stav faktur se počítají jen v `utils/invoiceMath.ts` – používá je doklad faktury, přehled pohledávek,
 úvodní stránka, počítadlo po splatnosti i export pro účetní. Nepočítat je znovu v komponentách.
 - Cena díla = `contract.price` + dodatky (vícepráce i méněpráce); doplatek = cena − sjednaná záloha.
+- **Čísla faktur** (`utils/invoiceNumbering.ts`): u zakázek s `numbering: 2` vzniká číslo až tlačítkem „Vystavit fakturu“
+  (další = nejvyšší v roce + 1; FA- a ZAL- mají každá svou řadu). Do té doby je doklad „Návrh faktury“ bez čísla a nejde
+  poslat. Starší zakázky mají číslo z doby založení a platí jako vystavené. Zakázku s vystavenou fakturou
+  (`hasIssuedInvoice`) nejde smazat, jen stornovat (`invoiceCancelledAt`: storno na faktuře, mimo pohledávky a tržby).
+  Pořadí smluv a nabídek (`nextDocumentSequence`) je taky nejvyšší + 1, ne počet zakázek.
+- **Jen faktura** (`docKind: 'invoice'`): faktura bez smlouvy z formuláře Nová smlouva; náhled má jen fakturu a pokladní
+  doklad, zakázka je rovnou ve fázi Předáno.
 - Konečná faktura se vystavuje k předání díla (`handoverData.handoverDate`, jinak `deliveryDate`), DUZP je stejné,
   splatnost 14 dnů. Zálohová faktura se vystavuje k datu uzavření smlouvy a jen na zálohu sjednanou ve smlouvě
   (`advanceAmount`); bez ní se nenabízí a žádná částka se nedomýšlí.
