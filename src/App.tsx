@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { PrivacyLink } from './components/PrivacyPolicy';
+import { TermsLink } from './components/TermsOfUse';
 import { preloadExportLibraries } from './utils/lazyExports';
 import { Navbar, TabType } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
@@ -1065,6 +1066,7 @@ export default function App() {
           >
             Kde jsou moje data?
           </button>
+          <TermsLink className="min-h-11 inline-flex items-center underline underline-offset-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white" />
           <PrivacyLink className="min-h-11 inline-flex items-center underline underline-offset-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white" />
           </div>
         </div>

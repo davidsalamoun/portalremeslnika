@@ -246,6 +246,12 @@ aplikace portál pro online podpis klientem (`RemoteSigningPortal.tsx`).
   oba texty a posunout `PRIVACY_POLICY_DATE` – nesmí slibovat nic, co neplatí. Údaje provozovatele jsou v
   `src/config/operator.ts` a jsou **zatím provizorní** (vymyšlený název, bez adresy a IČO) – před spuštěním pro skutečné
   uživatele je nahradit skutečnými.
+- **Podmínky používání** (`components/TermsOfUse.tsx`, formální text včetně smlouvy o zpracování podle čl. 28 GDPR
+  v čl. 9): okno otevře odkaz `#podminky-pouzivani` (patička úvodní stránky a aplikace, účet, registrace); v portálu
+  podpisu nejsou. Registrace bez zaškrtnutí souhlasu nejde; souhlas se ukládá k účtu (`user_metadata`: `terms_version`,
+  `terms_accepted_at`). Účet bez aktuální verze uvidí po přihlášení pruh `TermsUpdateBanner` (Přečíst / Souhlasím,
+  jen se signálem). Při změně znění posunout `TERMS_VERSION` v `src/config/operator.ts` – všichni pak potvrdí znovu;
+  text musí odpovídat skutečnosti (služba je zatím zdarma, další zpracovatelé Supabase a Vercel).
 - Změna schématu = úprava `supabase/schema.sql` (musí jít spustit opakovaně) a její nasazení v Supabase.
 - **Online podpis** (`utils/signShares.ts`, tabulka `sign_shares`): řemeslník založí odkaz `?sign=<token>` s náhodným
   tajným kódem (uložen u smlouvy jako `signToken`). Zákazník se nepřihlašuje a k tabulce přístup nemá – smlouvu čte

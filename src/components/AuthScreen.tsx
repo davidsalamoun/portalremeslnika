@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PrivacyLink } from './PrivacyPolicy';
+import { TermsLink, termsAcceptance } from './TermsOfUse';
 import { Mail, Lock, LogIn, UserPlus, ArrowLeft, MailCheck, KeyRound, ShieldCheck } from 'lucide-react';
 import { supabase, authErrorToCzech } from '../utils/supabase';
 import { Logo, Metr } from './Logo';
@@ -29,6 +30,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ initialMode = 'login', o
   const [passwordAgain, setPasswordAgain] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsError, setTermsError] = useState(false);
 
   const switchMode = (next: AuthMode) => {
     setError(null);
@@ -67,10 +70,16 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ initialMode = 'login', o
         if (err) throw err;
       } else if (mode === 'register') {
         if (!validatePassword()) return;
+        if (!termsAccepted) {
+          setTermsError(true);
+          document.getElementById('auth-terms')?.focus();
+          return;
+        }
         const { data, error: err } = await supabase.auth.signUp({
           email: cleanEmail,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          // Souhlas s podmínkami (verze a čas) se ukládá k účtu
+          options: { emailRedirectTo: window.location.origin, data: termsAcceptance() },
         });
         if (err) throw err;
         if (data.user && data.user.identities && data.user.identities.length === 0) {
@@ -254,6 +263,34 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ initialMode = 'login', o
                     required
                   />
                 </div>
+              </div>
+            )}
+
+            {mode === 'register' && (
+              <div>
+                <label htmlFor="auth-terms" className="flex items-start gap-3 min-h-11 cursor-pointer">
+                  <input
+                    id="auth-terms"
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => {
+                      setTermsAccepted(e.target.checked);
+                      if (e.target.checked) setTermsError(false);
+                    }}
+                    aria-invalid={termsError || undefined}
+                    aria-describedby={termsError ? 'auth-terms-error' : undefined}
+                    className="mt-0.5 w-6 h-6 shrink-0 accent-blue-600 cursor-pointer"
+                  />
+                  <span className="text-base text-slate-800 dark:text-slate-200 pt-0.5">
+                    Souhlasím s{' '}
+                    <TermsLink className="font-semibold text-blue-600 dark:text-blue-300 underline underline-offset-2">podmínkami používání</TermsLink>
+                  </span>
+                </label>
+                {termsError && (
+                  <p id="auth-terms-error" role="alert" className="mt-1 text-sm font-semibold text-rose-700 dark:text-rose-300">
+                    Bez souhlasu s podmínkami používání nelze účet založit.
+                  </p>
+                )}
               </div>
             )}
 

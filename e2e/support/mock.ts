@@ -1,4 +1,5 @@
 import { BrowserContext, Page, Route, test as base, expect } from '@playwright/test';
+import { TERMS_VERSION } from '../../src/config/operator';
 
 /**
  * Napodobený Supabase (přihlášení, zápisy do tabulek, úložiště obrázků, funkce pro online podpis), ARES a počasí.
@@ -14,9 +15,22 @@ export interface SignShareMock {
   contract: unknown;
 }
 
-export async function mockBackend(ctx: BrowserContext, opts: { signShare?: SignShareMock | null } = {}) {
+/**
+ * `termsVersion`: verze podmínek, kterou účet potvrdil (null = účet z doby před podmínkami). Výchozí je aktuální
+ * verze, aby se pruh se souhlasem neukazoval v ostatních testech.
+ */
+export async function mockBackend(
+  ctx: BrowserContext,
+  opts: { signShare?: SignShareMock | null; termsVersion?: string | null } = {}
+) {
   const rows = new Map<string, Record<string, unknown>>();
   const submitted: Record<string, unknown>[] = [];
+  /** Těla požadavků na registraci a na úpravu účtu (souhlas s podmínkami). */
+  const signups: Record<string, any>[] = [];
+  const userUpdates: Record<string, any>[] = [];
+  const termsVersion = opts.termsVersion === undefined ? TERMS_VERSION : opts.termsVersion;
+  let userMetadata: Record<string, unknown> = termsVersion ? { terms_version: termsVersion, terms_accepted_at: '2026-01-01T00:00:00Z' } : {};
+  const user = () => ({ id: USER_ID, aud: 'authenticated', role: 'authenticated', email: 'jan@example.cz', identities: [{}], app_metadata: {}, user_metadata: userMetadata });
   const json = (route: Route, body: unknown, status = 200) =>
     route.fulfill({ status, headers: { ...cors, 'content-type': 'application/json' }, body: JSON.stringify(body) });
 
@@ -32,9 +46,22 @@ export async function mockBackend(ctx: BrowserContext, opts: { signShare?: SignS
         expires_in: 3600,
         expires_at: exp,
         refresh_token: 'r',
-        user: { id: USER_ID, aud: 'authenticated', role: 'authenticated', email: 'jan@example.cz', identities: [{}], app_metadata: {}, user_metadata: {} },
+        user: user(),
       });
     }
+    if (url.pathname === '/auth/v1/signup') {
+      const body = req.postDataJSON();
+      signups.push(body);
+      // Potvrzení e-mailem: bez přihlášení
+      return json(route, { ...user(), id: '22222222-2222-4222-8222-222222222222', email: body.email, user_metadata: body.data ?? {} });
+    }
+    if (url.pathname === '/auth/v1/user' && req.method() === 'PUT') {
+      const body = req.postDataJSON();
+      userUpdates.push(body);
+      userMetadata = { ...userMetadata, ...(body.data ?? {}) };
+      return json(route, user());
+    }
+    if (url.pathname === '/auth/v1/user') return json(route, user());
     if (url.pathname.startsWith('/storage/')) return json(route, { Key: 'x' });
     if (url.pathname === '/rest/v1/rpc/get_sign_share') return json(route, opts.signShare ?? null);
     if (url.pathname === '/rest/v1/rpc/submit_sign_share') {
@@ -57,7 +84,7 @@ export async function mockBackend(ctx: BrowserContext, opts: { signShare?: SignS
       body: JSON.stringify({ ico: '12345678', obchodniJmeno: 'Jan Novák', sidlo: { textovaAdresa: 'Květinová 124/8, 14000 Praha 4', nazevObce: 'Praha' } }),
     })
   );
-  return { rows, submitted };
+  return { rows, submitted, signups, userUpdates };
 }
 
 /** Chyby ze stránky a z konzole (bez hlášek o nedostupné síti, které při napodobeném backendu nevadí). */

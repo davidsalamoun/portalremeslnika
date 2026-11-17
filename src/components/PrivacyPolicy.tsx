@@ -41,7 +41,8 @@ export const PrivacyPolicyText: React.FC = () => (
     <p className={p}>Správce zpracovává tyto kategorie osobních údajů:</p>
     <ol className={ol}>
       <li>
-        <strong>Údaje o uživatelském účtu</strong> – e-mailová adresa a přihlašovací heslo. Heslo je uloženo výhradně
+        <strong>Údaje o uživatelském účtu</strong> – e-mailová adresa, přihlašovací heslo a datum a verze souhlasu
+        s podmínkami používání. Heslo je uloženo výhradně
         v jednosměrně zašifrované podobě a správce k němu nemá přístup. Účelem je zřízení a vedení uživatelského účtu;
         právním základem je plnění smlouvy (čl. 6 odst. 1 písm. b) GDPR).
       </li>

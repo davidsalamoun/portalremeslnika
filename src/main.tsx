@@ -2,6 +2,7 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import {AuthGate} from './components/AuthGate.tsx';
 import {PrivacyPolicyHost} from './components/PrivacyPolicy.tsx';
+import {TermsOfUseHost} from './components/TermsOfUse.tsx';
 import './fonts.css';
 import './index.css';
 
@@ -18,5 +19,6 @@ createRoot(document.getElementById('root')!).render(
       <App />
     </AuthGate>
     <PrivacyPolicyHost />
+    <TermsOfUseHost />
   </>
 );
