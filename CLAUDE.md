@@ -124,6 +124,14 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   na papíře (jen na obrazovce) musí mít třídu `no-print` nebo být `button`/`a`, jinak mu pravidla vezmou barvy.
 - Ovládací prvky mají výšku aspoň 44 px a viditelné označení při ovládání klávesnicí.
 
+## Ikony a náhled odkazu
+
+`public/`: `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`,
+`manifest.webmanifest` (přidání na plochu telefonu) a `og.png` (náhled odkazu ve zprávách, 1200 × 630). `og:image`
+musí být celá adresa: `vite.config.ts` při buildu dosadí za `__SITE_URL__` v `index.html` adresu z proměnné `SITE_URL`,
+jinak produkční adresu projektu na Vercelu (`VERCEL_PROJECT_PRODUCTION_URL`). Při změně značky přegenerovat všechny.
+Písma se načítají jen dvě (IBM Plex Sans, Barlow Semi Condensed).
+
 ## Načítání aplikace
 
 Úvodní balík obsahuje jen přihlášení, navigaci a přehled. Ostatní stránky a modály jsou v `App.tsx` přes `React.lazy`
