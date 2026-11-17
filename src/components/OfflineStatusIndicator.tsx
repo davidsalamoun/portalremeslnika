@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { WifiOff, Wifi, CheckCircle2 } from 'lucide-react';
+import { WifiOff, CheckCircle2 } from 'lucide-react';
 import { triggerHaptic } from '../utils/haptics';
 
 export const OfflineStatusIndicator: React.FC = () => {
@@ -36,19 +36,17 @@ export const OfflineStatusIndicator: React.FC = () => {
 
   if (showReconnected) {
     return (
-      <div className="bg-emerald-600 text-white px-4 py-1.5 text-xs font-bold flex items-center justify-center gap-2 text-center animate-in slide-in-from-top duration-200 sticky top-0 z-50 shadow-md">
-        <CheckCircle2 className="w-3.5 h-3.5" />
-        <span>Jste opět online – připojení k síti bylo obnoveno</span>
+      <div role="status" className="bg-emerald-700 text-white px-4 py-2 text-[14px] font-medium flex items-center justify-center gap-2 text-center sticky top-0 z-50">
+        <CheckCircle2 className="w-4 h-4 shrink-0" />
+        <span>Signál je zpět, změny se odesílají do účtu.</span>
       </div>
     );
   }
 
   return (
-    <div className="bg-amber-600 text-white px-4 py-2 text-xs font-bold flex items-center justify-center gap-2 text-center sticky top-0 z-50 shadow-md">
-      <WifiOff className="w-4 h-4 shrink-0 animate-pulse" />
-      <span>
-        Režim bez signálu (offline): Vše se bezpečně ukládá v telefonu a synchronizuje se, jakmile vyjdete na signál.
-      </span>
+    <div role="status" className="bg-slate-900 dark:bg-slate-800 text-white px-4 py-2 text-[14px] font-medium flex items-center justify-center gap-2 text-center sticky top-0 z-50">
+      <WifiOff className="w-4 h-4 shrink-0" />
+      <span>Jste bez signálu. Změny se ukládají v zařízení a odešlou se, až bude signál.</span>
     </div>
   );
 };

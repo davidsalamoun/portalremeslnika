@@ -27,6 +27,24 @@ export function toCloudUser(user: { id: string; email?: string | null } | null |
   };
 }
 
+/**
+ * Uživatel z přihlášení uloženého v prohlížeči, i když platnost přístupového klíče vypršela. Bez signálu se klíč
+ * nedá obnovit a Supabase pak hlásí „žádné přihlášení“, ačkoli uživatele neodhlásil – uložené přihlášení maže
+ * jen při skutečném odhlášení nebo neplatném obnovovacím klíči. Aplikace proto do té doby pustí uživatele
+ * k datům v zařízení a přihlášení se obnoví, až bude signál.
+ */
+export function getStoredSessionUser(): CloudUser | null {
+  try {
+    const key = (supabase.auth as unknown as { storageKey?: string }).storageKey;
+    const raw = key ? window.localStorage.getItem(key) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return toCloudUser(parsed?.user ?? parsed?.currentSession?.user);
+  } catch {
+    return null;
+  }
+}
+
 /** Převod chyb přihlášení ze Supabase na české hlášky. */
 export function authErrorToCzech(err: any): string {
   const code: string = err?.code || '';

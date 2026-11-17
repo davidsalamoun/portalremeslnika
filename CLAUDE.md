@@ -142,6 +142,17 @@ Písma se načítají jen dvě (IBM Plex Sans, Barlow Semi Condensed).
 `preloadLazyChunks` dotáhne všechny na pozadí, aby aplikace po načtení fungovala i bez připojení. Novou stránku nebo
 modál přidávat do `lazyLoaders`, ne statickým importem; `exportDocx`/`exportPdf` nikdy neimportovat přímo z komponent.
 
+## Práce bez signálu
+
+`src/sw/serviceWorkerSource.ts` je zdroj service workeru; `vite.config.ts` (plugin `offlineServiceWorker`) z něj při
+buildu vytvoří `dist/sw.js` se seznamem všech souborů aplikace a verzí. `main.tsx` ho registruje jen v produkčním buildu.
+Soubory aplikace se čtou z mezipaměti, stránka ze sítě (po 3 s bez odpovědi z mezipaměti), písma Google se ukládají
+při použití; data (Supabase, `/api`) jdou vždy na síť. Nový soubor v `public/` se do seznamu dostane sám.
+Bez signálu `AuthGate` nečeká na obnovu vypršelého přístupového klíče a pustí uživatele s uloženým přihlášením
+(`getStoredSessionUser`) k datům v zařízení. Změny se zařadí do fronty a odešlou po návratu signálu; když první
+pokus selže (Supabase po neúspěšné obnově klíče minutu čeká), synchronizace se zkouší znovu po 15, 30 a 60 s.
+`vercel.json` posílá `sw.js`, `index.html` a manifest bez dlouhého ukládání v prohlížeči.
+
 ## Technologie
 
 React 19, TypeScript, Vite 8, Tailwind CSS 4 (`@tailwindcss/vite`), `motion`, `lucide-react`,
