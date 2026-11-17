@@ -44,8 +44,9 @@ export function buildSigningUrl(token: string): string {
 }
 
 /**
- * Zákazník dostane jen to, co portál k podpisu zobrazuje – ne náklady, fotky, deník ani další interní
- * údaje řemeslníka.
+ * Zákazník dostane jen to, co portál k podpisu zobrazuje – souhrn a údaje, ze kterých se skládá celé znění
+ * smlouvy (včetně e-mailu, DIČ a čísla účtu zhotovitele, které smlouva uvádí). Ne náklady, fotky, deník ani
+ * další interní údaje řemeslníka.
  */
 export function toSharedContract(contract: Contract): Partial<Contract> {
   return {
@@ -66,13 +67,22 @@ export function toSharedContract(contract: Contract): Partial<Contract> {
       ico: contract.contractor?.ico,
       address: contract.contractor?.address,
       phone: contract.contractor?.phone,
+      email: contract.contractor?.email,
+      dic: contract.contractor?.dic,
+      bankAccount: contract.contractor?.bankAccount,
     } as Contract['contractor'],
     client: {
       name: contract.client?.name,
       address: contract.client?.address,
       phone: contract.client?.phone,
+      email: contract.client?.email,
+      ico: contract.client?.ico,
     } as Contract['client'],
-  };
+    // Dodatky jen v rozsahu, který zmiňuje text smlouvy (počet a vliv na cenu)
+    amendments: (contract.amendments || []).map((a) => ({ id: a.id, priceDifference: a.priceDifference })) as Contract['amendments'],
+    // Verze 2: odkaz nese všechny údaje, ze kterých se skládá celé znění smlouvy
+    shareVersion: 2,
+  } as Partial<Contract>;
 }
 
 const toDatePart = (iso?: string | null) => (iso || new Date().toISOString()).split('T')[0];
