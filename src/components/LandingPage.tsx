@@ -13,14 +13,24 @@ interface LandingPageProps {
 
 const STAGES = ['Poptávka', 'Nabídka', 'Smlouva', 'Realizace', 'Předáno', 'Zaplaceno'];
 
-// Ukázková zakázka v úvodu: co se v každé fázi děje a jaký doklad přibude
-const DEMO: { next: string; doc?: { title: string; note: string; kind?: 'sign' | 'paid' } }[] = [
+// Ukázkové zakázky podle řemesla (vymyšlené, jen pro ukázku na úvodní stránce)
+const CRAFTS = [
+  { key: 'obklady', label: 'Obklady', title: 'Rekonstrukce koupelny', client: 'Marek Dvořák, Černošice', price: '38 000 Kč', items: '4 položky', photos: '12 fotek, 5 zápisů' },
+  { key: 'elektro', label: 'Elektro', title: 'Elektroinstalace v bytě 3+1', client: 'Jana Malá, Kladno', price: '64 000 Kč', items: '6 položek', photos: '9 fotek, revize' },
+  { key: 'malovani', label: 'Malování', title: 'Výmalba bytu 2+kk', client: 'Petr Novotný, Brno', price: '14 500 Kč', items: '3 položky', photos: '6 fotek, 2 zápisy' },
+  { key: 'sadrokarton', label: 'Sádrokarton', title: 'Podhled v obývacím pokoji', client: 'Eva Králová, Beroun', price: '27 800 Kč', items: '4 položky', photos: '8 fotek, 3 zápisy' },
+  { key: 'podlahy', label: 'Podlahy', title: 'Vinylová podlaha 45 m²', client: 'Tomáš Beneš, Plzeň', price: '32 400 Kč', items: '5 položek', photos: '7 fotek, 2 zápisy' },
+] as const;
+type Craft = (typeof CRAFTS)[number];
+
+// Co se v každé fázi děje a jaký doklad přibude
+const demoSteps = (c: Craft): { next: string; doc?: { title: string; note: string; kind?: 'sign' | 'paid' } }[] => [
   { next: 'Obhlídka v úterý v 9:00' },
-  { next: 'Čeká na potvrzení nabídky', doc: { title: 'Cenová nabídka', note: '38 000 Kč, 4 položky' } },
+  { next: 'Čeká na potvrzení nabídky', doc: { title: 'Cenová nabídka', note: `${c.price}, ${c.items}` } },
   { next: 'Zákazník podepsal v mobilu', doc: { title: 'Smlouva o dílo', note: '', kind: 'sign' } },
-  { next: 'Po dokončení předat dílo protokolem', doc: { title: 'Fotky a deník', note: '12 fotek, 5 zápisů' } },
+  { next: 'Po dokončení předat dílo protokolem', doc: { title: 'Fotky a deník', note: c.photos } },
   { next: 'Vystavit fakturu', doc: { title: 'Předávací protokol', note: 'Podepsáno bez vad' } },
-  { next: 'Hotovo', doc: { title: 'Faktura s QR platbou', note: 'Zaplaceno 38 000 Kč', kind: 'paid' } },
+  { next: 'Hotovo', doc: { title: 'Faktura s QR platbou', note: `Zaplaceno ${c.price}`, kind: 'paid' } },
 ];
 
 const STEPS = [
@@ -54,28 +64,58 @@ function prefersReducedMotion(): boolean {
   }
 }
 
-/** Zakázka, která v úvodu sama projde od poptávky po zaplacení (bez animací rovnou hotová). */
+/**
+ * Zakázka, která v úvodu sama projde od poptávky po zaplacení (bez animací rovnou hotová). Návštěvník si nahoře
+ * vybere své řemeslo a ukázka se přepne na zakázku z jeho oboru.
+ */
 const LiveJob: React.FC = () => {
+  const [craft, setCraft] = useState<Craft>(CRAFTS[0]);
   const [step, setStep] = useState(() => (prefersReducedMotion() ? 5 : 0));
   useEffect(() => {
     if (prefersReducedMotion()) return;
     const timer = window.setTimeout(() => setStep((s) => (s + 1) % 6), step === 5 ? 3200 : 1700);
     return () => window.clearTimeout(timer);
-  }, [step]);
+  }, [step, craft]);
+  const pickCraft = (c: Craft) => {
+    if (c.key === craft.key) return;
+    setCraft(c);
+    setStep(prefersReducedMotion() ? 5 : 0);
+  };
 
-  const docs = DEMO.slice(0, step + 1).filter((d) => d.doc);
+  const demo = demoSteps(craft);
+  const docs = demo.slice(0, step + 1).filter((d) => d.doc);
   return (
-    <div aria-hidden="true" className="pb-10 lg:pb-12">
+    <div className="pb-10 lg:pb-12">
+      <div id="uvod-remeslo" className="text-[15px] text-blue-100 mb-2">
+        Jaké děláte řemeslo?
+      </div>
+      <div role="group" aria-labelledby="uvod-remeslo" className="flex flex-wrap gap-2 mb-4">
+        {CRAFTS.map((c) => (
+          <button
+            key={c.key}
+            type="button"
+            aria-pressed={c.key === craft.key}
+            onClick={() => pickCraft(c)}
+            className={`min-h-11 px-3.5 rounded-md border-[1.5px] font-medium cursor-pointer transition-colors ${
+              c.key === craft.key ? 'bg-white text-blue-700 border-white' : 'border-white/70 text-white hover:bg-white/10'
+            }`}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+      <div aria-hidden="true">
       <div className="bg-white text-slate-900 border border-slate-200 rounded-md px-5 py-5 shadow-2xl">
         <div className="flex items-baseline justify-between gap-3">
-          <div>
-            <div className="font-semibold text-lg">Rekonstrukce koupelny</div>
-            <div className="text-[14px] text-slate-600">Marek Dvořák, Černošice</div>
+          <div key={craft.key} className="landing-fade min-w-0">
+            <div className="font-semibold text-lg">{craft.title}</div>
+            <div className="text-[14px] text-slate-600">{craft.client}</div>
           </div>
-          <div className="font-display font-bold text-[28px] tabular-nums">38 000 Kč</div>
+          <div key={craft.price} className="landing-fade font-display font-bold text-[28px] tabular-nums whitespace-nowrap">{craft.price}</div>
         </div>
         <Metr step={step} done={step === 5} label="" className="mt-4" />
-        <div className="grid grid-cols-6 text-[12px] sm:text-[13px] text-slate-600 mt-1.5">
+        {/* Na úzkém displeji se popisky nevejdou – fázi říká řádek pod metrem */}
+        <div className="hidden sm:grid grid-cols-6 text-[13px] text-slate-600 mt-1.5">
           {STAGES.map((s, i) => (
             <span key={s} className={i === step ? 'font-semibold text-slate-900' : ''}>
               {s}
@@ -83,12 +123,13 @@ const LiveJob: React.FC = () => {
           ))}
         </div>
         <div className="mt-3.5 min-h-6">
-          <span className="font-semibold">{STAGES[step]}:</span> <span key={step} className="landing-fade">{DEMO[step].next}</span>
+          <span className="font-semibold">{STAGES[step]}:</span> <span key={`${craft.key}-${step}`} className="landing-fade">{demo[step].next}</span>
         </div>
       </div>
-      <div className="mt-3.5 grid grid-cols-2 sm:grid-cols-3 gap-2.5 min-h-[100px]">
+      {/* Místo pro všechny doklady je vyhrazené předem, aby stránka při animaci neposkakovala */}
+      <div className="mt-3.5 grid grid-cols-2 sm:grid-cols-3 gap-2.5 min-h-[222px] sm:min-h-[150px] content-start">
         {docs.map(({ doc }) => (
-          <div key={doc!.title} className="landing-pop bg-white text-slate-900 border border-slate-200 rounded-sm px-3 py-2.5 text-[13px] shadow-lg">
+          <div key={`${craft.key}-${doc!.title}`} className="landing-pop bg-white text-slate-900 border border-slate-200 rounded-sm px-3 py-2.5 text-[13px] shadow-lg">
             <div className="font-display font-semibold text-base leading-tight">{doc!.title}</div>
             {doc!.kind === 'sign' ? (
               <svg width="120" height="30" viewBox="0 0 120 34" className="mt-1">
@@ -109,6 +150,7 @@ const LiveJob: React.FC = () => {
             )}
           </div>
         ))}
+      </div>
       </div>
     </div>
   );
@@ -220,6 +262,24 @@ const OpenOnPhone: React.FC = () => {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister }) => {
   const year = new Date().getFullYear();
+  // Na mobilu se po odrolování pod úvod přilepí dole tlačítko „Založit účet“; u závěrečné výzvy zase zmizí
+  const heroCta = useRef<HTMLDivElement>(null);
+  const finalCta = useRef<HTMLDivElement>(null);
+  const [heroVisible, setHeroVisible] = useState(true);
+  const [finalVisible, setFinalVisible] = useState(false);
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.target === heroCta.current) setHeroVisible(entry.isIntersecting);
+        if (entry.target === finalCta.current) setFinalVisible(entry.isIntersecting);
+      }
+    });
+    if (heroCta.current) observer.observe(heroCta.current);
+    if (finalCta.current) observer.observe(finalCta.current);
+    return () => observer.disconnect();
+  }, []);
+  const showStickyCta = !heroVisible && !finalVisible;
   return (
     <div className="min-h-screen bg-[#F4F5F2] dark:bg-[#111316] text-slate-900 dark:text-slate-100 text-base leading-normal">
       {/* Úvod */}
@@ -245,7 +305,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister })
             <p className="mt-5 text-lg sm:text-xl text-blue-100 max-w-xl">
               Aplikace pro řemeslníky a živnostníky. Zakázka od poptávky po zaplacení v mobilu na stavbě i večer u počítače.
             </p>
-            <div className="mt-7 flex flex-wrap gap-3">
+            <div ref={heroCta} className="mt-7 flex flex-wrap gap-3">
               <button type="button" onClick={onRegister} className={`${yellowButton} flex-1 sm:flex-none`}>
                 Založit účet zdarma
               </button>
@@ -349,7 +409,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister })
 
       {/* Závěr */}
       <div className="bg-slate-900 dark:bg-black text-white">
-        <div className="max-w-[1180px] mx-auto px-4 sm:px-6 py-12 flex flex-wrap items-center justify-between gap-5">
+        <div ref={finalCta} className="max-w-[1180px] mx-auto px-4 sm:px-6 py-12 flex flex-wrap items-center justify-between gap-5">
           <div>
             <div className="font-display font-bold text-3xl sm:text-[40px] leading-tight">Zkuste to na příští zakázce.</div>
             <div className="mt-1 text-slate-300">Účet založíte za minutu, stačí e-mail.</div>
@@ -362,6 +422,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister })
       <footer className="max-w-[1180px] mx-auto px-4 sm:px-6 py-5 text-[14px] text-slate-600 dark:text-slate-400 flex flex-wrap justify-between gap-3">
         <span>© {year} Řemeslník PRO</span>
       </footer>
+
+      {/* Přilepené tlačítko na mobilu */}
+      <div
+        className={`sm:hidden fixed inset-x-0 bottom-0 z-40 px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-800 transition-transform duration-300 ${
+          showStickyCta ? 'translate-y-0' : 'translate-y-full'
+        }`}
+        aria-hidden={!showStickyCta}
+      >
+        <button type="button" onClick={onRegister} tabIndex={showStickyCta ? 0 : -1} className={`${yellowButton} w-full`}>
+          Založit účet zdarma
+        </button>
+      </div>
     </div>
   );
 };

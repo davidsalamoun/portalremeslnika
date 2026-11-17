@@ -112,7 +112,8 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   oddělenými linkou, velká čísla písmem `font-display`, vedlejší akce jako tlačítka s obrysem, žádné dlaždice se statistikami.
 - **Úvodní stránka** (`LandingPage.tsx`): co vidí nepřihlášený návštěvník (AuthGate). Kdo se na zařízení už přihlásil
   (klíč `remeslnik_returning_user`), dostane rovnou přihlášení; logo na přihlášení vede zpět na úvod. Živá ukázka
-  zakázky je jen animace (bez animací hotový stav), podpis na zkoušku se nikam neukládá, QR kód nese adresu webu.
+  zakázky je jen animace (bez animací hotový stav) s volbou řemesla (vymyšlené ukázkové zakázky v `CRAFTS`); na mobilu
+  se pod úvodem přilepí tlačítko „Založit účet zdarma“, podpis na zkoušku se nikam neukládá, QR kód nese adresu webu.
   Snímky jsou v `public/landing/` z aplikace s testovacími daty – při změně vzhledu je přegenerovat. Texty o ceně
   a datech musí odpovídat skutečnosti.
 - **Průvodce prvním spuštěním** (`components/GettingStarted.tsx`, kroky v `utils/gettingStarted.ts`): na přehledu, dokud
