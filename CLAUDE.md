@@ -33,6 +33,7 @@ npm run dev                      # Express + Vite middleware na http://localhost
 npm run build                    # produkční build frontendu do dist/
 npm run lint                     # tsc --noEmit
 npm test                         # testy (tests/*.test.ts, node:test přes tsx)
+npm run e2e                      # průchody aplikací v prohlížeči (e2e/, Playwright, napodobený Supabase)
 NODE_ENV=production npm start    # lokální produkční běh: Express servíruje dist/ + /api
 ```
 
@@ -272,7 +273,11 @@ odstraněny včetně serverových endpointů a závislosti na Gemini. Nepřidáv
   a bannery PRO, paywall i doklad k licenci se nezobrazují. Nezapínat, dokud platbu neověřuje server a v `PRO_CONFIG`
   nejsou skutečné údaje provozovatele – současné IČO a číslo účtu jsou vymyšlené, stejně jako platební formulář
   v `PaywallModal.tsx` (jen napodobuje Stripe). Aktivace PRO parametrem v adrese byla odstraněna.
-- Testy pokrývají synchronizaci, odkazy na obrázky, výpočty faktur a české pomocné funkce; přihlášení a UI se ověřují ručně.
+- Testy (`tests/`) pokrývají synchronizaci, odkazy na obrázky, výpočty faktur a české pomocné funkce. Průchody aplikací
+  (`e2e/`, Playwright) běží proti produkčnímu buildu s napodobeným Supabase (`e2e/support/mock.ts`, data v `seed.ts`)
+  na počítači, mobilu a v tmavém režimu; každý test končí kontrolou, že v konzoli nejsou chyby. GitHub je spouští
+  u každé změny (`.github/workflows/ci.yml`). Ostrý Supabase, ARES a počasí se tak neověřují – ty jen ručně.
+  Novou obrazovku nebo doklad přidat i do průchodů.
 - PDF je obrázek stránky (nejde v něm hledat text). Strany se dělí v mezeře mezi řádky (`computePageSlices`
   v `exportPdf.ts`), ne podle odstavců nebo bloků – nadpis tak může zůstat na konci strany bez svého textu.
 - DPH: aplikace nevystavuje daňový doklad k přijaté záloze ani neřeší přenesení daňové povinnosti mezi plátci;

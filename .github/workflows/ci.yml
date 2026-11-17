@@ -1,0 +1,39 @@
+# Kontrola každé změny: typy, testy, build a automatické průchody aplikací (Supabase je v nich napodobený,
+# žádné tajné klíče nejsou potřeba).
+name: Kontrola
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: kontrola-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  kontrola:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Typy
+        run: npm run lint
+      - name: Testy
+        run: npm test
+      - name: Prohlížeč pro průchody
+        run: npx playwright install --with-deps chromium
+      - name: Průchody aplikací
+        run: npm run e2e
+      - name: Zpráva z průchodů
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zprava-z-pruchodu
+          path: playwright-report
+          retention-days: 7
