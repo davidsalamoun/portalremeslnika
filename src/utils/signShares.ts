@@ -61,6 +61,7 @@ export function toSharedContract(contract: Contract): Partial<Contract> {
     deliveryDate: contract.deliveryDate,
     conclusionDate: contract.conclusionDate,
     executionPlace: contract.executionPlace,
+    siteAddress: contract.siteAddress,
     items: contract.items,
     contractor: {
       name: contract.contractor?.name,

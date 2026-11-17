@@ -37,5 +37,5 @@ export function buildReminderText(input: ReminderInput, tone: ReminderTone): str
   if (tone === 'standard') {
     return `Dobrý den, dovoluji si Vás upozornit, že faktura ${input.invoiceNumber} na částku ${amount} je ${late} (termín byl ${due}). Prosím o kontrolu a úhradu. ${payment} V případě nejasností mě neváhejte kontaktovat. S pozdravem, ${name}.`;
   }
-  return `Dobrý den, k dnešnímu dni evidujeme neuhrazenou fakturu ${input.invoiceNumber} ve výši ${amount}, splatnou ${due} (${late}). Žádám o okamžitou úhradu. ${payment} V opačném případě bude pohledávka postoupena k vymáhání. ${name}.`;
+  return `Dobrý den, k dnešnímu dni evidujeme neuhrazenou fakturu ${input.invoiceNumber} ve výši ${amount}, splatnou ${due} (${late}). Prosím o úhradu nejpozději do 7 dnů. ${payment} Pokud jste už zaplatili, považujte prosím zprávu za bezpředmětnou; pokud je s platbou potíž, ozvěte se mi a domluvíme se. ${name}.`;
 }

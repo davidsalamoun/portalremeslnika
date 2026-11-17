@@ -582,7 +582,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 className={`${fieldBase} ${fieldOk}`}
               />
               <p className={hintText}>
-                Vyplňte, jen když se pracuje jinde, než klient bydlí. Použije se pro navigaci, počasí, kalendář a knihu jízd; text smlouvy se nemění.
+                Vyplňte, jen když se pracuje jinde, než klient bydlí. Uvede se ve smlouvě jako místo provedení díla a použije se pro navigaci, počasí, kalendář a knihu jízd.
               </p>
             </div>
 

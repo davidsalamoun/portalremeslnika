@@ -30,3 +30,10 @@ test('bez účtu a jména se použijí obecné údaje', () => {
   assert.match(t, /Číslo účtu: dle faktury/);
   assert.match(t, /Váš dodavatel/);
 });
+
+test('ani ostrá upomínka nehrozí vymáháním a nabízí domluvu', () => {
+  const text = buildReminderText({ ...base, daysPastDue: 20 }, 'urgent');
+  assert.doesNotMatch(text, /vymáh|postoup/i);
+  assert.match(text, /do 7 dnů/);
+  assert.match(text, /domluvíme/);
+});

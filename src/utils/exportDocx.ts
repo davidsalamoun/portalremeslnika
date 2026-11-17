@@ -103,9 +103,11 @@ export async function exportContractToDocx(contract: Contract): Promise<void> {
                 new TextRun({ text: `${contract.client.ico}\n` }),
               ] : []),
               new TextRun({ text: `Telefon: `, bold: true }),
-              new TextRun({ text: `${contract.client.phone} | ` }),
-              new TextRun({ text: `E-mail: `, bold: true }),
-              new TextRun({ text: `${contract.client.email}\n` }),
+              new TextRun({ text: `${contract.client.phone}${contract.client.email ? ' | ' : '\n'}` }),
+              ...(contract.client.email ? [
+                new TextRun({ text: `E-mail: `, bold: true }),
+                new TextRun({ text: `${contract.client.email}\n` }),
+              ] : []),
               new TextRun({ text: '(dále jen „Objednatel“)', italics: true }),
             ],
           }),
@@ -170,7 +172,9 @@ export async function exportContractToDocx(contract: Contract): Promise<void> {
             spacing: { after: 80 },
             children: [
               new TextRun({
-                text: `2.1 Místem provedení díla je adresa objednatele uvedená v záhlaví této smlouvy, nedohodnou-li se smluvní strany výslovně písemně jinak.`,
+                text: contract.siteAddress?.trim()
+                  ? `2.1 Místem provedení díla je ${contract.siteAddress.trim()}, nedohodnou-li se smluvní strany výslovně písemně jinak.`
+                  : `2.1 Místem provedení díla je adresa objednatele uvedená v záhlaví této smlouvy, nedohodnou-li se smluvní strany výslovně písemně jinak.`,
               }),
             ],
           }),

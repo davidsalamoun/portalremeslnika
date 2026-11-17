@@ -86,7 +86,9 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   měsíce po najetí nebo fokusu, skrytá tabulka pro čtečky.
 - **Adresa stavby:** nepovinné `contract.siteAddress` (formulář smlouvy, tlačítko „Adresa stavby“ v náhledu zakázky).
   Kde aplikace potřebuje místo práce (navigace, počasí, kalendář, kniha jízd, zprávy zákazníkovi), bere ho přes
-  `getSiteAddress`, ne přímo z `client.address`. Do textu dokladů se adresa stavby nepropisuje.
+  `getSiteAddress`, ne přímo z `client.address`. Ve smlouvě je v čl. 2.1 jako místo provedení díla (`ContractBody.tsx`
+  i `exportDocx.ts`); bez ní platí původní věta o adrese objednatele. Jiné doklady ji neuvádějí.
+- **E-mail klienta** je nepovinný: doklady řádek s e-mailem vynechají, když chybí.
 - **Archiv** (`HistoryPage.tsx`): seznam všech dokumentů s hledáním; fáze se tu jen zobrazuje, mění se v Zakázkách.
 - **Nastavení** (`SettingsPage.tsx`): údaje zhotovitele, podpis, razítko, ceník a záloha. Potvrzení (smazání položky,
   obnova ceníku, obnova ze zálohy) jdou přes `Dialog`, ne přes `window.confirm`.
@@ -104,6 +106,7 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   nepsat odkazy na paragrafy a tvrzení typu „splňuje náležitosti zákona“.
 - **Faktury** (`InvoicesOverviewPage.tsx`): souhrn v jednom rámečku, záložky stavů, seznam s odznakem splatnosti.
   Texty upomínek skládá `utils/invoiceReminder.ts`; faktura před splatností se jen připomíná, bez volby tónu.
+  Ani nejostřejší tón nehrozí vymáháním – žádá úhradu do 7 dnů a nabízí domluvu.
 - **Přehled** (`DashboardPage.tsx`) je vzor pro další obrazovky: nadpis sekce + odkaz vpravo, bílý rámeček s řádky
   oddělenými linkou, velká čísla písmem `font-display`, vedlejší akce jako tlačítka s obrysem, žádné dlaždice se statistikami.
 - **Průvodce prvním spuštěním** (`components/GettingStarted.tsx`, kroky v `utils/gettingStarted.ts`): na přehledu, dokud

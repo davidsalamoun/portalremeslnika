@@ -934,7 +934,9 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
               />
               <p className="mt-1.5 text-slate-600 dark:text-slate-400">
                 {siteAddressDraft.trim()
-                  ? 'Použije se pro navigaci, počasí, kalendář a knihu jízd. Text smlouvy se nemění.'
+                  ? currentContract.clientSignature
+                    ? 'Smlouva je už podepsaná – změna se v ní ukáže jako místo provedení díla, ale klient ji podepsal s původním zněním. Použije se i pro navigaci, počasí, kalendář a knihu jízd.'
+                    : 'Uvede se ve smlouvě jako místo provedení díla a použije se pro navigaci, počasí, kalendář a knihu jízd.'
                   : `Když pole necháte prázdné, platí adresa klienta${currentContract.client?.address ? `: ${currentContract.client.address}` : ''}.`}
               </p>
             </div>
