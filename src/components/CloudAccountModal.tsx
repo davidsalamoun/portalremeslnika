@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PrivacyLink } from './PrivacyPolicy';
+import { TermsLink } from './TermsOfUse';
 import { Dialog } from './Dialog';
 import { X, Cloud, CloudCheck, CloudOff, LogOut, RefreshCw, Info, Trash2, Download, AlertTriangle } from 'lucide-react';
 import { CloudUser } from '../utils/supabase';
@@ -236,7 +237,9 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
                 </li>
                 <li>
                   Podrobně to popisují{' '}
-                  <PrivacyLink className="font-semibold text-blue-600 dark:text-blue-300 underline underline-offset-2">zásady ochrany osobních údajů</PrivacyLink>.
+                  <PrivacyLink className="font-semibold text-blue-600 dark:text-blue-300 underline underline-offset-2">zásady ochrany osobních údajů</PrivacyLink>{' '}
+                  a{' '}
+                  <TermsLink className="font-semibold text-blue-600 dark:text-blue-300 underline underline-offset-2">podmínky používání</TermsLink>.
                 </li>
               </ul>
               <div className="flex flex-wrap items-center gap-2 pt-1">

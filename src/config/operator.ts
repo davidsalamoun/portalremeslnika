@@ -19,3 +19,9 @@ export const PRIVACY_POLICY_DATE = '2026-11-17';
 
 /** Odkaz, který odkudkoli v aplikaci otevře zásady (hash v adrese, funguje i bez přihlášení). */
 export const PRIVACY_HASH = '#ochrana-osobnich-udaju';
+
+/** Verze podmínek používání (datum účinnosti, YYYY-MM-DD). Při změně textu posunout – stávající uživatelé je potvrdí znovu. */
+export const TERMS_VERSION = '2026-11-17';
+
+/** Odkaz, který odkudkoli otevře podmínky používání. */
+export const TERMS_HASH = '#podminky-pouzivani';

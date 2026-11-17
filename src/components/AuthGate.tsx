@@ -4,6 +4,7 @@ import { supabase, toCloudUser, CloudUser, getStoredSessionUser } from '../utils
 import { connectAccount, needsAccountConnect, startAutoSync, prepareLocalData } from '../utils/cloudSync';
 import { AuthScreen } from './AuthScreen';
 import { LandingPage } from './LandingPage';
+import { TermsUpdateBanner } from './TermsOfUse';
 
 // Kdo se na tomto zařízení už někdy přihlásil, uvidí po odhlášení rovnou přihlášení, ne úvodní stránku
 const RETURNING_KEY = 'remeslnik_returning_user';
@@ -209,5 +210,10 @@ export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) 
     );
   }
 
-  return <CloudUserContext.Provider value={user}>{children}</CloudUserContext.Provider>;
+  return (
+    <CloudUserContext.Provider value={user}>
+      <TermsUpdateBanner key={user?.uid} />
+      {children}
+    </CloudUserContext.Provider>
+  );
 };

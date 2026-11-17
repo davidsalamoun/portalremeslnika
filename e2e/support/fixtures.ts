@@ -10,13 +10,16 @@ type Seed = 'full' | 'empty' | 'vatPayer';
  */
 export const test = base.extend<{
   seed: Seed;
+  /** false = účet z doby před podmínkami používání (po přihlášení se ukáže pruh se souhlasem). */
+  acceptedTerms: boolean;
   backend: Awaited<ReturnType<typeof mockBackend>>;
   errors: string[];
   app: Page;
 }>({
   seed: ['full', { option: true }],
-  backend: async ({ context }, use) => {
-    await use(await mockBackend(context));
+  acceptedTerms: [true, { option: true }],
+  backend: async ({ context, acceptedTerms }, use) => {
+    await use(await mockBackend(context, acceptedTerms ? {} : { termsVersion: null }));
   },
   errors: async ({ page }, use) => {
     const errors = collectErrors(page);

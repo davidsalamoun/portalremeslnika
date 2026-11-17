@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OPERATOR } from '../config/operator';
 import { PrivacyLink } from './PrivacyPolicy';
+import { TermsLink } from './TermsOfUse';
 import { Check, RotateCcw } from 'lucide-react';
 import { Logo, Metr } from './Logo';
 
@@ -427,6 +428,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister })
           <a href={`mailto:${OPERATOR.email}`} className="underline underline-offset-2">
             Kontakt: {OPERATOR.email}
           </a>
+          <TermsLink />
           <PrivacyLink />
         </span>
       </footer>
