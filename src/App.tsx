@@ -590,7 +590,7 @@ export default function App() {
   // Remote signing portal check
   if (signParam) {
     return (
-      <Suspense fallback={null}>
+      <Suspense fallback={<p role="status" className="p-6 text-slate-600 dark:text-slate-400">Načítám dokument k podpisu…</p>}>
       <RemoteSigningPortal
         shareId={signParam}
         onBackToApp={() => {
@@ -645,7 +645,13 @@ export default function App() {
 
       {/* Hlavní obsah */}
       <main className="flex-1 w-full px-3 sm:px-6 pt-5 sm:pt-7 pb-28 lg:pb-12">
-        <Suspense fallback={null}>
+        <Suspense
+          fallback={
+            <p role="status" className="max-w-[1180px] mx-auto py-10 text-slate-600 dark:text-slate-400">
+              Načítám…
+            </p>
+          }
+        >
         {previewContract ? (
           <ContractPreview
             contract={previewContract}

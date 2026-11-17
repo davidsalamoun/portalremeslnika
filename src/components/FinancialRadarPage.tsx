@@ -381,15 +381,17 @@ export const FinancialRadarPage: React.FC<FinancialRadarPageProps> = ({
                 <div className="mt-1.5 text-slate-600 dark:text-slate-400">
                   {totals.expenses > 0
                     ? `tržby minus výdaje na zakázky, marže ${margin} %`
-                    : 'u zakázek zatím nejsou zapsané žádné výdaje, zisk se proto rovná tržbám'}
-                  , {yearContracts.length} {jobsWord(yearContracts.length)}
+                    : totals.revenue > 0
+                      ? 'u zakázek zatím nejsou zapsané žádné výdaje, zisk se proto rovná tržbám'
+                      : 'v tomto roce zatím nejsou žádné tržby'}
+                  {yearContracts.length > 0 ? `, ${yearContracts.length} ${jobsWord(yearContracts.length)}` : ''}
                 </div>
               </div>
               {[
                 { label: 'Tržby', value: formatCurrency(totals.revenue), strong: true },
                 { label: 'z toho na účet', value: formatCurrency(totals.bank), sub: true },
                 { label: 'z toho v hotovosti', value: formatCurrency(totals.cash), sub: true },
-                { label: 'Výdaje na zakázky', value: `−${formatCurrency(totals.expenses)}`, strong: true },
+                { label: 'Výdaje na zakázky', value: totals.expenses > 0 ? `−${formatCurrency(totals.expenses)}` : formatCurrency(0), strong: true },
                 { label: `Jízdy (${totals.tripsKm} km), nejsou odečtené`, value: formatCurrency(totals.tripsCost) },
               ].map((row) => (
                 <div key={row.label} className={`px-5 py-3 flex items-baseline justify-between gap-4 ${row.sub ? 'pl-9' : ''}`}>
