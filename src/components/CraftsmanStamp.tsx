@@ -26,6 +26,7 @@ export const CraftsmanStamp: React.FC<CraftsmanStampProps> = ({ contractor, clas
 
   return (
     <div
+      data-stamp
       className={`relative select-none pointer-events-none ${className}`}
       style={{ transform: 'rotate(-1.5deg)', width: s.width, maxWidth: '100%', containerType: 'inline-size' }}
       title={`Razítko: ${contractor.name}`}

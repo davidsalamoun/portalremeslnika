@@ -33,7 +33,8 @@ npm run dev                      # Express + Vite middleware na http://localhost
 npm run build                    # produkční build frontendu do dist/
 npm run lint                     # tsc --noEmit
 npm test                         # testy (tests/*.test.ts, node:test přes tsx)
-npm run e2e                      # průchody aplikací v prohlížeči (e2e/, Playwright, napodobený Supabase)
+npm run e2e                      # průchody aplikací v prohlížeči (e2e/, Playwright, napodobený Supabase) + přístupnost
+npm run size                     # po buildu: velikost úvodního balíku (gzip) proti rozpočtu ve scripts/check-bundle-size.mjs
 NODE_ENV=production npm start    # lokální produkční běh: Express servíruje dist/ + /api
 ```
 
@@ -146,7 +147,7 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
 ## Ikony a náhled odkazu
 
 `public/`: `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`,
-`manifest.webmanifest` (přidání na plochu telefonu) a `og.png` (náhled odkazu ve zprávách, 1200 × 630). `og:image`
+`manifest.webmanifest` (přidání na plochu telefonu), `robots.txt` (odkazy `?sign=` se neindexují) a `og.png` (náhled odkazu ve zprávách, 1200 × 630). `og:image`
 musí být celá adresa: `vite.config.ts` při buildu dosadí za `__SITE_URL__` v `index.html` adresu z proměnné `SITE_URL`,
 jinak produkční adresu projektu na Vercelu (`VERCEL_PROJECT_PRODUCTION_URL`). Při změně značky přegenerovat všechny.
 Písma jsou jen dvě (IBM Plex Sans, Barlow Semi Condensed) a jsou uložená v aplikaci (`src/fonts.css`, balíčky
@@ -154,7 +155,9 @@ Písma jsou jen dvě (IBM Plex Sans, Barlow Semi Condensed) a jsou uložená v a
 
 ## Načítání aplikace
 
-Úvodní balík obsahuje jen přihlášení, navigaci a přehled. Ostatní stránky a modály jsou v `App.tsx` přes `React.lazy`
+Úvodní balík obsahuje jen přihlášení, navigaci a přehled; jeho velikost hlídá `npm run size` (rozpočet JS 190 kB, CSS
+20 kB po gzip; v CI po buildu). Texty zásad a podmínek (`PrivacyPolicyText.tsx`, `TermsOfUseText.tsx`) se načtou až při
+otevření okna, okno klienta a účtu jsou v `lazyLoaders`. Ostatní stránky a modály jsou v `App.tsx` přes `React.lazy`
 (seznam `lazyLoaders`) a knihovny pro Word a PDF se načítají přes `utils/lazyExports.ts`. Po startu je
 `preloadLazyChunks` dotáhne všechny na pozadí, aby aplikace po načtení fungovala i bez připojení. Novou stránku nebo
 modál přidávat do `lazyLoaders`, ne statickým importem; `exportDocx`/`exportPdf` nikdy neimportovat přímo z komponent.
@@ -333,6 +336,10 @@ odstraněny včetně serverových endpointů a závislosti na Gemini. Nepřidáv
   (`e2e/`, Playwright) běží proti produkčnímu buildu s napodobeným Supabase (`e2e/support/mock.ts`, data v `seed.ts`)
   na počítači, mobilu a v tmavém režimu; každý test končí kontrolou, že v konzoli nejsou chyby. GitHub je spouští
   u každé změny (`.github/workflows/ci.yml`). Ostrý Supabase, ARES a počasí se tak neověřují – ty jen ručně.
+  `e2e/pristupnost.spec.ts` kontroluje hlavní obrazovky, okno a doklady nástrojem axe (WCAG 2.1 A a AA) ve všech třech
+  režimech; razítko (`data-stamp`) je vynechané, protože přes jeho natočení axe nedopočítá pozadí. Rychlost se měří
+  ručně (Lighthouse proti `dist/` se serverem s kompresí, stav 11/2026: mobil 92, počítač 100, přístupnost, osvědčené
+  postupy a SEO 100).
   Novou obrazovku nebo doklad přidat i do průchodů.
 - PDF je obrázek stránky (nejde v něm hledat text). Strany se dělí v mezeře mezi řádky (`computePageSlices`
   v `exportPdf.ts`), ne podle odstavců nebo bloků – nadpis tak může zůstat na konci strany bez svého textu.

@@ -1,5 +1,5 @@
-# Kontrola každé změny: typy, testy, build a automatické průchody aplikací (Supabase je v nich napodobený,
-# žádné tajné klíče nejsou potřeba).
+# Kontrola každé změny: typy, testy, build s hlídáním velikosti úvodního balíku a automatické průchody aplikací
+# včetně kontroly přístupnosti (Supabase je v nich napodobený, žádné tajné klíče nejsou potřeba).
 name: Kontrola
 
 on:
@@ -26,9 +26,11 @@ jobs:
         run: npm run lint
       - name: Testy
         run: npm test
+      - name: Build a velikost úvodního balíku
+        run: npm run build && npm run size
       - name: Prohlížeč pro průchody
         run: npx playwright install --with-deps chromium
-      - name: Průchody aplikací
+      - name: Průchody aplikací a přístupnost
         run: npm run e2e
       - name: Zpráva z průchodů
         if: failure()
