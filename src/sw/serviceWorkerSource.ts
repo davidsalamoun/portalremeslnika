@@ -4,7 +4,6 @@
  *
  * - Soubory aplikace (skripty, styly, ikony) se uloží při instalaci a čtou se z mezipaměti.
  * - Stránka (index.html) se bere ze sítě, a když síť do 3 s neodpoví, z mezipaměti.
- * - Písma Google se ukládají při prvním použití.
  * - Data (Supabase, /api) jdou vždy přímo na síť – service worker je neukládá.
  */
 export function serviceWorkerSource(version: string, files: string[]): string {
@@ -12,7 +11,6 @@ export function serviceWorkerSource(version: string, files: string[]): string {
 const VERSION = ${JSON.stringify(version)};
 const FILES = ${JSON.stringify(files)};
 const APP_CACHE = 'remeslnik-app-' + VERSION;
-const FONT_CACHE = 'remeslnik-fonts';
 const PAGE = '/index.html';
 
 self.addEventListener('install', (event) => {
@@ -86,21 +84,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
-    event.respondWith(
-      caches.open(FONT_CACHE).then((cache) =>
-        cache.match(request).then((cached) => {
-          const network = fetch(request)
-            .then((response) => {
-              if (response.ok || response.type === 'opaque') cache.put(request, response.clone());
-              return response;
-            })
-            .catch(() => cached);
-          return cached || network;
-        })
-      )
-    );
-  }
+
 });
 `;
 }

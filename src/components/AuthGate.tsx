@@ -3,6 +3,17 @@ import { RefreshCw, CloudOff } from 'lucide-react';
 import { supabase, toCloudUser, CloudUser, getStoredSessionUser } from '../utils/supabase';
 import { connectAccount, needsAccountConnect, startAutoSync, prepareLocalData } from '../utils/cloudSync';
 import { AuthScreen } from './AuthScreen';
+import { LandingPage } from './LandingPage';
+
+// Kdo se na tomto zařízení už někdy přihlásil, uvidí po odhlášení rovnou přihlášení, ne úvodní stránku
+const RETURNING_KEY = 'remeslnik_returning_user';
+const isReturningUser = () => {
+  try {
+    return localStorage.getItem(RETURNING_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
 import { resolveIsDark, applyTheme, watchSystemTheme } from '../utils/theme';
 
 const CloudUserContext = createContext<CloudUser | null>(null);
@@ -38,6 +49,8 @@ export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const [phase, setPhase] = useState<Phase>('loading');
   const [user, setUser] = useState<CloudUser | null>(null);
   const [connectAttempt, setConnectAttempt] = useState(0);
+  // Nepřihlášený: úvodní stránka, nebo přihlášení / registrace
+  const [authView, setAuthView] = useState<'landing' | 'login' | 'register'>(() => (isReturningUser() ? 'login' : 'landing'));
   const localReady = useRef(false);
 
   // Režim podle zařízení nebo vlastní volby uživatele – i na přihlašovací obrazovce
@@ -125,6 +138,11 @@ export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) 
   // Průběžná synchronizace, dokud je uživatel v aplikaci
   useEffect(() => {
     if (phase !== 'ready' || !user) return;
+    try {
+      localStorage.setItem(RETURNING_KEY, '1');
+    } catch {
+      // bez úložiště se příště ukáže úvodní stránka
+    }
     return startAutoSync();
   }, [phase, user]);
 
@@ -138,7 +156,12 @@ export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) 
     );
   }
 
-  if (phase === 'signed-out') return <AuthScreen />;
+  if (phase === 'signed-out') {
+    if (authView === 'landing') {
+      return <LandingPage onLogin={() => setAuthView('login')} onRegister={() => setAuthView('register')} />;
+    }
+    return <AuthScreen key={authView} initialMode={authView} onBack={() => setAuthView('landing')} />;
+  }
 
   if (phase === 'recovery') {
     return <AuthScreen initialMode="new-password" onPasswordUpdated={() => setPhase('connecting')} />;
