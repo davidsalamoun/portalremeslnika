@@ -74,6 +74,11 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   má dál jen pět původních hodnot – `completed` znamená předáno, zaplaceno se pozná podle `isContractPaid`.
 - **Zakázky** (`LeadsPipelinePage.tsx`): jeden seznam se záložkami fází (ne sloupce nástěnky), u každé zakázky metr,
   věta „co dál“ a tlačítko posunu pojmenované podle cílové fáze. Okno „Nová poptávka“ je vzor pro formuláře v oknech.
+- **Nová zakázka podle jiné** („Nová zakázka podle této“ v nabídce Další možnosti náhledu): formulář převezme druh
+  dokumentu, popis, rozpočet (nová id položek), cenu bez dodatků, zálohu a DPH; ne klienta (vybírá se, nic se
+  nepředvybere), termín, adresu stavby, podpisy, čísla ani fotky. Nahoře je pruh, ze které zakázky vychází.
+  `formPreset` v `App.tsx` (také předvybraný klient z tlačítka „Nová smlouva“ v Klientech) platí jen pro jedno
+  založení formuláře a zapomene se po odchodu ze záložky.
 - **Formuláře** (vzor `ContractForm.tsx`, `BudgetItemsEditor.tsx`): popisek nad polem, pole vysoké aspoň 44 px s linkou
   1,5 px, volby jako přepínací tlačítka (`aria-pressed`), chyba červeně pod polem (`role="alert"`) a zmizí po opravě;
   při odeslání s chybou se stránka posune na první chybné pole. Nepředvyplňovat vymyšlené částky.

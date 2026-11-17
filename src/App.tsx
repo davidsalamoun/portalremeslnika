@@ -150,6 +150,12 @@ export default function App() {
 
   // Selected trade template for 1-click contract creation
   const [selectedTradeTemplate, setSelectedTradeTemplate] = useState<string | null>(null);
+  // Předvyplnění formuláře Nová smlouva: klient (z Klientů) nebo jiná zakázka jako základ; key vynutí nové založení formuláře
+  const [formPreset, setFormPreset] = useState<{ key: number; clientId?: string; base?: Contract } | null>(null);
+  // Předvyplnění platí jen pro formulář, ze kterého se vychází; po odchodu z něj se zapomene
+  useEffect(() => {
+    if (activeTab !== 'nova-smlouva') setFormPreset(null);
+  }, [activeTab]);
 
   // New tradesperson experience states
   const [quickMessagesContract, setQuickMessagesContract] = useState<Contract | null>(null);
@@ -430,8 +436,25 @@ export default function App() {
       );
       return;
     }
+    setSelectedTradeTemplate(null);
+    setFormPreset({ key: Date.now(), clientId: client.id });
     setActiveTab('nova-smlouva');
     setPreviewContract(null);
+  };
+
+  /** Nová zakázka podle jiné: převezme popis, rozpočet, cenu, zálohu a DPH (klienta a termín zvolí uživatel). */
+  const handleUseContractAsBase = (base: Contract) => {
+    if (!isProUser(contractor) && contracts.length >= PRO_CONFIG.maxFreeContracts) {
+      handleOpenPaywall(
+        `V bezplatném tarifu máte vytvořeno ${contracts.length} ze 3 povolených smluv. Přejděte na Mistr PRO pro neomezenou tvorbu smluv a nabídek.`
+      );
+      return;
+    }
+    setSelectedTradeTemplate(null);
+    setFormPreset({ key: Date.now(), base });
+    setPreviewContract(null);
+    setActiveTab('nova-smlouva');
+    window.scrollTo({ top: 0 });
   };
 
   // Calendar handlers
@@ -590,6 +613,7 @@ export default function App() {
         return;
       }
     }
+    setFormPreset(null);
     setActiveTab(tab);
     setPreviewContract(null);
   };
@@ -602,6 +626,7 @@ export default function App() {
       return;
     }
     setSelectedTradeTemplate(null);
+    setFormPreset(null);
     setActiveTab('nova-smlouva');
   };
 
@@ -678,6 +703,7 @@ export default function App() {
             onSaveToHistory={handleSaveToHistory}
             isSaved={savedContractIds.has(previewContract.id)}
             onToast={addToast}
+            onUseAsBase={handleUseContractAsBase}
           />
         ) : (
           <>
@@ -692,6 +718,7 @@ export default function App() {
                   if (key === 'client') handleOpenNewClientDialog();
                   else if (key === 'contract') {
                     setSelectedTradeTemplate(null);
+                    setFormPreset(null);
                     setActiveTab('nova-smlouva');
                   } else {
                     setActiveTab('nastaveni');
@@ -813,9 +840,12 @@ export default function App() {
             {/* Generátor nové smlouvy / cenové nabídky */}
             {activeTab === 'nova-smlouva' && (
               <ContractForm
+                key={formPreset?.key ?? 0}
                 contractor={contractor}
                 clients={clients}
                 initialTemplateId={selectedTradeTemplate}
+                initialClientId={formPreset?.clientId}
+                baseContract={formPreset?.base}
                 onOpenSettings={() => setActiveTab('nastaveni')}
                 onOpenNewClientDialog={handleOpenNewClientDialog}
                 onEditClient={handleEditClient}

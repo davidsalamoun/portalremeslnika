@@ -44,6 +44,10 @@ interface ContractFormProps {
   contractor: ContractorProfile | null;
   clients: Client[];
   initialTemplateId?: string | null;
+  /** Předvybraný klient (tlačítko „Nová smlouva“ u klienta) */
+  initialClientId?: string | null;
+  /** Zakázka, ze které se převezme popis, rozpočet, cena, záloha a DPH (ne klient, termín, adresa stavby ani podpisy) */
+  baseContract?: Contract | null;
   onOpenSettings: () => void;
   onOpenNewClientDialog: () => void;
   onEditClient?: (client: Client) => void;
@@ -56,6 +60,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   contractor,
   clients,
   initialTemplateId,
+  initialClientId,
+  baseContract,
   onOpenSettings,
   onOpenNewClientDialog,
   onEditClient,
@@ -63,28 +69,49 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   onPreloadSampleData,
   onToast,
 }) => {
-  const [docKind, setDocKind] = useState<'contract' | 'quote' | 'invoice'>('contract');
+  // Nová zakázka podle jiné: převzaté údaje (jen při založení formuláře)
+  const base = baseContract || null;
+  const basePrice = base && base.price > 0 ? base.price : 0;
+  const baseAdvance = base && !!base.advanceAmount && base.advanceAmount > 0 ? base.advanceAmount : 0;
+  // U nové zakázky podle jiné musí uživatel klienta vybrat sám (nepředvybírat prvního ze seznamu)
+  const [requireClientChoice] = useState(!!base && !initialClientId);
+
+  const [docKind, setDocKind] = useState<'contract' | 'quote' | 'invoice'>(base?.docKind === 'quote' || base?.docKind === 'invoice' ? base.docKind : 'contract');
   const isInvoiceOnly = docKind === 'invoice';
-  const [pricingType, setPricingType] = useState<'fixed' | 'budget'>('fixed');
-  const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
+  const [pricingType, setPricingType] = useState<'fixed' | 'budget'>(
+    base?.pricingType === 'budget' && base.items && base.items.length > 0 ? 'budget' : 'fixed'
+  );
+  const [budgetItems, setBudgetItems] = useState<BudgetItem[]>(() =>
+    (base?.items || []).map((it, i) => ({ ...it, id: `item_${Date.now()}_${i}` }))
+  );
   const [isListening, setIsListening] = useState(false);
 
   const [formData, setFormData] = useState<ContractFormData>({
-    clientId: clients.length > 0 ? clients[0].id : '',
+    clientId:
+      initialClientId && clients.some((c) => c.id === initialClientId)
+        ? initialClientId
+        : !requireClientChoice && clients.length > 0
+          ? clients[0].id
+          : '',
     docKind: 'contract',
-    workDescription: '',
-    price: '',
+    workDescription: base?.workDescription || '',
+    price: basePrice || '',
     deliveryDate: '',
-    advanceAmount: '',
+    advanceAmount: baseAdvance || '',
     siteAddress: '',
   });
 
-  const [rawPriceInput, setRawPriceInput] = useState<string>('');
+  const [rawPriceInput, setRawPriceInput] = useState<string>(basePrice ? String(basePrice) : '');
   // DPH u plátce: sazba a přenesení daňové povinnosti (cena se pak zadává bez DPH)
-  const [vatRate, setVatRate] = useState<21 | 12>(21);
-  const [reverseCharge, setReverseCharge] = useState(false);
-  const [rawAdvanceInput, setRawAdvanceInput] = useState<string>('');
-  const [advancePreset, setAdvancePreset] = useState<'none' | '30' | '50' | 'custom'>('none');
+  const [vatRate, setVatRate] = useState<21 | 12>(base?.vatRate === 12 ? 12 : 21);
+  const [reverseCharge, setReverseCharge] = useState(!!base?.reverseCharge);
+  const [rawAdvanceInput, setRawAdvanceInput] = useState<string>(baseAdvance ? String(baseAdvance) : '');
+  const [advancePreset, setAdvancePreset] = useState<'none' | '30' | '50' | 'custom'>(() => {
+    if (!baseAdvance) return 'none';
+    if (basePrice && baseAdvance === Math.round(basePrice * 0.3)) return '30';
+    if (basePrice && baseAdvance === Math.round(basePrice * 0.5)) return '50';
+    return 'custom';
+  });
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -186,7 +213,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
 
   // Sync client ID if client list updates and none selected
   React.useEffect(() => {
-    if (clients.length > 0 && !formData.clientId) {
+    if (clients.length > 0 && !formData.clientId && !requireClientChoice) {
       setFormData((prev) => ({ ...prev, clientId: clients[0].id }));
     }
   }, [clients, formData.clientId]);
@@ -416,6 +443,17 @@ export const ContractForm: React.FC<ContractFormProps> = ({
         )}
       </header>
 
+      {/* Nová zakázka podle jiné */}
+      {base && (
+        <div role="status" className="max-w-3xl px-4 py-3 border-l-[3px] border-blue-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+          <span className="font-semibold text-slate-900 dark:text-white">
+            Podle zakázky {[base.contractNumber || base.quoteNumber, base.client?.name].filter(Boolean).join(' – ')}.
+          </span>{' '}
+          Převzali jsme popis díla,
+          {base.items && base.items.length > 0 ? ' rozpočet,' : ''} cenu{baseAdvance ? ', zálohu' : ''} a DPH. Vyberte klienta a doplňte termín.
+        </div>
+      )}
+
       {/* Druh dokumentu */}
       <div role="group" aria-label="Druh dokumentu" className="grid grid-cols-3 gap-2 max-w-xl">
         <button type="button" aria-pressed={docKind === 'contract'} onClick={() => setDocKind('contract')} className={chip(docKind === 'contract')}>
@@ -490,13 +528,20 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                   {clients.length === 0 ? (
                     <option value="">Zatím nemáte žádného klienta</option>
                   ) : (
-                    clients.map((c) => (
+                    [
+                      !formData.clientId && (
+                        <option key="" value="" disabled>
+                          Vyberte klienta
+                        </option>
+                      ),
+                    ...clients.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
                         {c.ico ? ` (IČO ${c.ico})` : ''}
                         {c.address ? `, ${c.address}` : ''}
                       </option>
-                    ))
+                    )),
+                    ]
                   )}
                 </select>
                 <button type="button" onClick={onOpenNewClientDialog} className={`${outlineButton} !min-h-12 shrink-0`}>

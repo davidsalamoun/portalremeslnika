@@ -35,6 +35,7 @@ import {
   ChevronDown,
   ChevronUp,
   MoreHorizontal,
+  CopyPlus,
 } from 'lucide-react';
 import { Contract, ContractStatus } from '../types/contract';
 import {
@@ -87,6 +88,8 @@ interface ContractPreviewProps {
   isSaved?: boolean;
   onToast?: (type: 'success' | 'error' | 'info', text: string) => void;
   initialDocType?: DocumentType;
+  /** Založit novou zakázku s popisem, rozpočtem a cenou této zakázky */
+  onUseAsBase?: (contract: Contract) => void;
 }
 
 // Prvky lišty nad dokumentem (vzhled „Výkres a metr“)
@@ -116,6 +119,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
   isSaved = false,
   onToast,
   initialDocType,
+  onUseAsBase,
 }) => {
   const [currentContract, setCurrentContract] = useState<Contract>(contract);
   const isPro = isProUser(getContractorProfile());
@@ -518,6 +522,19 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
                       <Copy className="w-[18px] h-[18px] shrink-0" />
                       <span>Zkopírovat platební údaje</span>
                     </button>
+                    {onUseAsBase && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsExportMenuOpen(false);
+                          onUseAsBase(currentContract);
+                        }}
+                        className={tbMenuItem}
+                      >
+                        <CopyPlus className="w-[18px] h-[18px] shrink-0" />
+                        <span>Nová zakázka podle této</span>
+                      </button>
+                    )}
                     {!isSaved && (
                       <button
                         type="button"
