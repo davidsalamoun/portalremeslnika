@@ -43,3 +43,26 @@ test('na mobilu se pod úvodem přilepí tlačítko k registraci', async ({ page
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await expect(sticky).toHaveAttribute('aria-hidden', 'true');
 });
+
+test('zásady ochrany osobních údajů z úvodní stránky, registrace i přímým odkazem', async ({ page, context }) => {
+  const errors = collectErrors(page);
+  await mockBackend(context);
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Ochrana osobních údajů' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Ochrana osobních údajů' });
+  await expect(dialog).toContainText('Řemeslník PRO s.r.o.');
+  await expect(dialog).toContainText('info@portalremeslnika.cz');
+  await expect(dialog).toContainText('Úřad pro ochranu osobních údajů');
+  await expectNoOverflow(page);
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  expect(page.url()).not.toContain('#');
+  // z registrace
+  await page.getByRole('button', { name: 'Založit účet zdarma' }).first().click();
+  await page.getByRole('link', { name: 'zásady ochrany osobních údajů' }).click();
+  await expect(dialog).toBeVisible();
+  // přímý odkaz
+  await page.goto('/#ochrana-osobnich-udaju');
+  await expect(dialog).toBeVisible();
+  expect(errors).toEqual([]);
+});

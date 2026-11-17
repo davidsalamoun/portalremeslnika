@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { OPERATOR } from '../config/operator';
+import { PrivacyLink } from './PrivacyPolicy';
 import { Check, RotateCcw } from 'lucide-react';
 import { Logo, Metr } from './Logo';
 
@@ -421,6 +423,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister })
       </div>
       <footer className="max-w-[1180px] mx-auto px-4 sm:px-6 py-5 text-[14px] text-slate-600 dark:text-slate-400 flex flex-wrap justify-between gap-3">
         <span>© {year} Řemeslník PRO</span>
+        <span className="flex flex-wrap gap-x-5 gap-y-1">
+          <a href={`mailto:${OPERATOR.email}`} className="underline underline-offset-2">
+            Kontakt: {OPERATOR.email}
+          </a>
+          <PrivacyLink />
+        </span>
       </footer>
 
       {/* Přilepené tlačítko na mobilu */}

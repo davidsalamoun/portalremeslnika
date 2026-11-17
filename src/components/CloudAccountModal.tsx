@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { PrivacyLink } from './PrivacyPolicy';
 import { Dialog } from './Dialog';
 import { X, Cloud, CloudCheck, CloudOff, LogOut, RefreshCw, Info, Trash2, Download, AlertTriangle } from 'lucide-react';
 import { CloudUser } from '../utils/supabase';
@@ -218,7 +219,8 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
                 </li>
                 <li>
                   <strong>Kdo je vidí:</strong> jen vy po přihlášení. Zákazník, kterému pošlete odkaz k online podpisu,
-                  uvidí pouze smluvní strany, předmět díla, cenu, položky a termín – ne vaše náklady, fotky ani deník.
+                  uvidí smlouvu – smluvní strany, předmět díla, cenu, položky, termíny a celé znění smlouvy – ne vaše
+                  náklady, fotky ani deník.
                 </li>
                 <li>
                   <strong>Údaje vašich zákazníků</strong> (jména, adresy, telefony) do aplikace zadáváte vy a odpovídáte
@@ -231,6 +233,10 @@ export const CloudAccountModal: React.FC<CloudAccountModalProps> = ({
                 <li>
                   <strong>Záloha a smazání:</strong> všechna data si můžete stáhnout do souboru a účet kdykoli nenávratně
                   smazat.
+                </li>
+                <li>
+                  Podrobně to popisují{' '}
+                  <PrivacyLink className="font-semibold text-blue-600 dark:text-blue-300 underline underline-offset-2">zásady ochrany osobních údajů</PrivacyLink>.
                 </li>
               </ul>
               <div className="flex flex-wrap items-center gap-2 pt-1">
