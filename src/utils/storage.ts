@@ -260,6 +260,43 @@ export function getStoredPriceList(): import('../types/contract').PriceListTempl
   }
 }
 
+// Rozepsaný formulář smlouvy (koncept): jen v tomto zařízení, do účtu se neposílá a při odhlášení se maže
+const FORM_DRAFT_KEY = 'contract_form_draft';
+
+export interface ContractFormDraft {
+  /** Id upravované zakázky; bez něj jde o novou smlouvu */
+  editId?: string;
+  savedAt: number;
+  snapshot: unknown;
+}
+
+export function getContractFormDraft(): ContractFormDraft | null {
+  try {
+    const raw = localStorage.getItem(FORM_DRAFT_KEY);
+    if (!raw) return null;
+    const draft = JSON.parse(raw);
+    return draft && typeof draft.savedAt === 'number' && draft.snapshot ? draft : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveContractFormDraft(draft: ContractFormDraft): void {
+  try {
+    localStorage.setItem(FORM_DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    // plné nebo nedostupné úložiště: koncept se jen neuloží
+  }
+}
+
+export function clearContractFormDraft(): void {
+  try {
+    localStorage.removeItem(FORM_DRAFT_KEY);
+  } catch {
+    // nic
+  }
+}
+
 /** Ceník bez založení výchozího (přehled jen zjišťuje, zda si ho uživatel upravil – nic nezapisuje). */
 export function hasCustomizedPriceList(): boolean {
   try {
