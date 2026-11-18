@@ -65,15 +65,20 @@ test('kniha jízd: jedna jízda s kontrolou kilometrů', async ({ app }) => {
   await expect(dialog.getByRole('listitem').filter({ hasText: '40 km × 5 Kč' })).toContainText('200');
 });
 
-test('kalkulačka: bez rozsahu nic nepočítá, sazby jsou vidět', async ({ app }) => {
+test('kalkulačka počítá z ceníku a převede rozpočet do formuláře smlouvy', async ({ app }) => {
   await app.getByRole('button', { name: 'Kalkulačka na obhlídce' }).first().click();
   const dialog = app.getByRole('dialog', { name: 'Kalkulačka na obhlídce' });
   await expect(dialog.getByRole('button', { name: 'Převést do smlouvy' })).toBeDisabled();
-  await expect(dialog).toContainText('Zadejte rozsah práce.');
-  await dialog.getByLabel(/^Rozsah/).fill('10');
-  await expect(dialog.getByRole('button', { name: 'Převést do smlouvy' })).toBeEnabled();
-  await expect(dialog).toContainText('ne s vaším ceníkem');
-  await expect(dialog).not.toContainText('Doporučená cena');
+  await dialog.getByRole('button', { name: 'Obklady a dlažby' }).click();
+  await dialog.getByRole('button', { name: 'Přidat do odhadu: Pokládka keramického obkladu / dlažby' }).click();
+  await expect(dialog.getByRole('spinbutton', { name: /Pokládka keramického obkladu/ })).toBeFocused();
+  await dialog.getByRole('spinbutton', { name: /Pokládka keramického obkladu/ }).fill('10');
+  // 10 m² × 650 Kč z výchozího ceníku
+  await expect(dialog.getByText('Orientační cena').locator('..')).toContainText(/6\s500/);
+  await dialog.getByRole('button', { name: 'Převést do smlouvy' }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(app.getByRole('status').filter({ hasText: 'Rozpočet z kalkulačky na obhlídce.' })).toBeVisible();
+  await expect(app.getByText('Pokládka keramického obkladu / dlažby').first()).toBeVisible();
 });
 
 test('podklady pro účetní: druh výdaje česky, souhrn v jednom rámečku', async ({ app }) => {
@@ -85,4 +90,10 @@ test('podklady pro účetní: druh výdaje česky, souhrn v jednom rámečku', a
   await dialog.getByRole('tab', { name: /^Výdaje/ }).click();
   await expect(dialog.getByRole('cell', { name: 'Materiál', exact: true })).toBeVisible();
   await expect(dialog).not.toContainText('material');
+});
+
+test('kalkulačka: odkaz Upravit ceník otevře ceník v nastavení', async ({ app }) => {
+  await app.getByRole('button', { name: 'Kalkulačka na obhlídce' }).first().click();
+  await app.getByRole('dialog', { name: 'Kalkulačka na obhlídce' }).getByRole('button', { name: 'Upravit ceník' }).click();
+  await expect(app.getByRole('tab', { name: 'Ceník' })).toHaveAttribute('aria-selected', 'true');
 });

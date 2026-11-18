@@ -85,8 +85,10 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   nepřebírají ze smlouvy; kniha jízd (`LogbookModal.tsx`) zapíše více dní najednou jen u dnů, které uživatel vybere,
   a nepředvyplňuje kilometry ani sazbu. Částka jízdy se v součtech bere přes `getTripCost` (`utils/tripCost.ts`).
   Stavební deník (`SiteLogbookModal.tsx`) nepředvyplňuje počasí, teplotu, počet lidí ani hodiny a počasí „nezjišťuje“
-  (rychlé volby jen doplní slovo). Kalkulačka na obhlídce ukazuje „Orientační cenu“ až po zadání rozsahu a vypisuje
-  průměrné sazby, ze kterých počítá (nejsou z ceníku uživatele). Názvy druhů výdajů jsou v `utils/expenseCategories.ts`.
+  (rychlé volby jen doplní slovo). Kalkulačka na obhlídce (`QuickEstimateCalculatorModal.tsx`) počítá jen z položek
+  a cen uživatelova ceníku (`getStoredPriceList`) a množství, která zadá; rezerva 10 % k materiálu je samostatný řádek.
+  „Převést do smlouvy“ předá rozpočet do formuláře přes `formPreset.estimate` (pruh „Rozpočet z kalkulačky na obhlídce“,
+  klient se vybírá); „Upravit ceník“ otevře Nastavení na záložce Ceník. Názvy druhů výdajů jsou v `utils/expenseCategories.ts`.
   „Vyfotit účtenku“ na přehledu otevře výběr zakázky a její okno Náklady a zisk (`initialOpenExpenses` v náhledu).
 - **Formuláře** (vzor `ContractForm.tsx`, `BudgetItemsEditor.tsx`): popisek nad polem, pole vysoké aspoň 44 px s linkou
   1,5 px, volby jako přepínací tlačítka (`aria-pressed`), chyba červeně pod polem (`role="alert"`) a zmizí po opravě;
