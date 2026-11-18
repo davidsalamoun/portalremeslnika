@@ -4,6 +4,7 @@ import { getVatRegistration, getFlatTaxBand } from '../src/utils/taxLimits';
 import { getVatBreakdown, getVatRate } from '../src/utils/invoiceMath';
 import { getSiteAddress } from '../src/utils/siteAddress';
 import { getGettingStartedSteps } from '../src/utils/gettingStarted';
+import { getEditLock, editLockReason, applyContractEdit } from '../src/utils/contractEdit';
 import { DEFAULT_PRICE_LIST_ITEMS, isSamplePriceItem, isPriceListCustomized } from '../src/data/defaultPriceList';
 
 test('registrace k DPH podle obratu', () => {
@@ -61,4 +62,31 @@ test('ceník: ukázkové ceny se poznají, upravený ceník ne', () => {
   const own = { id: 'x', type: 'prace' as const, category: 'Vlastní', title: 'Montáž kuchyně', unit: 'kpl', unitPrice: 8000 };
   assert.equal(isPriceListCustomized([...sample, own]), true);
   assert.equal(isPriceListCustomized(sample.slice(0, 5)), false);
+});
+
+test('úprava uložené zakázky: kdy jde a co se změní', () => {
+  const draft = { numbering: 2 as const, invoiceNumber: '', advanceInvoiceNumber: '' };
+  assert.equal(getEditLock(draft), null);
+  assert.equal(getEditLock({ ...draft, clientSignature: 'data:image/png;base64,x' }), 'signed');
+  assert.equal(getEditLock({ ...draft, invoiceIssuedAt: '2026-11-18T10:00:00Z', invoiceNumber: '2026001' }), 'invoice');
+  assert.equal(getEditLock({ ...draft, advanceInvoiceIssuedAt: '2026-11-18T10:00:00Z' }), 'invoice');
+  // Starší zakázka s číslem faktury od založení platí jako vystavená
+  assert.equal(getEditLock({ invoiceNumber: '2025004' }), 'invoice');
+  assert.equal(getEditLock({ ...draft, handoverData: { handoverDate: '2026-11-18', status: 'bez_vad' } as never }), 'handover');
+  assert.equal(getEditLock({ ...draft, amendments: [{} as never] }), 'amendments');
+  assert.match(editLockReason('signed', 'quote'), /^Nabídku klient podepsal/);
+
+  const original = {
+    id: 'c1', contractNumber: 'SOD-2026-001', price: 10000, workDescription: 'A', signToken: 'tok', expenses: [{ id: 'e' }],
+    client: { id: 'k1', name: 'Jan' },
+  } as never;
+  const edited = applyContractEdit(original, {
+    client: { id: 'k2', name: 'Petr' } as never, workDescription: 'B', price: 12000, advanceAmount: undefined, deliveryDate: '2026-12-01',
+    siteAddress: undefined, pricingType: 'fixed', items: undefined, vatRate: undefined, reverseCharge: undefined,
+  });
+  assert.equal(edited.contractNumber, 'SOD-2026-001');
+  assert.equal(edited.price, 12000);
+  assert.equal(edited.client.name, 'Petr');
+  assert.equal(edited.signToken, undefined);
+  assert.deepEqual(edited.expenses, [{ id: 'e' }]);
 });

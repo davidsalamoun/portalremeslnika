@@ -35,10 +35,13 @@ import {
   updateStoredCalendarEvent,
   deleteStoredCalendarEvent,
   seedSampleData,
+  getContractFormDraft,
+  clearContractFormDraft,
 } from './utils/storage';
+import { canEditContract } from './utils/contractEdit';
 import { cleanPlaceName, formatDateCs } from './utils/numberToWordsCs';
 import { applyBackup } from './utils/backup';
-import { checkAndSyncRemoteSignatures } from './utils/signShares';
+import { checkAndSyncRemoteSignatures, revokePendingSignShare } from './utils/signShares';
 import { useCloudUser } from './components/AuthGate';
 import { resolveIsDark, applyTheme, watchSystemTheme, saveThemeChoice } from './utils/theme';
 import { isInvoiceable, getInvoiceStatus } from './utils/invoiceMath';
@@ -162,6 +165,8 @@ export default function App() {
     clientId?: string;
     base?: Contract;
     estimate?: { description: string; items: Omit<BudgetItem, 'id'>[] };
+    /** Úprava uložené zakázky */
+    edit?: Contract;
   } | null>(null);
   // Předvyplnění platí jen pro formulář, ze kterého se vychází; po odchodu z něj se zapomene
   useEffect(() => {
@@ -346,6 +351,8 @@ export default function App() {
 
   // Save / update contract
   const handleSaveToHistory = (contract: Contract) => {
+    // Uložením nové zakázky je rozepsaný formulář hotový – koncept se zahodí (koncept úpravy jiné zakázky zůstane)
+    if (!savedContractIds.has(contract.id) && !getContractFormDraft()?.editId) clearContractFormDraft();
     addStoredContract(contract);
     const updatedContracts = getStoredContracts();
     setContracts(updatedContracts);
@@ -612,6 +619,50 @@ export default function App() {
     window.scrollTo({ top: 0 });
   };
 
+  /** Upravit uloženou zakázku: otevře formulář s jejími údaji */
+  const handleEditContract = (contract: Contract) => {
+    if (!canEditContract(contract)) return;
+    setSelectedTradeTemplate(null);
+    setFormPreset({ key: Date.now(), edit: contract });
+    setPreviewContract(null);
+    setActiveTab('nova-smlouva');
+    window.scrollTo({ top: 0 });
+  };
+
+  /** Uložit upravenou zakázku. Odkaz k podpisu poslaný před úpravou se zruší (zákazník nesmí podepsat starou verzi). */
+  const handleSaveEdit = async (updated: Contract) => {
+    const original = contracts.find((c) => c.id === updated.id);
+    if (!original || !canEditContract(original)) {
+      addToast('error', 'Zakázku už nejde upravit – mezitím ji klient podepsal nebo k ní vznikla faktura.');
+      return;
+    }
+    let revokedLink = false;
+    if (original.signToken) {
+      try {
+        const result = await revokePendingSignShare(original.signToken);
+        if (result === 'signed') {
+          addToast('error', 'Klient smlouvu mezitím online podepsal, takže ji už nejde upravit. Změnu udělejte dodatkem.');
+          void syncRemoteSignatures();
+          return;
+        }
+        revokedLink = true;
+      } catch {
+        addToast('error', 'Klientovi jste poslali odkaz k podpisu a ten se teď nepodařilo zrušit. Změny uložte znovu, až budete mít signál.');
+        return;
+      }
+    }
+    handleUpdateContract(updated);
+    clearContractFormDraft();
+    setFormPreset(null);
+    setPreviewContract(updated);
+    setPreviewInitialDoc(defaultDocFor(updated));
+    window.scrollTo({ top: 0 });
+    addToast(
+      'success',
+      revokedLink ? 'Změny jsou uložené. Odkaz k podpisu, který jste poslali, už neplatí – pošlete klientovi nový.' : 'Změny jsou uložené.'
+    );
+  };
+
   // Tab change
   const handleTabChange = (tab: TabType) => {
     if (tab === 'nova-smlouva') {
@@ -726,6 +777,7 @@ export default function App() {
             isSaved={savedContractIds.has(previewContract.id)}
             onToast={addToast}
             onUseAsBase={handleUseContractAsBase}
+            onEdit={handleEditContract}
           />
         ) : (
           <>
@@ -775,6 +827,7 @@ export default function App() {
                     return;
                   }
                   setSelectedTradeTemplate(tplId);
+                  setFormPreset({ key: Date.now() });
                   setActiveTab('nova-smlouva');
                 }}
                 onOpenExpenses={(contract) => {
@@ -874,6 +927,19 @@ export default function App() {
                 initialClientId={formPreset?.clientId}
                 baseContract={formPreset?.base}
                 estimate={formPreset?.estimate}
+                editContract={formPreset?.edit}
+                presetKey={formPreset?.key ?? 0}
+                onSaveEdit={handleSaveEdit}
+                onCancelEdit={() => {
+                  const original = formPreset?.edit && contracts.find((c) => c.id === formPreset.edit!.id);
+                  clearContractFormDraft();
+                  setFormPreset(null);
+                  if (original) {
+                    setPreviewContract(original);
+                    setPreviewInitialDoc(defaultDocFor(original));
+                  }
+                }}
+                onRestart={() => setFormPreset((prev) => ({ ...(prev ?? {}), key: Date.now() }))}
                 onOpenSettings={() => setActiveTab('nastaveni')}
                 onOpenNewClientDialog={handleOpenNewClientDialog}
                 onEditClient={handleEditClient}

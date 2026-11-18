@@ -6,7 +6,8 @@ import { formatCurrency, formatDateCs, cleanPlaceName } from '../utils/numberToW
 import { CRAFT_TEMPLATES, CraftTemplate } from '../data/craftTemplates';
 import { BudgetItemsEditor } from './BudgetItemsEditor';
 import { triggerHaptic } from '../utils/haptics';
-import { getStoredContracts } from '../utils/storage';
+import { getStoredContracts, getContractFormDraft, saveContractFormDraft, clearContractFormDraft, ContractFormDraft } from '../utils/storage';
+import { applyContractEdit } from '../utils/contractEdit';
 import { addDaysIso, todayIso } from '../utils/invoiceMath';
 
 // Pořadí polí ve formuláři a jejich prvky – pro přesun na první chybu
@@ -40,6 +41,32 @@ const chip = (active: boolean) =>
   }`;
 const textLink = 'min-h-11 inline-flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-300 underline underline-offset-2 cursor-pointer';
 
+/** „dnes 14:32“ / „včera 14:32“ / „18. 11. 14:32“ */
+function formatDraftTime(ts: number): string {
+  const d = new Date(ts);
+  const time = d.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+  const day = (x: Date) => `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}`;
+  const now = new Date();
+  const yesterday = new Date(now.getTime() - 86400000);
+  if (day(d) === day(now)) return `dnes ${time}`;
+  if (day(d) === day(yesterday)) return `včera ${time}`;
+  return `${d.getDate()}. ${d.getMonth() + 1}. ${time}`;
+}
+
+/** Stav formuláře, který se ukládá jako koncept (a ze kterého se formulář obnoví) */
+interface FormSnapshot {
+  docKind: 'contract' | 'quote' | 'invoice';
+  pricingType: 'fixed' | 'budget';
+  budgetItems: BudgetItem[];
+  formData: ContractFormData;
+  rawPriceInput: string;
+  rawAdvanceInput: string;
+  advancePreset: 'none' | '30' | '50' | 'custom';
+  vatRate: 21 | 12;
+  reverseCharge: boolean;
+  selectedTemplateId: string | null;
+}
+
 interface ContractFormProps {
   contractor: ContractorProfile | null;
   clients: Client[];
@@ -50,6 +77,14 @@ interface ContractFormProps {
   baseContract?: Contract | null;
   /** Rozpočet z kalkulačky na obhlídce (položky z ceníku uživatele) */
   estimate?: { description: string; items: Omit<BudgetItem, 'id'>[] } | null;
+  /** Úprava uložené zakázky (jen dokud ji nezamyká podpis, faktura, předání ani dodatek) */
+  editContract?: Contract | null;
+  /** Kdy vznikl pokyn k otevření formuláře (předvyplnění) – koncept starší než pokyn se neobnoví */
+  presetKey?: number;
+  onSaveEdit?: (updated: Contract) => void;
+  onCancelEdit?: () => void;
+  /** Zahodit koncept a začít s prázdným formulářem (rodič formulář založí znovu) */
+  onRestart?: () => void;
   onOpenSettings: () => void;
   onOpenNewClientDialog: () => void;
   onEditClient?: (client: Client) => void;
@@ -65,6 +100,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   initialClientId,
   baseContract,
   estimate,
+  editContract,
+  presetKey = 0,
+  onSaveEdit,
+  onCancelEdit,
+  onRestart,
   onOpenSettings,
   onOpenNewClientDialog,
   onEditClient,
@@ -72,52 +112,137 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   onPreloadSampleData,
   onToast,
 }) => {
-  // Nová zakázka podle jiné: převzaté údaje (jen při založení formuláře)
-  const base = baseContract || null;
-  const est = !base && estimate && estimate.items.length > 0 ? estimate : null;
-  const estTotal = est ? est.items.reduce((sum, it) => sum + (it.totalPrice || 0), 0) : 0;
-  const basePrice = base && base.price > 0 ? base.price : estTotal;
+  // Úprava uložené zakázky, nová zakázka podle jiné, nebo rozpočet z kalkulačky (jen při založení formuláře)
+  const edit = editContract || null;
+  const base = !edit ? baseContract || null : null;
+  const est = !edit && !base && estimate && estimate.items.length > 0 ? estimate : null;
+
+  // Rozepsaný koncept z tohoto zařízení: obnoví se, jen když patří k tomuto formuláři a je novější než pokyn k otevření
+  const [draft] = useState<ContractFormDraft | null>(() => {
+    const d = getContractFormDraft();
+    if (!d || d.savedAt <= presetKey) return null;
+    if (edit ? d.editId !== edit.id : !!d.editId) return null;
+    const snap = d.snapshot as Partial<FormSnapshot> | null;
+    return snap && snap.formData && typeof snap.formData === 'object' ? d : null;
+  });
+
+  const [initial] = useState<FormSnapshot>(() => {
+    if (draft) return draft.snapshot as FormSnapshot;
+    const src = edit || base;
+    if (src) {
+      const price = src.price > 0 ? src.price : 0;
+      const advance = src.advanceAmount && src.advanceAmount > 0 ? src.advanceAmount : 0;
+      const items = src.pricingType === 'budget' && src.items && src.items.length > 0 ? src.items : [];
+      return {
+        docKind: src.docKind === 'quote' || src.docKind === 'invoice' ? src.docKind : 'contract',
+        pricingType: items.length > 0 ? 'budget' : 'fixed',
+        // U nové zakázky podle jiné dostanou položky nová id, upravovaná zakázka si je ponechá
+        budgetItems: items.map((it, i) => (edit ? { ...it } : { ...it, id: `item_${Date.now()}_${i}` })),
+        formData: {
+          clientId: edit ? edit.client.id : initialClientId && clients.some((c) => c.id === initialClientId) ? initialClientId : '',
+          docKind: 'contract',
+          workDescription: src.workDescription || '',
+          price: price || '',
+          deliveryDate: edit ? edit.deliveryDate || '' : '',
+          advanceAmount: advance || '',
+          siteAddress: edit ? edit.siteAddress || '' : '',
+        },
+        rawPriceInput: price ? String(price) : '',
+        rawAdvanceInput: advance ? String(advance) : '',
+        advancePreset: !advance
+          ? 'none'
+          : price && advance === Math.round(price * 0.3)
+            ? '30'
+            : price && advance === Math.round(price * 0.5)
+              ? '50'
+              : 'custom',
+        vatRate: src.vatRate === 12 ? 12 : 21,
+        reverseCharge: !!src.reverseCharge,
+        selectedTemplateId: null,
+      };
+    }
+    const estTotal = est ? est.items.reduce((sum, it) => sum + (it.totalPrice || 0), 0) : 0;
+    return {
+      docKind: 'contract',
+      pricingType: est ? 'budget' : 'fixed',
+      budgetItems: (est?.items || []).map((it, i) => ({ ...it, id: `item_${Date.now()}_${i}` })),
+      formData: {
+        clientId:
+          initialClientId && clients.some((c) => c.id === initialClientId)
+            ? initialClientId
+            : !est && clients.length > 0
+              ? clients[0].id
+              : '',
+        docKind: 'contract',
+        workDescription: est?.description || '',
+        price: estTotal || '',
+        deliveryDate: '',
+        advanceAmount: '',
+        siteAddress: '',
+      },
+      rawPriceInput: estTotal ? String(estTotal) : '',
+      rawAdvanceInput: '',
+      advancePreset: 'none',
+      vatRate: 21,
+      reverseCharge: false,
+      selectedTemplateId: null,
+    };
+  });
   const baseAdvance = base && !!base.advanceAmount && base.advanceAmount > 0 ? base.advanceAmount : 0;
-  // U nové zakázky podle jiné musí uživatel klienta vybrat sám (nepředvybírat prvního ze seznamu)
+  // U nové zakázky podle jiné a z kalkulačky musí uživatel klienta vybrat sám (nepředvybírat prvního ze seznamu)
   const [requireClientChoice] = useState((!!base || !!est) && !initialClientId);
 
-  const [docKind, setDocKind] = useState<'contract' | 'quote' | 'invoice'>(base?.docKind === 'quote' || base?.docKind === 'invoice' ? base.docKind : 'contract');
+  const [docKind, setDocKind] = useState<'contract' | 'quote' | 'invoice'>(initial.docKind);
   const isInvoiceOnly = docKind === 'invoice';
-  const [pricingType, setPricingType] = useState<'fixed' | 'budget'>(
-    est || (base?.pricingType === 'budget' && base.items && base.items.length > 0) ? 'budget' : 'fixed'
-  );
-  const [budgetItems, setBudgetItems] = useState<BudgetItem[]>(() =>
-    (base?.items || est?.items || []).map((it, i) => ({ ...it, id: `item_${Date.now()}_${i}` }))
-  );
+  const [pricingType, setPricingType] = useState<'fixed' | 'budget'>(initial.pricingType);
+  const [budgetItems, setBudgetItems] = useState<BudgetItem[]>(initial.budgetItems);
   const [isListening, setIsListening] = useState(false);
-
-  const [formData, setFormData] = useState<ContractFormData>({
-    clientId:
-      initialClientId && clients.some((c) => c.id === initialClientId)
-        ? initialClientId
-        : !requireClientChoice && clients.length > 0
-          ? clients[0].id
-          : '',
-    docKind: 'contract',
-    workDescription: base?.workDescription || est?.description || '',
-    price: basePrice || '',
-    deliveryDate: '',
-    advanceAmount: baseAdvance || '',
-    siteAddress: '',
-  });
-
-  const [rawPriceInput, setRawPriceInput] = useState<string>(basePrice ? String(basePrice) : '');
+  const [formData, setFormData] = useState<ContractFormData>(initial.formData);
+  const [rawPriceInput, setRawPriceInput] = useState<string>(initial.rawPriceInput);
   // DPH u plátce: sazba a přenesení daňové povinnosti (cena se pak zadává bez DPH)
-  const [vatRate, setVatRate] = useState<21 | 12>(base?.vatRate === 12 ? 12 : 21);
-  const [reverseCharge, setReverseCharge] = useState(!!base?.reverseCharge);
-  const [rawAdvanceInput, setRawAdvanceInput] = useState<string>(baseAdvance ? String(baseAdvance) : '');
-  const [advancePreset, setAdvancePreset] = useState<'none' | '30' | '50' | 'custom'>(() => {
-    if (!baseAdvance) return 'none';
-    if (basePrice && baseAdvance === Math.round(basePrice * 0.3)) return '30';
-    if (basePrice && baseAdvance === Math.round(basePrice * 0.5)) return '50';
-    return 'custom';
-  });
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [vatRate, setVatRate] = useState<21 | 12>(initial.vatRate);
+  const [reverseCharge, setReverseCharge] = useState(initial.reverseCharge);
+  const [rawAdvanceInput, setRawAdvanceInput] = useState<string>(initial.rawAdvanceInput);
+  const [advancePreset, setAdvancePreset] = useState<'none' | '30' | '50' | 'custom'>(initial.advancePreset);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(initial.selectedTemplateId);
+
+  // Koncept se průběžně ukládá v tomto zařízení (jen když se formulář od otevření změnil)
+  const snapshot: FormSnapshot = {
+    docKind,
+    pricingType,
+    budgetItems,
+    formData,
+    rawPriceInput,
+    rawAdvanceInput,
+    advancePreset,
+    vatRate,
+    reverseCharge,
+    selectedTemplateId,
+  };
+  const snapshotJson = JSON.stringify(snapshot);
+  const initialJson = React.useRef(JSON.stringify(initial));
+  const [draftSavedAt, setDraftSavedAt] = useState<number | null>(draft ? draft.savedAt : null);
+  useEffect(() => {
+    if (snapshotJson === initialJson.current) return;
+    const timer = window.setTimeout(() => {
+      const savedAt = Date.now();
+      saveContractFormDraft({ editId: edit?.id, savedAt, snapshot: JSON.parse(snapshotJson) });
+      setDraftSavedAt(savedAt);
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [snapshotJson]);
+  // Při odchodu z formuláře (např. „Zobrazit dokumenty“ hned po psaní) se uloží i poslední změna,
+  // ne však po uložení úpravy, zrušení úpravy nebo „Začít znovu“ (koncept tam končí)
+  const latestJson = React.useRef(snapshotJson);
+  latestJson.current = snapshotJson;
+  const draftDone = React.useRef(false);
+  useEffect(
+    () => () => {
+      if (draftDone.current || latestJson.current === initialJson.current) return;
+      saveContractFormDraft({ editId: edit?.id, savedAt: Date.now(), snapshot: JSON.parse(latestJson.current) });
+    },
+    []
+  );
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const startVoiceDictation = () => {
@@ -187,7 +312,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   };
 
   useEffect(() => {
-    if (initialTemplateId) {
+    if (initialTemplateId && !draft && !edit) {
       const found = CRAFT_TEMPLATES.find((t) => t.id === initialTemplateId);
       if (found) {
         applyTemplate(found);
@@ -337,9 +462,30 @@ export const ContractForm: React.FC<ContractFormProps> = ({
       return;
     }
 
-    const selectedClient = clients.find((c) => c.id === formData.clientId);
+    const selectedClient =
+      clients.find((c) => c.id === formData.clientId) || (edit && edit.client.id === formData.clientId ? edit.client : undefined);
     if (!selectedClient) {
       setErrors((prev) => ({ ...prev, clientId: 'Vybraný klient nebyl nalezen.' }));
+      return;
+    }
+
+    if (edit) {
+      draftDone.current = true;
+      onSaveEdit?.(
+        applyContractEdit(edit, {
+          client: selectedClient,
+          workDescription: formData.workDescription.trim(),
+          price: Number(formData.price),
+          advanceAmount:
+            !isInvoiceOnly && typeof formData.advanceAmount === 'number' && formData.advanceAmount > 0 ? formData.advanceAmount : undefined,
+          deliveryDate: formData.deliveryDate,
+          siteAddress: formData.siteAddress?.trim() || undefined,
+          pricingType,
+          items: pricingType === 'budget' && budgetItems.length > 0 ? budgetItems : undefined,
+          vatRate: contractor.dic && vatRate === 12 ? 12 : undefined,
+          reverseCharge: contractor.dic && reverseCharge ? true : undefined,
+        })
+      );
       return;
     }
 
@@ -394,7 +540,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     onShowPreview(newContract);
   };
 
-  const selectedClientObj = clients.find((c) => c.id === formData.clientId);
+  const selectedClientObj =
+    clients.find((c) => c.id === formData.clientId) || (edit && edit.client.id === formData.clientId ? edit.client : undefined);
   const priceVatSuffix = !contractor?.dic ? '' : reverseCharge ? ' bez DPH' : ' včetně DPH';
   const totalPriceNum = typeof formData.price === 'number' ? formData.price : 0;
   const advancePriceNum = typeof formData.advanceAmount === 'number' ? formData.advanceAmount : 0;
@@ -431,22 +578,59 @@ export const ContractForm: React.FC<ContractFormProps> = ({
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-4xl sm:text-[44px] font-bold leading-[1.05] text-slate-900 dark:text-white">
-            {isInvoiceOnly ? 'Nová faktura' : isQuote ? 'Nová cenová nabídka' : 'Nová smlouva o dílo'}
+            {edit
+              ? isInvoiceOnly
+                ? 'Úprava faktury'
+                : isQuote
+                  ? 'Úprava cenové nabídky'
+                  : 'Úprava smlouvy o dílo'
+              : isInvoiceOnly
+                ? 'Nová faktura'
+                : isQuote
+                  ? 'Nová cenová nabídka'
+                  : 'Nová smlouva o dílo'}
           </h1>
           <div className="mt-1 text-slate-600 dark:text-slate-400 max-w-2xl">
-            {isInvoiceOnly
+            {edit
+              ? `${[edit.contractNumber || edit.quoteNumber, edit.client?.name].filter(Boolean).join(' – ').replace(/\.$/, '')}. Číslo dokumentu i datum uzavření zůstanou.`
+              : isInvoiceOnly
               ? 'Faktura za drobnou práci bez smlouvy. Číslo dostane, až ji v dalším kroku vystavíte.'
               : isQuote
               ? 'Sestavte rozpočet prací a materiálu. Po odsouhlasení nabídku převedete na smlouvu.'
               : 'Vyplňte zakázku. V dalším kroku zkontrolujete smlouvu, předávací protokol a fakturu.'}
           </div>
         </div>
-        {(!contractor || clients.length === 0) && onPreloadSampleData && (
+        {!edit && (!contractor || clients.length === 0) && onPreloadSampleData && (
           <button type="button" onClick={onPreloadSampleData} className={outlineButton}>
             Vyplnit ukázková data
           </button>
         )}
       </header>
+
+      {/* Obnovený koncept */}
+      {draft && (
+        <div role="status" className="max-w-3xl px-4 py-2 border-l-[3px] border-blue-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 flex flex-wrap items-center gap-x-4 gap-y-1">
+          <span>
+            <span className="font-semibold text-slate-900 dark:text-white">
+              {edit ? 'Pokračujete v rozepsané úpravě.' : 'Pokračujete v rozepsané smlouvě.'}
+            </span>{' '}
+            Naposledy upraveno {formatDraftTime(draft.savedAt)}.
+          </span>
+          {onRestart && (
+            <button
+              type="button"
+              onClick={() => {
+                draftDone.current = true;
+                clearContractFormDraft();
+                onRestart();
+              }}
+              className={textLink}
+            >
+              {edit ? 'Zahodit rozepsané změny' : 'Začít znovu'}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Nová zakázka podle jiné */}
       {base && (
@@ -467,7 +651,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
         </div>
       )}
 
-      {/* Druh dokumentu */}
+      {/* Druh dokumentu (u upravované zakázky se nemění – určuje číslo dokumentu) */}
+      {!edit && (
       <div role="group" aria-label="Druh dokumentu" className="grid grid-cols-3 gap-2 max-w-xl">
         <button type="button" aria-pressed={docKind === 'contract'} onClick={() => setDocKind('contract')} className={chip(docKind === 'contract')}>
           Smlouva o dílo
@@ -479,6 +664,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
           Jen faktura
         </button>
       </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-7 items-start">
         {/* Formulář */}
@@ -547,6 +733,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                           Vyberte klienta
                         </option>
                       ),
+                    edit && !clients.some((c) => c.id === edit.client.id) && (
+                      <option key={edit.client.id} value={edit.client.id}>
+                        {edit.client.name} (ze zakázky)
+                      </option>
+                    ),
                     ...clients.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
@@ -591,6 +782,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               2. Dílo a cena
             </h2>
 
+            {!edit && (
             <div>
               <div className={fieldLabel}>Začít ze šablony řemesla</div>
               <div className="flex flex-wrap gap-2">
@@ -616,6 +808,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                   : 'Šablona vyplní popis díla, položky rozpočtu, termín a zálohu. Vše pak můžete upravit.'}
               </p>
             </div>
+            )}
 
             <div>
               <div className="flex flex-wrap items-end justify-between gap-x-4">
@@ -897,11 +1090,26 @@ export const ContractForm: React.FC<ContractFormProps> = ({
 
           )}
 
-          <div className="p-5 sm:p-6">
+          <div className="p-5 sm:p-6 flex flex-wrap gap-2.5">
             <button type="submit" className={`${primaryButton} w-full sm:w-auto`}>
-              <Eye className="w-5 h-5" />
-              <span>Zobrazit dokumenty</span>
+              {edit ? <Check className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              <span>{edit ? 'Uložit změny' : 'Zobrazit dokumenty'}</span>
             </button>
+            {edit && onCancelEdit && (
+              <button
+                type="button"
+                onClick={() => {
+                  draftDone.current = true;
+                  onCancelEdit();
+                }}
+                className={`${outlineButton} !min-h-12 w-full sm:w-auto`}
+              >
+                Zrušit úpravu
+              </button>
+            )}
+            {draftSavedAt && (
+              <p className="basis-full text-slate-600 dark:text-slate-400">Rozepsané údaje se průběžně ukládají v tomto zařízení.</p>
+            )}
           </div>
         </form>
 
@@ -956,8 +1164,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             </div>
           </div>
           <button type="button" onClick={(e) => handleSubmit(e as any)} className={`${primaryButton} w-full !hidden lg:!inline-flex`}>
-            <Eye className="w-5 h-5" />
-            <span>Zobrazit dokumenty</span>
+            {edit ? <Check className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            <span>{edit ? 'Uložit změny' : 'Zobrazit dokumenty'}</span>
           </button>
         </aside>
       </div>

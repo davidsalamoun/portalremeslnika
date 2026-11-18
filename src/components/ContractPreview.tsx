@@ -36,7 +36,9 @@ import {
   ChevronUp,
   MoreHorizontal,
   CopyPlus,
+  Pencil,
 } from 'lucide-react';
+import { canEditContract } from '../utils/contractEdit';
 import { Contract, ContractStatus } from '../types/contract';
 import {
   formatContractPriceWithWords,
@@ -91,6 +93,8 @@ interface ContractPreviewProps {
   initialDocType?: DocumentType;
   /** Založit novou zakázku s popisem, rozpočtem a cenou této zakázky */
   onUseAsBase?: (contract: Contract) => void;
+  /** Upravit uloženou zakázku (jen dokud ji nezamyká podpis, faktura, předání ani dodatek) */
+  onEdit?: (contract: Contract) => void;
   /** Otevřít rovnou okno Náklady a zisk (tlačítko „Vyfotit účtenku“ na přehledu) */
   initialOpenExpenses?: boolean;
 }
@@ -124,6 +128,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
   onToast,
   initialDocType,
   onUseAsBase,
+  onEdit,
   initialOpenExpenses,
 }) => {
   const [currentContract, setCurrentContract] = useState<Contract>(contract);
@@ -441,6 +446,9 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
     { label: 'Složka zakázky', icon: FolderArchive, open: () => setIsArchiveModalOpen(true) },
   ];
 
+  // Úprava uložené zakázky jde, dokud ji nezamyká podpis klienta, vystavená faktura, předání ani dodatek
+  const canEdit = !!onEdit && isSaved && canEditContract(currentContract);
+
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950 pb-40 sm:pb-16">
       {/* Horní lišta: zpět, název zakázky, hlavní akce a přepínač dokumentů (zůstává nahoře) */}
@@ -464,6 +472,12 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
             </div>
 
             <div className="hidden sm:flex items-center gap-2">
+              {canEdit && (
+                <button type="button" onClick={() => onEdit!(currentContract)} className={tbButton}>
+                  <Pencil className="w-[18px] h-[18px]" />
+                  <span>Upravit</span>
+                </button>
+              )}
               {!isSaved && (
                 <button type="button" onClick={() => onSaveToHistory(currentContract)} className={tbButton}>
                   <Bookmark className="w-[18px] h-[18px]" />
@@ -496,6 +510,19 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsExportMenuOpen(false)} />
                   <div className={`${tbMenu} right-0 w-64`}>
+                    {canEdit && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsExportMenuOpen(false);
+                          onEdit!(currentContract);
+                        }}
+                        className={`${tbMenuItem} sm:hidden`}
+                      >
+                        <Pencil className="w-[18px] h-[18px] shrink-0" />
+                        <span>Upravit zakázku</span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => {

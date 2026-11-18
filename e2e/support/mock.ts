@@ -25,6 +25,7 @@ export async function mockBackend(
 ) {
   const rows = new Map<string, Record<string, unknown>>();
   const submitted: Record<string, unknown>[] = [];
+  const deleted: string[] = [];
   /** Těla požadavků na registraci a na úpravu účtu (souhlas s podmínkami). */
   const signups: Record<string, any>[] = [];
   const userUpdates: Record<string, any>[] = [];
@@ -70,6 +71,10 @@ export async function mockBackend(
     }
     if (url.pathname.startsWith('/rest/v1/rpc/')) return json(route, null);
     const table = url.pathname.match(/^\/rest\/v1\/(\w+)$/)?.[1];
+    if (table && req.method() === 'DELETE') {
+      deleted.push(`${table}?${url.searchParams.toString()}`);
+      return json(route, []);
+    }
     if (table && req.method() === 'POST') {
       for (const r of ([] as Record<string, unknown>[]).concat(req.postDataJSON())) rows.set(`${table}/${r.id ?? r.token}`, r);
       return route.fulfill({ status: 201, headers: cors });
@@ -84,7 +89,7 @@ export async function mockBackend(
       body: JSON.stringify({ ico: '12345678', obchodniJmeno: 'Jan Novák', sidlo: { textovaAdresa: 'Květinová 124/8, 14000 Praha 4', nazevObce: 'Praha' } }),
     })
   );
-  return { rows, submitted, signups, userUpdates };
+  return { rows, submitted, signups, userUpdates, deleted };
 }
 
 /** Chyby ze stránky a z konzole (bez hlášek o nedostupné síti, které při napodobeném backendu nevadí). */

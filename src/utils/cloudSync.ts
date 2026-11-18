@@ -14,7 +14,7 @@ import {
   markBlobForReupload,
 } from './blobStore';
 import { planImageCleanup } from './imageCleanup';
-import { migrateInlineImages, findMissingImageIds, getReferencedImageIds } from './storage';
+import { migrateInlineImages, findMissingImageIds, getReferencedImageIds, clearContractFormDraft } from './storage';
 
 /**
  * Propojení synchronizace (syncEngine.ts) se Supabase a s prohlížečem:
@@ -380,6 +380,7 @@ export async function signOutAndClear(): Promise<boolean> {
   await clearAllBlobs();
   window.localStorage.removeItem('last_cloud_sync');
   window.localStorage.removeItem(IMAGE_CLEANUP_KEY);
+  clearContractFormDraft();
   window.location.reload();
   return true;
 }
@@ -427,6 +428,7 @@ export async function deleteAccount(email: string, password: string): Promise<De
   await clearAllBlobs();
   window.localStorage.removeItem('last_cloud_sync');
   window.localStorage.removeItem(IMAGE_CLEANUP_KEY);
+  clearContractFormDraft();
   window.location.reload();
   return 'deleted';
 }

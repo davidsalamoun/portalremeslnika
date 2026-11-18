@@ -126,6 +126,25 @@ async function saveSignShare(contract: Contract, token: string): Promise<void> {
   if (error) throw error;
 }
 
+/**
+ * Zruší nepodepsaný odkaz k podpisu (po úpravě smlouvy nesmí zákazník podepsat starou verzi).
+ * Vrací 'signed', když zákazník mezitím podepsal – pak se smlouva upravit nesmí.
+ */
+export async function revokePendingSignShare(token: string): Promise<'revoked' | 'signed'> {
+  const { data: deleted, error } = await supabase
+    .from('sign_shares')
+    .delete()
+    .eq('token', token)
+    .eq('status', 'pending')
+    .select('token');
+  if (error) throw error;
+  if (deleted && deleted.length > 0) return 'revoked';
+  // Nic se nesmazalo: odkaz buď neexistuje (nikdy se neuložil), nebo je už podepsaný
+  const { data: existing, error: readError } = await supabase.from('sign_shares').select('status').eq('token', token).maybeSingle();
+  if (readError) throw readError;
+  return existing?.status === 'signed' ? 'signed' : 'revoked';
+}
+
 /** Podepsané odkazy přihlášeného řemeslníka pro zadané smlouvy (jedním dotazem). */
 export async function getSignedShares(contractIds: string[]): Promise<SignedShare[]> {
   if (contractIds.length === 0) return [];
