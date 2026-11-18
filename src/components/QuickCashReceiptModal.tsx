@@ -244,7 +244,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                 <button
                   type="button"
                   onClick={() => handleShareWhatsApp(createdReceipt)}
-                  className="min-h-[46px] px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
+                  className="min-h-[46px] px-4 py-2.5 rounded-xl border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
                 >
                   <Share2 className="w-4 h-4" />
                   <span>Odeslat potvrzení (WhatsApp)</span>
@@ -503,7 +503,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
                       <button
                         type="button"
                         onClick={saveCanvasSignature}
-                        className="min-h-11 inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
+                        className="min-h-11 inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-semibold bg-amber-400 hover:bg-amber-300 text-slate-900 border-[1.5px] border-slate-900 cursor-pointer"
                       >
                         Uložit podpis
                       </button>
@@ -553,7 +553,7 @@ export const QuickCashReceiptModal: React.FC<QuickCashReceiptModalProps> = ({
             <button
               type="button"
               onClick={handleCreateReceipt}
-              className="min-h-[44px] px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm sm:text-sm flex items-center gap-2 shadow-md cursor-pointer active:scale-95 transition-all"
+              className="min-h-[44px] px-5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 border-[1.5px] border-slate-900 font-semibold text-sm sm:text-sm flex items-center gap-2 shadow-md cursor-pointer active:scale-95 transition-all"
             >
               <Check className="w-4 h-4 stroke-[3]" />
               <span>Vystavit a uložit PPD ({nextNumber})</span>

@@ -284,7 +284,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
 
   const features = [
     {
-      title: 'Neomezený počet smluv & nabídek',
+      title: 'Neomezený počet smluv a nabídek',
       desc: 'Žádné limity. Vytvářejte smlouvy o dílo, cenové nabídky i dodatky bez omezení.',
       icon: FileText,
     },
@@ -309,7 +309,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
       icon: Car,
     },
     {
-      title: 'Kompletní export pro účetní (ZIP & CSV)',
+      title: 'Kompletní export pro účetní (ZIP a CSV)',
       desc: 'Všechny faktury, smlouvy a přehled DPH/nákladů připravené k odevzdání účetní.',
       icon: FileSpreadsheet,
     },
@@ -332,7 +332,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                 <Crown className="w-3.5 h-3.5 fill-current" /> Mistr PRO
               </span>
               <span className="text-xs text-slate-400 font-mono hidden sm:inline">
-                Předplatné & neomezená licence pro živnost
+                Předplatné a neomezená licence pro živnost
               </span>
             </div>
 

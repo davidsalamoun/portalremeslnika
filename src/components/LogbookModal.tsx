@@ -1,3 +1,4 @@
+import { getTripCost } from '../utils/tripCost';
 import React, { useState } from 'react';
 import { getSiteAddress } from '../utils/siteAddress';
 import { Dialog } from './Dialog';
@@ -52,8 +53,8 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [origin, setOrigin] = useState(contractorAddress);
   const [destination, setDestination] = useState(clientAddress);
-  const [distanceKm, setDistanceKm] = useState<number | ''>(30);
-  const [ratePerKm, setRatePerKm] = useState<number | ''>(10);
+  const [distanceKm, setDistanceKm] = useState<number | ''>('');
+  const [ratePerKm, setRatePerKm] = useState<number | ''>('');
   const [purpose, setPurpose] = useState(COMMON_PURPOSES[1]);
   const [vehicle, setVehicle] = useState('Firemní dodávka');
   const [billableToClient, setBillableToClient] = useState(false);
@@ -64,15 +65,17 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
   const [batchStartDate, setBatchStartDate] = useState(defaultStartDate);
   const [batchEndDate, setBatchEndDate] = useState(defaultEndDate);
   const [batchWorkdaysOnly, setBatchWorkdaysOnly] = useState(true);
-  const [batchOneWayKm, setBatchOneWayKm] = useState<number | ''>(18);
-  const [batchRatePerKm, setBatchRatePerKm] = useState<number | ''>(10);
+  const [batchOneWayKm, setBatchOneWayKm] = useState<number | ''>('');
+  const [batchRatePerKm, setBatchRatePerKm] = useState<number | ''>('');
+  // Kniha jízd má odpovídat skutečným cestám: zapíšou se jen dny, které uživatel sám vybere
+  const [batchSelected, setBatchSelected] = useState<string[]>([]);
   const [batchVehicle, setBatchVehicle] = useState('Firemní dodávka');
   const [batchPurpose, setBatchPurpose] = useState('Montážní a stavební práce na zakázce');
 
   if (!isOpen) return null;
 
   const totalKm = trips.reduce((sum, t) => sum + (t.distanceKm || 0), 0);
-  const totalCost = trips.reduce((sum, t) => sum + (t.totalCost || 0), 0);
+  const totalCost = trips.reduce((sum, t) => sum + getTripCost(t), 0);
 
   // Compute batch days
   const getBatchDays = () => {
@@ -94,15 +97,18 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
   };
 
   const batchDays = getBatchDays();
+  const selectedDays = batchDays.filter((d) => batchSelected.includes(d));
+  const toggleBatchDay = (day: string) =>
+    setBatchSelected((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
   const calculatedBatchKm = typeof batchOneWayKm === 'number' ? batchOneWayKm * 2 : 0;
-  const calculatedBatchTotalKm = calculatedBatchKm * batchDays.length;
+  const calculatedBatchTotalKm = calculatedBatchKm * selectedDays.length;
   const calculatedBatchTotalCost = Math.round(
     calculatedBatchTotalKm * (typeof batchRatePerKm === 'number' ? batchRatePerKm : 0)
   );
 
   const handleGenerateBatchTrips = () => {
-    if (batchDays.length === 0) {
-      if (onToast) onToast('error', 'Vyberte platný časový rozsah od–do.');
+    if (selectedDays.length === 0) {
+      if (onToast) onToast('error', 'Vyberte dny, kdy jste na stavbu jeli.');
       return;
     }
     const oneWay = typeof batchOneWayKm === 'number' ? batchOneWayKm : parseFloat(String(batchOneWayKm));
@@ -111,11 +117,15 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
       if (onToast) onToast('error', 'Zadejte platnou vzdálenost jedné cesty v km.');
       return;
     }
+    if (isNaN(rate) || rate < 0) {
+      if (onToast) onToast('error', 'Zadejte sazbu za kilometr.');
+      return;
+    }
 
     const dailyKm = Math.round(oneWay * 2);
     const dailyCost = Math.round(dailyKm * rate);
 
-    const generatedTrips: LogbookTrip[] = batchDays.map((dayDate, idx) => ({
+    const generatedTrips: LogbookTrip[] = selectedDays.map((dayDate, idx) => ({
       id: `trip_batch_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 5)}`,
       date: dayDate,
       origin: contractorAddress,
@@ -135,11 +145,12 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
       trips: updatedTrips,
     });
     setActiveTab('list');
+    setBatchSelected([]);
 
     if (onToast) {
       onToast(
         'success',
-        `Vygenerováno ${generatedTrips.length} jízd (${generatedTrips.length * dailyKm} km, ${formatCurrency(
+        `Zapsáno ${generatedTrips.length} jízd (${generatedTrips.length * dailyKm} km, ${formatCurrency(
           generatedTrips.length * dailyCost
         )}).`
       );
@@ -300,7 +311,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
               <button
                 type="button"
                 onClick={handleSyncToExpenses}
-                className="min-h-11 mt-2.5 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-2xs transition-colors cursor-pointer"
+                className="min-h-11 mt-2.5 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold shadow-2xs transition-colors cursor-pointer"
               >
                 <TrendingUp className="w-3.5 h-3.5" />
                 <span>Zaúčtovat do ziskovosti</span>
@@ -320,7 +331,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
               }`}
             >
               <Zap className="w-4 h-4 text-amber-500" />
-              <span>Hromadný generátor (Celá stavba)</span>
+              <span>Více dní najednou</span>
             </button>
 
             <button
@@ -357,10 +368,10 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                 <div>
                   <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                     <Zap className="w-5 h-5 text-amber-500" />
-                    <span>Automatické vygenerování jízd pro celou dobu realizace</span>
+                    <span>Zápis stejné cesty za více dní</span>
                   </h3>
                   <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
-                    Ušetří ruční vypisování desítek jízd – vytvoří cestovní příkazy za každý den stavby.
+                    Vyberte dny, kdy jste na stavbu opravdu jeli. Kniha jízd má odpovídat skutečným cestám.
                   </p>
                 </div>
               </div>
@@ -428,7 +439,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Místo výjezdu ➔ Cíl
+                    Odkud → kam
                   </label>
                   <div className="text-sm font-medium text-slate-700 dark:text-slate-300 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                     {contractorAddress} ➔ <strong>{clientAddress}</strong>
@@ -437,7 +448,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Vozidlo & Účel
+                    Vozidlo a účel
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <input
@@ -470,24 +481,45 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                   <span>Pouze pracovní dny (vynechat soboty a neděle)</span>
                 </label>
 
-                <div className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                  {batchDays.length} dnů · celkem {calculatedBatchTotalKm} km ·{' '}
-                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                    {formatCurrency(calculatedBatchTotalCost)}
-                  </span>
+                <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  Vybráno {selectedDays.length} z {batchDays.length} dnů · {calculatedBatchTotalKm} km ·{' '}
+                  {formatCurrency(calculatedBatchTotalCost)}
                 </div>
               </div>
+
+              {/* Dny v rozsahu: zapíšou se jen zaškrtnuté */}
+              {batchDays.length > 0 && (
+                <div role="group" aria-label="Dny, kdy jste jeli na stavbu" className="flex flex-wrap gap-2">
+                  {batchDays.map((day) => {
+                    const on = batchSelected.includes(day);
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => toggleBatchDay(day)}
+                        className={`min-h-11 px-3 rounded-md border text-sm font-medium cursor-pointer transition-colors ${
+                          on
+                            ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
+                            : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        {new Date(`${day}T00:00:00`).toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'numeric' })}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Action button */}
               <button
                 type="button"
                 onClick={handleGenerateBatchTrips}
-                disabled={batchDays.length === 0}
-                className="min-h-11 w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-md cursor-pointer active:scale-98 transition-all"
+                disabled={selectedDays.length === 0}
+                className="min-h-11 w-full py-3 px-4 rounded-md bg-amber-400 hover:bg-amber-300 text-slate-900 border-[1.5px] border-slate-900 disabled:opacity-50 font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
               >
-                <Zap className="w-5 h-5 text-amber-300" />
                 <span>
-                  Vygenerovat všech {batchDays.length} jízd ({calculatedBatchTotalKm} km, {formatCurrency(calculatedBatchTotalCost)})
+                  Zapsat vybrané jízdy ({selectedDays.length})
                 </span>
               </button>
             </div>
@@ -555,7 +587,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                 <div className="sm:col-span-6">
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Místo výjezdu (odkud)</span>
+                    <span>Odkud</span>
                   </label>
                   <input
                     type="text"
@@ -593,6 +625,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                     step="0.5"
                     value={distanceKm}
                     onChange={(e) => setDistanceKm(e.target.value ? parseFloat(e.target.value) : '')}
+                    placeholder="tam i zpět"
                     className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                     required
                   />
@@ -608,6 +641,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                     step="0.5"
                     value={ratePerKm}
                     onChange={(e) => setRatePerKm(e.target.value ? parseFloat(e.target.value) : '')}
+                    placeholder="Kč za km"
                     className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                     required
                   />
@@ -664,7 +698,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                   Zatím jste nezaznamenali žádnou jízdu k této zakázce.
                 </p>
                 <p className="text-sm text-slate-400 mt-1">
-                  Po každém výjezdu na stavbu stačí zapsat kilometry výše pro evidenci nákladů.
+                  Po každé cestě na stavbu stačí zapsat kilometry výše.
                 </p>
               </div>
             ) : (

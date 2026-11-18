@@ -80,6 +80,11 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   nepředvybere), termín, adresu stavby, podpisy, čísla ani fotky. Nahoře je pruh, ze které zakázky vychází.
   `formPreset` v `App.tsx` (také předvybraný klient z tlačítka „Nová smlouva“ v Klientech) platí jen pro jedno
   založení formuláře a zapomene se po odchodu ze záložky.
+- **Nástroje stavby a záznamy** nesmí nic předstírat: zkušební protokoly (`TechnicalProtocolsModal.tsx`) nepředvyplňují
+  parametry, naměřené hodnoty, výsledek ani popis průběhu (hodnota podle normy je jen nápověda v poli) a podpis zákazníka
+  nepřebírají ze smlouvy; kniha jízd (`LogbookModal.tsx`) zapíše více dní najednou jen u dnů, které uživatel vybere,
+  a nepředvyplňuje kilometry ani sazbu. Částka jízdy se v součtech bere přes `getTripCost` (`utils/tripCost.ts`).
+  „Vyfotit účtenku“ na přehledu otevře výběr zakázky a její okno Náklady a zisk (`initialOpenExpenses` v náhledu).
 - **Formuláře** (vzor `ContractForm.tsx`, `BudgetItemsEditor.tsx`): popisek nad polem, pole vysoké aspoň 44 px s linkou
   1,5 px, volby jako přepínací tlačítka (`aria-pressed`), chyba červeně pod polem (`role="alert"`) a zmizí po opravě;
   při odeslání s chybou se stránka posune na první chybné pole. Nepředvyplňovat vymyšlené částky.

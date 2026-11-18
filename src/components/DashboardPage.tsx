@@ -34,6 +34,7 @@ import { getSubscriptionInfo, isProUser } from '../utils/subscription';
 import { isInvoiceable, isContractPaid, getFinalBalance, getInvoiceStatus, getContractTotal } from '../utils/invoiceMath';
 import { getJobStage, isActiveJob, JOB_STAGE_LABELS } from '../utils/jobStage';
 import { Metr } from './Logo';
+import { Dialog } from './Dialog';
 import { GettingStarted } from './GettingStarted';
 import { getGettingStartedSteps, GettingStartedKey } from '../utils/gettingStarted';
 
@@ -79,7 +80,8 @@ interface DashboardPageProps {
   onNewContract: () => void;
   onOpenPaywall?: () => void;
   onSelectTradeTemplate?: (tplId: string) => void;
-  onOpenReceiptScan: () => void;
+  /** Účtenka se ukládá k zakázce: otevře náhled zakázky s oknem Náklady a zisk */
+  onOpenExpenses: (contract: Contract) => void;
   onOpenQuickMessages?: (contract: Contract) => void;
   onOpenSigningKiosk?: (contract: Contract) => void;
   onOpenEstimateCalculator?: () => void;
@@ -108,7 +110,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   onNewContract,
   onOpenPaywall,
   onSelectTradeTemplate,
-  onOpenReceiptScan,
+  onOpenExpenses,
   onOpenQuickMessages,
   onOpenSigningKiosk,
   onOpenEstimateCalculator,
@@ -149,6 +151,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       .sort((a, b) => b.stage.percent - a.stage.percent || (a.contract.deliveryDate || '').localeCompare(b.contract.deliveryDate || ''));
   }, [contracts]);
   const shownJobs = activeJobs.slice(0, 6);
+
+  // Vyfotit účtenku: účtenka patří k zakázce – s jedinou rozpracovanou rovnou k ní, jinak výběr
+  const [receiptPicker, setReceiptPicker] = useState(false);
+  const handleReceipt = () => {
+    if (activeJobs.length === 1) onOpenExpenses(activeJobs[0].contract);
+    else setReceiptPicker(true);
+  };
 
   // Nezaplacené faktury a pohledávky
   const unpaidInvoices = useMemo(() => {
@@ -276,7 +285,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           <h1 className="text-4xl sm:text-[44px] font-bold leading-[1.05] text-slate-900 dark:text-white">{greeting}</h1>
         </div>
         <div className="w-full sm:w-auto grid grid-flow-col auto-cols-fr sm:flex sm:flex-wrap gap-2 sm:gap-2.5">
-          <button type="button" onClick={onOpenReceiptScan} aria-label="Vyfotit účtenku" className={`${outlineButton} ${quickAction}`}>
+          <button type="button" onClick={handleReceipt} aria-label="Vyfotit účtenku" className={`${outlineButton} ${quickAction}`}>
             <Receipt className="w-[18px] h-[18px]" />
             <span className="sm:hidden">Účtenka</span>
             <span className="hidden sm:inline">Vyfotit účtenku</span>
@@ -652,6 +661,40 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           ))}
         </div>
       </section>
+
+      {/* Ke které zakázce účtenka patří */}
+      {receiptPicker && (
+        <Dialog title="Vyfotit účtenku" subtitle="Účtenka se uloží do nákladů zakázky." onClose={() => setReceiptPicker(false)}>
+          {activeJobs.length === 0 ? (
+            <p className="text-[15px] text-slate-700 dark:text-slate-300">
+              Zatím nemáte žádnou rozpracovanou zakázku. Účtenku přidáte v náhledu zakázky přes Náklady a zisk.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-[15px] text-slate-700 dark:text-slate-300">Ke které zakázce účtenka patří?</p>
+              <ul className="border border-slate-200 dark:border-slate-800 rounded-md divide-y divide-slate-100 dark:divide-slate-800">
+                {activeJobs.map(({ contract, stage }) => (
+                  <li key={contract.id}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReceiptPicker(false);
+                        onOpenExpenses(contract);
+                      }}
+                      className="w-full min-h-11 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                    >
+                      <span className="block font-semibold text-slate-900 dark:text-white">{contract.workDescription || 'Zakázka'}</span>
+                      <span className="block text-slate-600 dark:text-slate-400">
+                        {contract.client?.name} · {stage.label}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </Dialog>
+      )}
     </div>
   );
 };

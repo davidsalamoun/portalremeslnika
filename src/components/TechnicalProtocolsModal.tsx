@@ -8,6 +8,7 @@ import {
   Printer,
   Share2,
   CheckCircle2,
+  XCircle,
   AlertTriangle,
   PenTool,
   RotateCcw,
@@ -43,12 +44,15 @@ interface TestPreset {
   testDurationMinutes: number;
   maxAllowedDropBar: number;
   defaultNotes: string;
+  /** Krátký název do výběru druhu zkoušky */
+  label: string;
 }
 
 const TEST_PRESETS: TestPreset[] = [
   {
     type: 'water_pressure',
     title: 'Protokol o tlakové zkoušce vnitřního vodovodu',
+    label: 'Tlaková zkouška vodovodu',
     standard: 'ČSN 73 6660 (Vnitřní vodovody)',
     pipeMaterial: 'PPR / PEX-AL-PEX',
     testMedium: 'voda',
@@ -61,6 +65,7 @@ const TEST_PRESETS: TestPreset[] = [
   {
     type: 'heating_pressure',
     title: 'Protokol o tlakové zkoušce otopné soustavy',
+    label: 'Tlaková zkouška otopné soustavy',
     standard: 'ČSN EN 14336 (Tepelné soustavy v budovách)',
     pipeMaterial: 'PEX-AL-PEX / Měď',
     testMedium: 'voda',
@@ -73,6 +78,7 @@ const TEST_PRESETS: TestPreset[] = [
   {
     type: 'floor_heating_test',
     title: 'Zápis o provedení topné zkoušky a nátopu podlahového topení',
+    label: 'Topná zkouška podlahového topení',
     standard: 'ČSN EN 1264-4 (Zabudované plošné vytápění)',
     pipeMaterial: 'PEX / PE-RT potrubí s kyslíkovou bariérou',
     testMedium: 'voda',
@@ -85,6 +91,7 @@ const TEST_PRESETS: TestPreset[] = [
   {
     type: 'sewage_tightness',
     title: 'Protokol o zkoušce těsnosti vnitřní kanalizace',
+    label: 'Zkouška těsnosti kanalizace',
     standard: 'ČSN 75 6760 / ČSN EN 1610 (Vnitřní kanalizace)',
     pipeMaterial: 'HT / KG plastové potrubí s hrdlovými spoji',
     testMedium: 'voda',
@@ -97,6 +104,7 @@ const TEST_PRESETS: TestPreset[] = [
   {
     type: 'electrical_initial',
     title: 'Výchozí kontrolní záznam zapojení elektroinstalace a spotřebičů',
+    label: 'Kontrola zapojení elektroinstalace',
     standard: 'ČSN 33 2000-6 ed. 2 (Revize elektrických zařízení)',
     pipeMaterial: 'Kabely CYKY v chráničkách pod omítkou',
     testMedium: 'plyn', // Not applicable
@@ -125,6 +133,8 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
   // New protocol form state
   const [selectedPresetIdx, setSelectedPresetIdx] = useState<number>(0);
   const currentPreset = TEST_PRESETS[selectedPresetIdx] || TEST_PRESETS[0];
+  // Elektroinstalace se netlakuje – tlak a pokles u ní nejsou povinné
+  const isPressureTest = currentPreset.type !== 'electrical_initial';
 
   const nextNumber = `TZ-${contract.contractNumber.replace(/\D/g, '') || new Date().getFullYear()}-${String(
     protocols.length + 1
@@ -136,22 +146,24 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
   const [title, setTitle] = useState(currentPreset.title);
   const [pipeMaterial, setPipeMaterial] = useState(currentPreset.pipeMaterial);
   const [testMedium, setTestMedium] = useState<'voda' | 'vzduch' | 'plyn'>(currentPreset.testMedium);
-  const [operatingPressure, setOperatingPressure] = useState<number | ''>(currentPreset.operatingPressureBar);
-  const [testPressure, setTestPressure] = useState<number | ''>(currentPreset.testPressureBar);
-  const [durationMinutes, setDurationMinutes] = useState<number | ''>(currentPreset.testDurationMinutes);
-  const [pressureDrop, setPressureDrop] = useState<number | ''>(0.0);
-  const [result, setResult] = useState<'vyhovuje' | 'nevyhovuje'>('vyhovuje');
+  // Parametry a naměřené hodnoty zkoušky se nepředvyplňují – protokol smí vzniknout jen z toho, co se skutečně změřilo
+  // (hodnoty podle normy jsou jen nápovědou v poli)
+  const [operatingPressure, setOperatingPressure] = useState<number | ''>('');
+  const [testPressure, setTestPressure] = useState<number | ''>('');
+  const [durationMinutes, setDurationMinutes] = useState<number | ''>('');
+  const [pressureDrop, setPressureDrop] = useState<number | ''>('');
+  const [result, setResult] = useState<'vyhovuje' | 'nevyhovuje' | ''>('');
+  const [resultError, setResultError] = useState(false);
   const [testedBy, setTestedBy] = useState(contract.contractor.name || 'Zhotovitel');
   const [witnessedBy, setWitnessedBy] = useState(contract.client.name || 'Objednatel');
-  const [notes, setNotes] = useState(currentPreset.defaultNotes);
+  const [notes, setNotes] = useState('');
 
   // Signature state
   const [contractorSignature, setContractorSignature] = useState<string | null>(
     contract.contractorSignature || null
   );
-  const [clientSignature, setClientSignature] = useState<string | null>(
-    contract.clientSignature || null
-  );
+  // Podpis zákazníka se nepřebírá ze smlouvy: protokol podepisuje ten, kdo byl u zkoušky
+  const [clientSignature, setClientSignature] = useState<string | null>(null);
   const [activeSigner, setActiveSigner] = useState<'contractor' | 'client' | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -167,12 +179,13 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
     setStandard(p.standard);
     setPipeMaterial(p.pipeMaterial);
     setTestMedium(p.testMedium);
-    setOperatingPressure(p.operatingPressureBar);
-    setTestPressure(p.testPressureBar);
-    setDurationMinutes(p.testDurationMinutes);
-    setNotes(p.defaultNotes);
-    setPressureDrop(0.0);
-    setResult('vyhovuje');
+    setOperatingPressure('');
+    setTestPressure('');
+    setDurationMinutes('');
+    setNotes('');
+    setPressureDrop('');
+    setResult('');
+    setResultError(false);
   };
 
   // Canvas drawing handlers
@@ -224,6 +237,10 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
 
   const handleCreateProtocol = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!result) {
+      setResultError(true);
+      return;
+    }
     triggerHaptic('success');
 
     const newProtocol: TechnicalProtocol = {
@@ -239,7 +256,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
       testPressureBar: typeof testPressure === 'number' ? testPressure : 0,
       testDurationMinutes: typeof durationMinutes === 'number' ? durationMinutes : 60,
       pressureDropBar: typeof pressureDrop === 'number' ? pressureDrop : 0,
-      result,
+      result: result as 'vyhovuje' | 'nevyhovuje',
       testedBy: testedBy.trim() || contract.contractor.name,
       witnessedBy: witnessedBy.trim() || contract.client.name,
       notes: notes.trim(),
@@ -341,7 +358,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
             className="min-h-11 px-3.5 py-1.5 rounded-xl bg-slate-600 hover:bg-slate-700 text-white font-semibold text-sm flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Vystavit nový protokol</span>
+            <span>Vystavit nový protokol</span>
           </button>
         </div>
 
@@ -375,9 +392,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                         ) : (
                           <ShieldCheck className="w-4 h-4 text-slate-500" />
                         )}
-                        <span className="font-semibold text-slate-900 dark:text-white truncate">
-                          {preset.title.replace('Protokol o ', '')}
-                        </span>
+                        <span className="font-semibold text-slate-900 dark:text-white">{preset.label}</span>
                       </div>
                       <span className="text-[13px] text-slate-400 font-medium block">
                         {preset.standard}
@@ -457,8 +472,9 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                       step="0.1"
                       value={testPressure}
                       onChange={(e) => setTestPressure(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                      placeholder={isPressureTest ? `norma: ${currentPreset.testPressureBar}` : ''}
                       className="min-h-11 w-full text-sm font-semibold px-2.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300"
-                      required
+                      required={isPressureTest}
                     />
                   </div>
 
@@ -470,6 +486,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                       type="number"
                       value={durationMinutes}
                       onChange={(e) => setDurationMinutes(e.target.value === '' ? '' : parseInt(e.target.value, 10))}
+                      placeholder={`např. ${currentPreset.testDurationMinutes}`}
                       className="min-h-11 w-full text-sm font-semibold px-2.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
                       required
                     />
@@ -484,8 +501,9 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                       step="0.01"
                       value={pressureDrop}
                       onChange={(e) => setPressureDrop(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                      placeholder={isPressureTest ? 'naměřený pokles' : ''}
                       className="min-h-11 w-full text-sm font-semibold px-2.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
-                      required
+                      required={isPressureTest}
                     />
                   </div>
                 </div>
@@ -498,25 +516,33 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                     </span>
                     <button
                       type="button"
-                      onClick={() => setResult('vyhovuje')}
+                      onClick={() => {
+                        setResult('vyhovuje');
+                        setResultError(false);
+                      }}
+                      aria-pressed={result === 'vyhovuje'}
                       className={`min-h-11 inline-flex items-center justify-center px-3 py-1 rounded-xl text-sm font-semibold cursor-pointer transition-all ${
                         result === 'vyhovuje'
                           ? 'bg-emerald-600 text-white shadow-xs'
                           : 'bg-white dark:bg-slate-800 text-slate-600'
                       }`}
                     >
-                      ✓ VYHOVUJE
+                      ✓ Vyhovuje
                     </button>
                     <button
                       type="button"
-                      onClick={() => setResult('nevyhovuje')}
+                      onClick={() => {
+                        setResult('nevyhovuje');
+                        setResultError(false);
+                      }}
+                      aria-pressed={result === 'nevyhovuje'}
                       className={`min-h-11 inline-flex items-center justify-center px-3 py-1 rounded-xl text-sm font-semibold cursor-pointer transition-all ${
                         result === 'nevyhovuje'
                           ? 'bg-rose-600 text-white shadow-xs'
                           : 'bg-white dark:bg-slate-800 text-slate-600'
                       }`}
                     >
-                      ✗ NEVYHOVUJE
+                      ✗ Nevyhovuje
                     </button>
                   </div>
 
@@ -524,6 +550,11 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                     Dle ČSN nesmí dojít k orosení ani zjevnému poklesu
                   </span>
                 </div>
+                {resultError && (
+                  <p role="alert" className="text-sm font-semibold text-rose-700 dark:text-rose-300">
+                    Vyberte výsledek zkoušky podle toho, co jste naměřili.
+                  </p>
+                )}
               </div>
 
               {/* Notes */}
@@ -535,6 +566,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                   rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Popište průběh zkoušky a co jste zjistili."
                   className="w-full text-sm font-medium p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 outline-hidden"
                 />
               </div>
@@ -667,7 +699,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                   </div>
 
                   <div>
-                    <span className="text-3xs uppercase font-extrabold text-slate-400 block">Objednatel & Místo stavby:</span>
+                    <span className="text-3xs uppercase font-extrabold text-slate-400 block">Objednatel a místo stavby:</span>
                     <span className="font-bold text-slate-900 dark:text-white block">{contract.client.name}</span>
                     <span className="text-2xs text-slate-600 dark:text-slate-400">{contract.executionPlace || contract.client.address}</span>
                   </div>
@@ -710,10 +742,20 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    {selectedProtocol.result === 'vyhovuje' ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-rose-600" />
+                    )}
                     <div>
-                      <span className="font-black text-sm block">VÝSLEDEK ZKOUŠKY: {selectedProtocol.result.toUpperCase()}</span>
-                      <span className="text-2xs opacity-80">Rozvody splňují požadavky příslušných technických norem ČR.</span>
+                      <span className="font-black text-sm block">
+                        Výsledek zkoušky: {selectedProtocol.result === 'vyhovuje' ? 'vyhovuje' : 'nevyhovuje'}
+                      </span>
+                      <span className="text-2xs opacity-80">
+                        {selectedProtocol.result === 'vyhovuje'
+                          ? 'Rozvody splňují požadavky příslušných technických norem ČR.'
+                          : 'Rozvody nesplnily požadavky zkoušky; je nutné závadu odstranit a zkoušku zopakovat.'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -754,7 +796,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                   <button
                     type="button"
                     onClick={() => handleShareWhatsApp(selectedProtocol)}
-                    className="min-h-[42px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    className="min-h-[42px] px-3.5 py-2 rounded-xl border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
                     <Share2 className="w-4 h-4" />
                     <span>Sdílet protokol (WhatsApp)</span>

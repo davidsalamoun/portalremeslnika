@@ -91,6 +91,8 @@ interface ContractPreviewProps {
   initialDocType?: DocumentType;
   /** Založit novou zakázku s popisem, rozpočtem a cenou této zakázky */
   onUseAsBase?: (contract: Contract) => void;
+  /** Otevřít rovnou okno Náklady a zisk (tlačítko „Vyfotit účtenku“ na přehledu) */
+  initialOpenExpenses?: boolean;
 }
 
 // Prvky lišty nad dokumentem (vzhled „Výkres a metr“)
@@ -122,6 +124,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
   onToast,
   initialDocType,
   onUseAsBase,
+  initialOpenExpenses,
 }) => {
   const [currentContract, setCurrentContract] = useState<Contract>(contract);
   const isPro = isProUser(getContractorProfile());
@@ -147,7 +150,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   // Na mobilu jsou akce zakázky schované v nabídce „Další“, aby dokument začínal výš
   const [isJobMenuOpen, setIsJobMenuOpen] = useState(false);
-  const [isExpensesModalOpen, setIsExpensesModalOpen] = useState(false);
+  const [isExpensesModalOpen, setIsExpensesModalOpen] = useState(!!initialOpenExpenses);
   const [siteAddressDraft, setSiteAddressDraft] = useState<string | null>(null);
   const [isLogbookModalOpen, setIsLogbookModalOpen] = useState(false);
   const [isShoppingListModalOpen, setIsShoppingListModalOpen] = useState(false);
@@ -885,7 +888,7 @@ export const ContractPreview: React.FC<ContractPreviewProps> = ({
                         title="Přidat vícepráce nebo změnu rozsahu (Změnový list s podpisem na mobilu)"
                       >
                         <FilePlus2 className="w-3.5 h-3.5 text-amber-600" />
-                        <span>+ Přidat vícepráce (Změnový list)</span>
+                        <span>Přidat vícepráce (změnový list)</span>
                       </button>
   
                       <button

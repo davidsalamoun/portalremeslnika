@@ -288,7 +288,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
               className="min-h-11 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold shadow-xs active:scale-95 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>{isAdding ? 'Zavřít formulář' : '+ Zapsat směnu / úkol parťáka'}</span>
+              <span>{isAdding ? 'Zavřít formulář' : 'Zapsat směnu / úkol parťáka'}</span>
             </button>
 
             <div className="flex items-center gap-2">
@@ -489,7 +489,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                   Zatím nemáte zapsaného žádného parťáka ani brigádníka
                 </p>
                 <p className="text-sm text-slate-500 max-w-sm mx-auto">
-                  Klikněte na „+ Zapsat směnu / úkol parťáka“ pro rychlou evidenci hodin a vyplacených záloh.
+                  Klikněte na „Zapsat směnu / úkol parťáka“ pro rychlou evidenci hodin a vyplacených záloh.
                 </p>
               </div>
             ) : (

@@ -26,6 +26,8 @@ import {
   formatSignedCurrency,
 } from '../utils/numberToWordsCs';
 import { getWhatsAppShareUrl } from '../utils/shareUtils';
+import { getJobStage } from '../utils/jobStage';
+import { getSiteAddress } from '../utils/siteAddress';
 import { triggerHaptic } from '../utils/haptics';
 
 interface ContractArchiveModalProps {
@@ -75,9 +77,9 @@ export const ContractArchiveModal: React.FC<ContractArchiveModalProps> = ({
 <body>
   <div style="display: flex; justify-content: space-between; align-items: center;">
     <div>
-      <span class="badge">KOMPLETNÍ ARCHIVNÍ SLOŽKA ZAKÁZKY</span>
+      <span class="badge">Kompletní archivní složka zakázky</span>
       <h1 style="border: none; margin: 8px 0 0 0;">Zakázka č. ${contract.contractNumber}</h1>
-      <p style="color: #64748b; margin: 0;">Místo plnění: ${contract.executionPlace || 'Není specifikováno'} · Datum: ${formatDateCs(contract.conclusionDate || contract.createdAt)}</p>
+      <p style="color: #64748b; margin: 0;">Místo plnění: ${getSiteAddress(contract) || 'Není specifikováno'} · Datum: ${formatDateCs(contract.conclusionDate || contract.createdAt)}</p>
     </div>
     <div style="text-align: right;">
       <h2 style="border: none; margin: 0; color: #1e3a78;">${formatCurrency(contract.price)}</h2>
@@ -102,7 +104,7 @@ export const ContractArchiveModal: React.FC<ContractArchiveModalProps> = ({
     </div>
   </div>
 
-  <h2>1. Předmět díla & Rozpočet</h2>
+  <h2>1. Předmět díla a rozpočet</h2>
   <p>${contract.workDescription}</p>
 
   ${contract.items && contract.items.length > 0 ? `
@@ -140,7 +142,7 @@ export const ContractArchiveModal: React.FC<ContractArchiveModalProps> = ({
     <table>
       <thead><tr><th>Typ zkoušky</th><th>ČSN norma</th><th>Datum</th><th>Výsledek</th></tr></thead>
       <tbody>
-        ${contract.technicalProtocols.map(tp => `<tr><td>${tp.title}</td><td>${tp.standard}</td><td>${formatDateCs(tp.date)}</td><td><strong>${tp.result === 'vyhovuje' ? 'VYHOVUJE' : 'NEVYHOVUJE'}</strong></td></tr>`).join('')}
+        ${contract.technicalProtocols.map(tp => `<tr><td>${tp.title}</td><td>${tp.standard}</td><td>${formatDateCs(tp.date)}</td><td><strong>${tp.result === 'vyhovuje' ? 'vyhovuje' : 'nevyhovuje'}</strong></td></tr>`).join('')}
       </tbody>
     </table>
   ` : ''}
@@ -203,15 +205,15 @@ export const ContractArchiveModal: React.FC<ContractArchiveModalProps> = ({
           {/* Status banner */}
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-4">
             <div className="space-y-1">
-              <span className="text-3xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 block">
+              <span className="text-3xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-300 block">
                 Souhrnná digitální složka díla
               </span>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                {contract.workDescription.substring(0, 90)}...
+                {contract.workDescription.length > 90 ? `${contract.workDescription.substring(0, 90)}…` : contract.workDescription}
               </h2>
               <div className="text-xs text-slate-500 flex items-center gap-2">
                 <MapPin className="w-3.5 h-3.5" />
-                <span>{contract.executionPlace || 'Místo neuvedeno'}</span>
+                <span>{getSiteAddress(contract) || 'Místo neuvedeno'}</span>
                 <span>·</span>
                 <Calendar className="w-3.5 h-3.5" />
                 <span>Termín: {formatDateCs(contract.deliveryDate)}</span>
@@ -223,8 +225,15 @@ export const ContractArchiveModal: React.FC<ContractArchiveModalProps> = ({
               <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
                 {formatCurrency(contract.price)}
               </div>
-              <span className="text-3xs font-bold px-2 py-0.5 rounded-md uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
-                {contract.status === 'handover_done' || contract.status === 'paid' ? 'Dokončeno a archivováno' : 'V realizaci'}
+              {/* Fáze podle jednotných pravidel (utils/jobStage); zelená jen u zaplacené zakázky */}
+              <span
+                className={`text-3xs font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                  getJobStage(contract).key === 'paid'
+                    ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200'
+                }`}
+              >
+                {getJobStage(contract).label}
               </span>
             </div>
           </div>
@@ -354,8 +363,8 @@ export const ContractArchiveModal: React.FC<ContractArchiveModalProps> = ({
                   <div key={tp.id} className="p-3.5 rounded-xl border border-sky-200 dark:border-sky-900/60 bg-sky-50/30 dark:bg-sky-950/20 text-xs space-y-1">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-900 dark:text-white">{tp.title}</span>
-                      <span className="text-3xs font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider bg-emerald-600 text-white">
-                        {tp.result === 'vyhovuje' ? 'VYHOVUJE' : 'NEVYHOVUJE'}
+                      <span className={`text-3xs font-extrabold px-2 py-0.5 rounded-md text-white ${tp.result === 'vyhovuje' ? 'bg-emerald-600' : 'bg-rose-600'}`}>
+                        {tp.result === 'vyhovuje' ? 'vyhovuje' : 'nevyhovuje'}
                       </span>
                     </div>
                     <div className="text-slate-500 font-mono text-2xs">{tp.standard} · {formatDateCs(tp.date)}</div>
@@ -374,7 +383,7 @@ export const ContractArchiveModal: React.FC<ContractArchiveModalProps> = ({
           {contract.photos && contract.photos.length > 0 && (
             <div className="space-y-2">
               <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                <Camera className="w-4 h-4 text-purple-600" />
+                <Camera className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                 <span>Fotodokumentace ze stavby ({contract.photos.length} fotek)</span>
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -382,7 +391,7 @@ export const ContractArchiveModal: React.FC<ContractArchiveModalProps> = ({
                   <div key={p.id} className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900">
                     <img src={p.dataUrl} alt={p.caption || 'Foto'} className="w-full h-28 object-cover" />
                     <div className="p-2 text-2xs">
-                      <span className="font-bold text-purple-600 uppercase block">
+                      <span className="font-bold text-slate-900 dark:text-slate-100 block">
                         {p.category === 'before' ? 'Před' : p.category === 'after' ? 'Po dokončení' : 'V průběhu'}
                       </span>
                       <p className="text-slate-600 dark:text-slate-400 truncate">{p.caption || formatDateCs(p.createdAt)}</p>

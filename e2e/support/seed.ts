@@ -39,7 +39,7 @@ export function seedData(sig: string, photo: string, opts: { vatPayer?: boolean 
       { id: 'e1', date: iso(-8), title: 'Lepidlo a spárovačka', supplier: 'Stavebniny DEK', amount: 3480, category: 'material', receiptPhotoUrl: photo, createdAt: iso(-8) + 'T10:00:00.000Z' },
       { id: 'e2', date: iso(-7), title: 'PHM', amount: 900, category: 'travel', createdAt: iso(-7) + 'T10:00:00.000Z' },
     ],
-    trips: [{ id: 't1', date: iso(-8), from: 'Praha 4', to: 'Černošice', distanceKm: 24, purpose: 'Zaměření', ratePerKm: 5.6, createdAt: iso(-8) + 'T10:00:00.000Z' }],
+    trips: [{ id: 't1', date: iso(-8), origin: 'Praha 4', destination: 'Černošice', distanceKm: 24, purpose: 'Zaměření', ratePerKm: 5.6, totalCost: 134.4, createdAt: iso(-8) + 'T10:00:00.000Z' }],
   });
   const contracts = [
     full,

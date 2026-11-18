@@ -1,3 +1,4 @@
+import { getTripCost } from '../utils/tripCost';
 import React, { useState, useMemo } from 'react';
 import { buildIsdoc, isdocFileName } from '../utils/isdoc';
 import { createZip, downloadFile } from '../utils/zipStore';
@@ -273,7 +274,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
             destination: tr.destination,
             distanceKm: tr.distanceKm,
             ratePerKm: tr.ratePerKm,
-            totalCost: tr.totalCost,
+            totalCost: getTripCost(tr),
             purpose: tr.purpose,
           });
         }
@@ -502,7 +503,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
 
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
               <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
-                Výdaje & Materiál
+                Výdaje a materiál
               </span>
               <span className="text-lg sm:text-xl font-semibold text-rose-600 dark:text-rose-400 block">
                 {formatCurrency(filteredData.sumExpenses)}
@@ -690,7 +691,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
                                 : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
                             }`}
                           >
-                            {inv.isPaid ? 'ZAPLACENO' : 'NEUHRASENO'}
+                            {inv.isPaid ? 'Zaplaceno' : 'Neuhrazeno'}
                           </span>
                         </td>
                       </tr>
@@ -816,7 +817,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
             <button
               type="button"
               onClick={handleExportCsv}
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm sm:text-sm flex items-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
+              className="min-h-[44px] px-4 py-2 rounded-xl border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm sm:text-sm flex items-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
               title="Exportovat tabulku do CSV (Pohoda / Excel)"
             >
               <FileSpreadsheet className="w-4 h-4" />

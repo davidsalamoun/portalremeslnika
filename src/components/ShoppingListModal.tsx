@@ -30,7 +30,7 @@ interface ShoppingListModalProps {
 
 const TRADE_PRESETS: { name: string; items: { name: string; quantity: number; unit: string; estimatedPrice: number }[] }[] = [
   {
-    name: 'Zedník & Obkladač',
+    name: 'Zedník a obkladač',
     items: [
       { name: 'Flexibilní lepidlo C2TES1 (25 kg)', quantity: 6, unit: 'pyt', estimatedPrice: 380 },
       { name: 'Hloubková penetrace 5 l', quantity: 1, unit: 'kan', estimatedPrice: 420 },
@@ -41,7 +41,7 @@ const TRADE_PRESETS: { name: string; items: { name: string; quantity: number; un
     ],
   },
   {
-    name: 'Malíř & Sádrokartonář',
+    name: 'Malíř a sádrokartonář',
     items: [
       { name: 'Bílá otěruvzdorná malířská barva (15 kg)', quantity: 2, unit: 'kbl', estimatedPrice: 790 },
       { name: 'Sádrokartonová deska RB 12,5 mm (2000x1250)', quantity: 8, unit: 'ks', estimatedPrice: 210 },
@@ -52,7 +52,7 @@ const TRADE_PRESETS: { name: string; items: { name: string; quantity: number; un
     ],
   },
   {
-    name: 'Elektro & Voda & Topení',
+    name: 'Elektro, voda a topení',
     items: [
       { name: 'Kabel CYKY-J 3x1.5 (100 m kruh)', quantity: 1, unit: 'bal', estimatedPrice: 1450 },
       { name: 'Kabel CYKY-J 3x2.5 (100 m kruh)', quantity: 1, unit: 'bal', estimatedPrice: 2200 },
@@ -450,7 +450,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
             <button
               type="button"
               onClick={handleShareWhatsApp}
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm sm:text-sm flex items-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
+              className="min-h-[44px] px-4 py-2 rounded-xl border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm sm:text-sm flex items-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
               title="Odeslat nákupní seznam kolegům nebo závozu do WhatsAppu"
             >
               <Share2 className="w-4 h-4" />
