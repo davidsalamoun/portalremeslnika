@@ -144,6 +144,8 @@ export default function App() {
   // Preview state
   const [previewContract, setPreviewContract] = useState<Contract | null>(null);
   const [previewInitialDoc, setPreviewInitialDoc] = useState<DocumentType>('smlouva');
+  // Náhled otevřený tlačítkem „Vyfotit účtenku“: rovnou okno Náklady a zisk
+  const [previewOpenExpenses, setPreviewOpenExpenses] = useState(false);
   const [savedContractIds, setSavedContractIds] = useState<Set<string>>(new Set());
 
   // Client modal state
@@ -709,7 +711,11 @@ export default function App() {
           <ContractPreview
             contract={previewContract}
             initialDocType={previewInitialDoc}
-            onBack={() => setPreviewContract(null)}
+            initialOpenExpenses={previewOpenExpenses}
+            onBack={() => {
+              setPreviewContract(null);
+              setPreviewOpenExpenses(false);
+            }}
             onSaveToHistory={handleSaveToHistory}
             isSaved={savedContractIds.has(previewContract.id)}
             onToast={addToast}
@@ -764,7 +770,11 @@ export default function App() {
                   setSelectedTradeTemplate(tplId);
                   setActiveTab('nova-smlouva');
                 }}
-                onOpenReceiptScan={() => setActiveTab('finance')}
+                onOpenExpenses={(contract) => {
+                  setPreviewInitialDoc(defaultDocFor(contract));
+                  setPreviewOpenExpenses(true);
+                  setPreviewContract(contract);
+                }}
                 onOpenQuickMessages={(c) => setQuickMessagesContract(c)}
                 onOpenSigningKiosk={(c) => setSigningKioskContract(c)}
                 onOpenEstimateCalculator={() => setIsEstimateCalculatorOpen(true)}

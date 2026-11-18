@@ -66,7 +66,7 @@ const TRADES: TradeFormula[] = [
   },
   {
     id: 'drywall',
-    title: 'Sádrokartony & příčky',
+    title: 'Sádrokartony a příčky',
     iconName: 'squareSplit',
     unit: 'm²',
     defaultQty: 45,
@@ -78,7 +78,7 @@ const TRADES: TradeFormula[] = [
   },
   {
     id: 'paint',
-    title: 'Malířské práce & stěrky',
+    title: 'Malířské práce a stěrky',
     iconName: 'brush',
     unit: 'm²',
     defaultQty: 100,
@@ -90,7 +90,7 @@ const TRADES: TradeFormula[] = [
   },
   {
     id: 'floor',
-    title: 'Vinylové podlahy & stěrka',
+    title: 'Vinylové podlahy a stěrka',
     iconName: 'hammer',
     unit: 'm²',
     defaultQty: 50,
@@ -269,7 +269,7 @@ Přesnou cenovou nabídku s položkovým rozpočtem vám rád připravím.`;
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 text-[13px]">
-              Třída materiálu & chemie:
+              Třída materiálu a chemie:
             </label>
             <div className="grid grid-cols-2 gap-1.5 h-10">
               <button
@@ -281,7 +281,7 @@ Přesnou cenovou nabídku s položkovým rozpočtem vám rád připravím.`;
                     : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
                 }`}
               >
-                STANDARD
+                Standard
               </button>
               <button
                 type="button"
@@ -292,7 +292,7 @@ Přesnou cenovou nabídku s položkovým rozpočtem vám rád připravím.`;
                     : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
                 }`}
               >
-                PRÉMIE (+25%)
+                Prémiový (+25 %)
               </button>
             </div>
           </div>
@@ -331,7 +331,7 @@ Přesnou cenovou nabídku s položkovým rozpočtem vám rád připravím.`;
               <strong className="text-sm tabular-nums font-semibold text-white">{formatCurrency(calculation.laborPrice)}</strong>
             </div>
             <div className="bg-slate-800/60 p-2 rounded border border-slate-700/60">
-              <span className="text-slate-400 text-[13px] block">Materiál & chemie:</span>
+              <span className="text-slate-400 text-[13px] block">Materiál a chemie:</span>
               <strong className="text-sm tabular-nums font-semibold text-amber-400">{formatCurrency(calculation.materialPrice)}</strong>
             </div>
           </div>

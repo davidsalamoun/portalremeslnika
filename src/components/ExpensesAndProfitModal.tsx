@@ -38,7 +38,7 @@ const CATEGORY_META: Record<
     badgeClass: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700',
   },
   tools: {
-    label: 'Nářadí & Půjčovna',
+    label: 'Nářadí a půjčovna',
     badgeClass: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700',
   },
   subcontractor: {
@@ -46,7 +46,7 @@ const CATEGORY_META: Record<
     badgeClass: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700',
   },
   travel: {
-    label: 'Doprava & PHM',
+    label: 'Doprava a PHM',
     badgeClass: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700',
   },
   other: {
@@ -252,7 +252,7 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
                   netProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                 }`}
               >
-                {netProfit >= 0 ? 'Tvůj reálný výdělek' : 'Pozor: zakázka je ve ztrátě!'}
+                {netProfit >= 0 ? 'Výdělek po odečtení nákladů' : 'Zakázka je ve ztrátě'}
               </span>
             </div>
 
@@ -421,7 +421,7 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
                 <div className="sm:col-span-3 sm:self-end">
                   <button
                     type="submit"
-                    className="min-h-11 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors shadow-xs cursor-pointer"
+                    className="min-h-11 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 border-[1.5px] border-slate-900 font-semibold text-sm transition-colors shadow-xs cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Uložit výdaj</span>
@@ -571,7 +571,7 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
         {/* Modal Footer */}
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 flex items-center justify-between shrink-0">
           <div className="text-sm text-slate-500 dark:text-slate-400">
-            Výdaje jsou automaticky uloženy k zakázce a promítnou se do finančního radaru OSVČ.
+            Výdaje se ukládají k zakázce a promítnou se do Financí.
           </div>
           <button
             type="button"

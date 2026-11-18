@@ -112,16 +112,16 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
         <div className="space-y-4">
           <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
             <div>
-              <span className="text-[13px] text-slate-400 block font-semibold">Stavba & Klient</span>
+              <span className="text-[13px] text-slate-400 block font-semibold">Klient</span>
               <span className="text-sm font-semibold text-slate-900 dark:text-white">{contract.client.name}</span>
             </div>
             <span className="text-sm font-semibold px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-              SOD #{contract.contractNumber}
+              {contract.contractNumber}
             </span>
           </div>
 
           <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-            Klidná hlava po šichtě. 4 rychlá klepnutí potvrdí, že na stavbě nic nezůstalo otevřené, zapnuté ani neuzamčené:
+            Před odjezdem si odškrtněte, že na stavbě nic nezůstalo otevřené, zapnuté ani nezamčené:
           </p>
 
           {/* 4 Fat-finger checklist buttons */}
@@ -290,8 +290,8 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
           <button
             type="button"
             onClick={handleSendWhatsApp}
-            className="min-h-[40px] px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all"
-            title="Poslat majiteli uklidňující zprávu na WhatsApp"
+            className="min-h-11 px-4 py-2 rounded-lg border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+            title="Poslat zákazníkovi zprávu o stavu stavby na WhatsApp"
           >
             <Send className="w-4 h-4" />
             <span>Poslat na WhatsApp</span>
@@ -310,7 +310,7 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
               onClick={handleSaveChecklist}
               className="min-h-11 inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-sm font-semibold cursor-pointer transition-colors shadow-xs"
             >
-              Uložit kontrolu do SOD
+              Uložit kontrolu k zakázce
             </button>
           </div>
         </div>

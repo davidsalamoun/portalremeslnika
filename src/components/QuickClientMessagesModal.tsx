@@ -225,7 +225,7 @@ export const QuickClientMessagesModal: React.FC<QuickClientMessagesModalProps> =
           <button
             type="button"
             onClick={handleSendWhatsApp}
-            className="min-h-11 flex items-center justify-center gap-2 py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-md transition-all cursor-pointer active:scale-95"
+            className="min-h-11 flex items-center justify-center gap-2 py-3 px-3 rounded-xl border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm shadow-md transition-all cursor-pointer active:scale-95"
           >
             <Send className="w-4 h-4" />
             <span>Odeslat WhatsApp</span>

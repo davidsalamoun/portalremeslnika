@@ -1,3 +1,4 @@
+import { getTripCost } from '../utils/tripCost';
 import React, { useMemo, useState } from 'react';
 import { Package, Printer } from 'lucide-react';
 import { Contract, ContractorProfile } from '../types/contract';
@@ -100,7 +101,7 @@ export const FinancialRadarPage: React.FC<FinancialRadarPageProps> = ({
       t.expenses += sumExpenses(c);
       (c.trips || []).forEach((trip) => {
         t.tripsKm += trip.distanceKm || 0;
-        t.tripsCost += trip.totalCost || 0;
+        t.tripsCost += getTripCost(trip);
       });
     });
     return t;

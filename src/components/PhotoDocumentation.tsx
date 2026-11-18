@@ -264,7 +264,7 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
                       <button
                         type="button"
                         onClick={() => handleSaveCaption(photo.id)}
-                        className="min-h-11 min-w-11 inline-flex items-center justify-center p-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700"
+                        className="min-h-11 min-w-11 inline-flex items-center justify-center p-1 rounded-md bg-amber-400 hover:bg-amber-300 text-slate-900 border-[1.5px] border-slate-900"
                       >
                         <Check className="w-3.5 h-3.5" />
                       </button>

@@ -197,7 +197,7 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
               className="min-h-11 w-full py-3 px-4 rounded-lg border-2 border-dashed border-amber-500/50 hover:border-amber-500 hover:bg-amber-500/5 text-slate-900 dark:text-amber-400 font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
             >
               <Plus className="w-4 h-4" />
-              <span>+ Zapsat dnešní den na stavbě (počasí, práce, fotky)</span>
+              <span>Zapsat dnešní den na stavbě (počasí, práce, fotky)</span>
             </button>
           )}
 
