@@ -592,7 +592,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
           </h1>
           <div className="mt-1 text-slate-600 dark:text-slate-400 max-w-2xl">
             {edit
-              ? `${[edit.contractNumber || edit.quoteNumber, edit.client?.name].filter(Boolean).join(' – ')}. Číslo dokumentu i datum uzavření zůstanou.`
+              ? `${[edit.contractNumber || edit.quoteNumber, edit.client?.name].filter(Boolean).join(' – ').replace(/\.$/, '')}. Číslo dokumentu i datum uzavření zůstanou.`
               : isInvoiceOnly
               ? 'Faktura za drobnou práci bez smlouvy. Číslo dostane, až ji v dalším kroku vystavíte.'
               : isQuote
@@ -782,6 +782,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               2. Dílo a cena
             </h2>
 
+            {!edit && (
             <div>
               <div className={fieldLabel}>Začít ze šablony řemesla</div>
               <div className="flex flex-wrap gap-2">
@@ -807,6 +808,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                   : 'Šablona vyplní popis díla, položky rozpočtu, termín a zálohu. Vše pak můžete upravit.'}
               </p>
             </div>
+            )}
 
             <div>
               <div className="flex flex-wrap items-end justify-between gap-x-4">
