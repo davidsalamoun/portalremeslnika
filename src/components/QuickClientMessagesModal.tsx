@@ -143,20 +143,17 @@ export const QuickClientMessagesModal: React.FC<QuickClientMessagesModalProps> =
                   triggerHaptic('light');
                   setSelectedTemplateIndex(idx);
                 }}
-                className={`min-h-11 min-w-11 p-3 rounded-xl border text-left flex flex-col items-start gap-1.5 transition-all cursor-pointer ${
+                aria-pressed={isSelected}
+                className={`min-h-11 min-w-11 p-3 rounded-md border text-left flex flex-col items-start gap-1.5 transition-colors cursor-pointer ${
                   isSelected
-                    ? 'bg-blue-50 dark:bg-blue-950/80 border-blue-500 dark:border-blue-500 shadow-xs ring-2 ring-blue-200 dark:ring-blue-900'
-                    : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                    ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
+                    : 'border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
-                <div className={`p-1.5 rounded-xl ${
-                  isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                }`}>
+                <div className="p-0.5">
                   <Icon className="w-4 h-4" />
                 </div>
-                <span className={`text-sm font-semibold leading-tight ${
-                  isSelected ? 'text-blue-900 dark:text-blue-200' : 'text-slate-800 dark:text-slate-200'
-                }`}>
+                <span className="font-semibold leading-tight">
                   {tpl.title}
                 </span>
               </button>
@@ -166,47 +163,48 @@ export const QuickClientMessagesModal: React.FC<QuickClientMessagesModalProps> =
 
         {/* Context parameters depending on template */}
         {selectedTemplateIndex === 0 && (
-          <div className="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-sm">
-            <span className="font-semibold text-slate-600 dark:text-slate-300">Budu tam za (minut):</span>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <label htmlFor="zprava-minuty" className="font-semibold text-slate-900 dark:text-slate-100">Budu tam za (minut)</label>
             <input
+              id="zprava-minuty"
               type="text"
               value={customMinutes}
               onChange={(e) => setCustomMinutes(e.target.value)}
-              className="min-h-11 w-16 px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-center font-semibold"
+              className="min-h-11 px-3 bg-white dark:bg-slate-950 border-[1.5px] border-slate-900 dark:border-slate-500 rounded-md text-slate-900 dark:text-white w-24 tabular-nums"
             />
           </div>
         )}
 
         {selectedTemplateIndex === 1 && (
-          <div className="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-sm">
-            <span className="font-semibold text-slate-600 dark:text-slate-300">Pokračujeme:</span>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <label htmlFor="zprava-pokracujeme" className="font-semibold text-slate-900 dark:text-slate-100">Pokračujeme</label>
             <input
+              id="zprava-pokracujeme"
               type="text"
               value={resumeDate}
               onChange={(e) => setResumeDate(e.target.value)}
-              className="min-h-11 flex-1 px-2.5 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg font-semibold"
+              className="min-h-11 px-3 bg-white dark:bg-slate-950 border-[1.5px] border-slate-900 dark:border-slate-500 rounded-md text-slate-900 dark:text-white flex-1 min-w-0"
             />
           </div>
         )}
 
         {selectedTemplateIndex === 2 && (
-          <div className="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-sm">
-            <span className="font-semibold text-slate-600 dark:text-slate-300">Závoz materiálu:</span>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <label htmlFor="zprava-zavoz" className="font-semibold text-slate-900 dark:text-slate-100">Závoz materiálu</label>
             <input
+              id="zprava-zavoz"
               type="text"
               value={deliveryDate}
               onChange={(e) => setDeliveryDate(e.target.value)}
-              className="min-h-11 flex-1 px-2.5 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg font-semibold"
+              className="min-h-11 px-3 bg-white dark:bg-slate-950 border-[1.5px] border-slate-900 dark:border-slate-500 rounded-md text-slate-900 dark:text-white flex-1 min-w-0"
             />
           </div>
         )}
 
         {/* Text Preview */}
         <div>
-          <label className="block text-[13px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
-            Náhled textu pro klienta:
-          </label>
-          <div className="p-3.5 bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-200 dark:border-slate-800 text-sm sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-sans select-all whitespace-pre-line">
+          <div className="font-semibold text-slate-900 dark:text-slate-100 mb-1.5">Text zprávy</div>
+          <div className="px-4 py-3.5 bg-white dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 leading-relaxed select-all whitespace-pre-line">
             {currentText}
           </div>
         </div>
@@ -216,16 +214,16 @@ export const QuickClientMessagesModal: React.FC<QuickClientMessagesModalProps> =
           <button
             type="button"
             onClick={handleCopy}
-            className="min-h-11 flex items-center justify-center gap-2 py-3 px-3 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-sm transition-colors cursor-pointer active:scale-95"
+            className="min-h-11 flex items-center justify-center gap-2 px-3 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold transition-colors cursor-pointer"
           >
-            {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-            <span>{copied ? 'Zkopírováno!' : 'Kopírovat pro SMS'}</span>
+            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            <span>{copied ? 'Zkopírováno' : 'Kopírovat pro SMS'}</span>
           </button>
 
           <button
             type="button"
             onClick={handleSendWhatsApp}
-            className="min-h-11 flex items-center justify-center gap-2 py-3 px-3 rounded-xl border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm shadow-md transition-all cursor-pointer active:scale-95"
+            className="min-h-11 flex items-center justify-center gap-2 px-3 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold transition-colors cursor-pointer"
           >
             <Send className="w-4 h-4" />
             <span>Odeslat WhatsApp</span>

@@ -168,15 +168,15 @@ export const HandoverProtocolView: React.FC<HandoverProtocolViewProps> = ({
       </div>
 
       {activeTab === 'fotky' ? (
-        <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200/90 dark:border-slate-800 shadow-xs">
+        <div className="bg-white dark:bg-slate-900 rounded-md p-5 sm:p-6 border border-slate-200 dark:border-slate-800">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
             <div>
               <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Camera className="w-5 h-5 text-[#1E3A78] dark:text-blue-400" />
+                <Camera className="w-5 h-5" />
                 <span>Fotodokumentace díla (Příloha k předávacímu protokolu)</span>
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Vyfoťte stav před započetím a po dokončení prací. Fotografie se automaticky uloží k zakázce.
+              <p className="text-slate-600 dark:text-slate-400 mt-0.5">
+                Vyfoťte stav před zahájením a po dokončení prací. Fotky se ukládají k zakázce a první čtyři se vytisknou s protokolem.
               </p>
             </div>
           </div>

@@ -5,6 +5,7 @@ import { getStoredContracts } from '../utils/storage';
 import { formatCurrency } from '../utils/numberToWordsCs';
 import { getContractTotal } from '../utils/invoiceMath';
 import { Dialog } from './Dialog';
+import { matchesSearch } from '../utils/search';
 
 interface ClientsPageProps {
   clients: Client[];
@@ -46,9 +47,9 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
     return map;
   }, [clients]);
 
-  const q = searchTerm.trim().toLowerCase();
+  const q = searchTerm.trim();
   const filteredClients = clients.filter(
-    (c) => !q || [c.name, c.address, c.email, c.phone, c.ico || ''].some((v) => (v || '').toLowerCase().includes(q)),
+    (c) => !q || matchesSearch([c.name, c.address, c.email, c.phone, c.ico, c.dic], q),
   );
 
   const jobsWord = (n: number) => (n === 1 ? 'zakázka' : n >= 2 && n <= 4 ? 'zakázky' : 'zakázek');

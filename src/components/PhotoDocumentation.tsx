@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Camera, ImagePlus, Trash2, Tag, Loader2, ZoomIn, X, Check } from 'lucide-react';
 import { ContractPhoto } from '../types/contract';
 import { compressImageFile } from '../utils/imageCompression';
+import { Dialog } from './Dialog';
 
 interface PhotoDocumentationProps {
   photos: ContractPhoto[];
@@ -20,6 +21,7 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activePhotoZoom, setActivePhotoZoom] = useState<ContractPhoto | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ContractPhoto | null>(null);
   const [newCategory, setNewCategory] = useState<'before' | 'progress' | 'after'>('after');
   const [editingCaptionId, setEditingCaptionId] = useState<string | null>(null);
   const [tempCaption, setTempCaption] = useState('');
@@ -69,6 +71,7 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
   };
 
   const handleDeletePhoto = (id: string) => {
+    setDeleteTarget(null);
     const next = photos.filter((p) => p.id !== id);
     onChange(next);
     onToast?.('info', 'Fotografie byla odstraněna');
@@ -105,14 +108,15 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
             <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
               Kategorie nové fotky:
             </span>
-            <div className="inline-flex rounded-lg bg-slate-200 dark:bg-slate-800 p-0.5 text-sm">
+            <div role="group" aria-label="Kategorie nové fotky" className="inline-flex flex-wrap gap-1.5">
               <button
                 type="button"
                 onClick={() => setNewCategory('before')}
-                className={`min-h-11 inline-flex items-center justify-center px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                aria-pressed={newCategory === 'before'}
+                className={`min-h-11 inline-flex items-center justify-center px-3 rounded-md border font-medium transition-colors cursor-pointer ${
                   newCategory === 'before'
-                    ? 'bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400'
+                    ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
+                    : 'border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 Před zahájením
@@ -120,10 +124,11 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
               <button
                 type="button"
                 onClick={() => setNewCategory('progress')}
-                className={`min-h-11 inline-flex items-center justify-center px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                aria-pressed={newCategory === 'progress'}
+                className={`min-h-11 inline-flex items-center justify-center px-3 rounded-md border font-medium transition-colors cursor-pointer ${
                   newCategory === 'progress'
-                    ? 'bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400'
+                    ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
+                    : 'border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 V průběhu
@@ -131,10 +136,11 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
               <button
                 type="button"
                 onClick={() => setNewCategory('after')}
-                className={`min-h-11 inline-flex items-center justify-center px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                aria-pressed={newCategory === 'after'}
+                className={`min-h-11 inline-flex items-center justify-center px-3 rounded-md border font-medium transition-colors cursor-pointer ${
                   newCategory === 'after'
-                    ? 'bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400'
+                    ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
+                    : 'border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 Hotové dílo
@@ -165,10 +171,10 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
               type="button"
               disabled={isProcessing}
               onClick={() => cameraInputRef.current?.click()}
-              className="min-h-11 flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
+              className="min-h-11 flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
               title="Vyfotit fotoaparátem v mobilu"
             >
-              <Camera className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              <Camera className="w-[18px] h-[18px] shrink-0" />
               <span>Vyfotit</span>
             </button>
 
@@ -176,13 +182,13 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
               type="button"
               disabled={isProcessing}
               onClick={() => fileInputRef.current?.click()}
-              className="min-h-11 flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1E3A78] dark:bg-blue-600 hover:bg-[#162c5c] dark:hover:bg-blue-500 text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+              className="min-h-11 flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
               title="Vybrat fotku z galerie mobilu nebo disku"
             >
               {isProcessing ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                <Loader2 className="w-[18px] h-[18px] animate-spin shrink-0" />
               ) : (
-                <ImagePlus className="w-3.5 h-3.5 shrink-0" />
+                <ImagePlus className="w-[18px] h-[18px] shrink-0" />
               )}
               <span>Z galerie ({photos.length}/8)</span>
             </button>
@@ -192,13 +198,12 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
 
       {/* Galerie fotografií */}
       {photos.length === 0 ? (
-        <div className="no-print p-6 text-center border-2 border-dashed border-slate-300 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-900/30">
-          <Camera className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-            Zatím nebyla přidána žádná fotodokumentace
+        <div className="no-print px-5 py-5 border border-slate-200 dark:border-slate-800 rounded-md bg-white dark:bg-slate-900">
+          <p className="font-semibold text-slate-900 dark:text-white">
+            Zatím tu nejsou žádné fotky
           </p>
-          <p className="text-[13px] text-slate-400 dark:text-slate-500 mt-0.5">
-            Můžete vyfotit stav díla před realizací a po dokončení jako právní přílohu protokolu.
+          <p className="text-slate-600 dark:text-slate-400 mt-0.5">
+            Vyfoťte stav před zahájením a po dokončení – fotky se zobrazí u předávacího protokolu.
           </p>
         </div>
       ) : (
@@ -210,7 +215,7 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
             return (
               <div
                 key={photo.id}
-                className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-shadow flex flex-col"
+                className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden flex flex-col"
               >
                 <div className="relative aspect-4/3 bg-slate-100 dark:bg-slate-950 overflow-hidden">
                   <img
@@ -221,17 +226,18 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
 
                   {/* Štítek kategorie */}
                   <span
-                    className={`absolute top-2 left-2 text-[13px] font-semibold px-2 py-0.5 rounded-md border shadow-xs ${badge.bg}`}
+                    className={`absolute top-2 left-2 text-[13px] font-semibold px-2 py-0.5 rounded-md border ${badge.bg}`}
                   >
                     {badge.label}
                   </span>
 
                   {/* Akce v hoveru */}
-                  <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity no-print">
+                  <div className="absolute top-2 right-2 flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity no-print">
                     <button
                       type="button"
                       onClick={() => setActivePhotoZoom(photo)}
-                      className="min-h-11 min-w-11 inline-flex items-center justify-center p-1.5 rounded-lg bg-black/60 hover:bg-black/80 text-white transition-colors"
+                      className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-md bg-slate-900/75 hover:bg-slate-900 text-white transition-colors cursor-pointer"
+                      aria-label={`Zvětšit fotku ${photo.caption || ''}`.trim()}
                       title="Zvětšit fotku"
                     >
                       <ZoomIn className="w-3.5 h-3.5" />
@@ -239,8 +245,9 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
                     {!readonly && (
                       <button
                         type="button"
-                        onClick={() => handleDeletePhoto(photo.id)}
-                        className="min-h-11 min-w-11 inline-flex items-center justify-center p-1.5 rounded-lg bg-rose-600/90 hover:bg-rose-700 text-white transition-colors"
+                        onClick={() => setDeleteTarget(photo)}
+                        className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-md bg-slate-900/75 hover:bg-slate-900 text-white transition-colors cursor-pointer"
+                        aria-label={`Smazat fotku ${photo.caption || ''}`.trim()}
                         title="Smazat fotku"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -281,7 +288,7 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
                     </p>
                   )}
 
-                  <div className="mt-2 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[13px] text-slate-400">
+                  <div className="mt-2 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[13px] text-slate-600 dark:text-slate-400">
                     <span>{new Date(photo.createdAt).toLocaleDateString('cs-CZ')}</span>
                     {!readonly && !isEditing && (
                       <button
@@ -300,26 +307,36 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
         </div>
       )}
 
-      {/* Modal pro zvětšení fotky */}
+      {/* Zvětšená fotka */}
       {activePhotoZoom && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xs no-print">
-          <div className="relative max-w-3xl w-full max-h-[90vh] flex flex-col items-center">
-            <button
-              onClick={() => setActivePhotoZoom(null)}
-              className="absolute -top-10 right-0 p-1.5 rounded-full bg-white/20 hover:bg-white/40 text-white transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <img
-              src={activePhotoZoom.dataUrl}
-              alt={activePhotoZoom.caption}
-              className="max-h-[80vh] w-auto object-contain rounded-lg shadow-2xl"
-            />
-            <p className="mt-3 text-white text-sm font-medium text-center">
-              {activePhotoZoom.caption}
-            </p>
+        <Dialog title={activePhotoZoom.caption || 'Fotka'} size="3xl" onClose={() => setActivePhotoZoom(null)}>
+          <img src={activePhotoZoom.dataUrl} alt={activePhotoZoom.caption || 'Fotka ze stavby'} className="max-h-[75vh] w-full object-contain" />
+        </Dialog>
+      )}
+
+      {/* Potvrzení smazání */}
+      {deleteTarget && (
+        <Dialog title="Smazat fotku?" onClose={() => setDeleteTarget(null)}>
+          <div className="space-y-5 text-[15px]">
+            <p>Fotka {deleteTarget.caption ? `„${deleteTarget.caption}“ ` : ''}se odstraní ze zakázky.</p>
+            <div className="flex flex-wrap justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="min-h-11 px-4 inline-flex items-center justify-center rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              >
+                Zpět
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeletePhoto(deleteTarget.id)}
+                className="min-h-11 px-4 inline-flex items-center justify-center rounded-md border-[1.5px] border-rose-700 text-rose-700 dark:border-rose-400 dark:text-rose-300 font-semibold hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+              >
+                Smazat fotku
+              </button>
+            </div>
           </div>
-        </div>
+        </Dialog>
       )}
     </div>
   );
