@@ -123,19 +123,21 @@ export const VoiceDictationButton: React.FC<VoiceDictationButtonProps> = ({
         type="button"
         onClick={toggleListening}
         title={isListening ? 'Klepněte pro ukončení diktování' : 'Diktovat hlasem (česky)'}
-        className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center justify-center shrink-0 ${
+        aria-label={isListening ? 'Ukončit diktování' : buttonText}
+        aria-pressed={isListening}
+        className={`min-h-11 min-w-11 p-2 rounded-md border-[1.5px] transition-colors cursor-pointer flex items-center justify-center shrink-0 ${
           isListening
-            ? 'bg-rose-500 text-white border-rose-600 shadow-md shadow-rose-500/30 animate-pulse'
-            : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
+            ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white animate-pulse'
+            : 'border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
         } ${className}`}
       >
         {isListening ? (
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+            <span className="w-2 h-2 rounded-full bg-current animate-ping" />
             <MicOff className="w-4 h-4" />
           </div>
         ) : (
-          <Mic className="w-4 h-4 text-rose-500" />
+          <Mic className="w-4 h-4" />
         )}
       </button>
     );
@@ -145,21 +147,22 @@ export const VoiceDictationButton: React.FC<VoiceDictationButtonProps> = ({
     <button
       type="button"
       onClick={toggleListening}
-      className={`min-h-[40px] px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+      aria-pressed={isListening}
+      className={`min-h-11 px-3.5 rounded-md border-[1.5px] text-sm font-semibold transition-colors cursor-pointer flex items-center justify-center gap-2 ${
         isListening
-          ? 'bg-rose-500 hover:bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-500/30 ring-2 ring-rose-400 animate-pulse'
-          : 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+          ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white animate-pulse'
+          : 'border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
       } ${className}`}
     >
       {isListening ? (
         <>
-          <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
+          <span className="w-2.5 h-2.5 rounded-full bg-current animate-ping" />
           <MicOff className="w-4 h-4" />
-          <span>Poslouchám... (Klepněte pro ukončení)</span>
+          <span>Poslouchám… klepnutím ukončíte</span>
         </>
       ) : (
         <>
-          <Mic className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+          <Mic className="w-4 h-4" />
           <span>{buttonText}</span>
         </>
       )}

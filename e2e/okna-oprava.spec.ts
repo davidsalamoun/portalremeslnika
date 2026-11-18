@@ -28,8 +28,8 @@ test('protokol o zkoušce nemá předvyplněné naměřené hodnoty ani výslede
   await app.getByRole('button', { name: /^Zkoušky a protokoly/ }).or(app.getByRole('menuitem', { name: /^Zkoušky a protokoly/ })).first().click();
   const dialog = app.getByRole('dialog', { name: 'Zkoušky a protokoly' });
   await expect(dialog.getByRole('button', { name: /Tlaková zkouška vodovodu/ })).toBeVisible();
-  await expect(dialog.getByRole('button', { name: '✓ Vyhovuje' })).toHaveAttribute('aria-pressed', 'false');
-  await expect(dialog.getByRole('button', { name: '✗ Nevyhovuje' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(dialog.getByRole('button', { name: 'Vyhovuje', exact: true })).toHaveAttribute('aria-pressed', 'false');
+  await expect(dialog.getByRole('button', { name: 'Nevyhovuje', exact: true })).toHaveAttribute('aria-pressed', 'false');
   await expect(dialog.locator('textarea').first()).toHaveValue('');
   const numbers = dialog.locator('input[type="number"]');
   for (let i = 0; i < (await numbers.count()); i++) await expect(numbers.nth(i)).toHaveValue('');
@@ -43,7 +43,7 @@ test('kniha jízd: více dní najednou zapíše jen vybrané dny', async ({ app 
   else await app.getByRole('button', { name: 'Další', exact: true }).click();
   await app.getByRole('button', { name: /^Kniha jízd/ }).or(app.getByRole('menuitem', { name: /^Kniha jízd/ })).first().click();
   const dialog = app.getByRole('dialog', { name: 'Kniha jízd' });
-  await dialog.getByRole('button', { name: /Více dní najednou/ }).click();
+  await dialog.getByRole('tab', { name: 'Více dní najednou' }).click();
   const zapsat = dialog.getByRole('button', { name: /Zapsat vybrané jízdy/ });
   await expect(zapsat).toBeDisabled();
   const days = dialog.getByRole('group', { name: 'Dny, kdy jste jeli na stavbu' }).getByRole('button');

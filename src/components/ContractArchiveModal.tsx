@@ -194,7 +194,7 @@ export const ContractArchiveModal: React.FC<ContractArchiveModalProps> = ({
       title="Složka zakázky"
       subtitle={<>smlouva {contract.contractNumber}</>}
       size="3xl"
-      actions={<><button type="button" onClick={handlePrint} className={dialogActionButton}><Printer className="w-4 h-4" /><span className="hidden sm:inline">Tisk</span></button><button type="button" onClick={handleExportHtml} className={dialogActionButton}><Download className="w-4 h-4" /><span className="hidden sm:inline">Stáhnout</span></button></>}
+      actions={<><button type="button" onClick={handlePrint} aria-label="Vytisknout složku" className={dialogActionButton}><Printer className="w-4 h-4" /><span className="hidden sm:inline">Tisk</span></button><button type="button" onClick={handleExportHtml} aria-label="Stáhnout složku" className={dialogActionButton}><Download className="w-4 h-4" /><span className="hidden sm:inline">Stáhnout</span></button></>}
       bare
       closeOnBackdrop={false}
       onClose={onClose}

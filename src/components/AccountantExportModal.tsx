@@ -4,24 +4,8 @@ import { buildIsdoc, isdocFileName } from '../utils/isdoc';
 import { createZip, downloadFile } from '../utils/zipStore';
 import { getFinalInvoiceNumber } from '../utils/invoiceNumbering';
 import { Dialog } from './Dialog';
-import {
-  X,
-  FileSpreadsheet,
-  FileCode2,
-  Download,
-  Printer,
-  Mail,
-  Calendar,
-  CheckCircle2,
-  DollarSign,
-  Receipt,
-  Banknote,
-  Car,
-  Package,
-  Share2,
-  Building2,
-  Filter,
-} from 'lucide-react';
+import { expenseCategoryLabel } from '../utils/expenseCategories';
+import { FileSpreadsheet, FileCode2, Printer, Mail } from 'lucide-react';
 import { Contract, ContractorProfile } from '../types/contract';
 import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
 import { triggerHaptic } from '../utils/haptics';
@@ -73,7 +57,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
       const lastDay = new Date(selectedYear, currentMonth + 1, 0).getDate();
       from = `${selectedYear}-${pad(monthNum)}-01`;
       to = `${selectedYear}-${pad(monthNum)}-${pad(lastDay)}`;
-      const monthNames = ['Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen', 'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'];
+      const monthNames = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec'];
       label = `${monthNames[currentMonth]} ${selectedYear}`;
     } else if (period === 'last_month') {
       const targetMonth = currentMonth === 0 ? 11 : currentMonth - 1;
@@ -81,32 +65,32 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
       const lastDay = new Date(targetYear, targetMonth + 1, 0).getDate();
       from = `${targetYear}-${pad(targetMonth + 1)}-01`;
       to = `${targetYear}-${pad(targetMonth + 1)}-${pad(lastDay)}`;
-      const monthNames = ['Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen', 'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'];
+      const monthNames = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec'];
       label = `${monthNames[targetMonth]} ${targetYear}`;
     } else if (period === 'q1') {
       from = `${selectedYear}-01-01`;
       to = `${selectedYear}-03-31`;
-      label = `1. Kvartál (Q1) ${selectedYear}`;
+      label = `1. čtvrtletí ${selectedYear}`;
     } else if (period === 'q2') {
       from = `${selectedYear}-04-01`;
       to = `${selectedYear}-06-30`;
-      label = `2. Kvartál (Q2) ${selectedYear}`;
+      label = `2. čtvrtletí ${selectedYear}`;
     } else if (period === 'q3') {
       from = `${selectedYear}-07-01`;
       to = `${selectedYear}-09-30`;
-      label = `3. Kvartál (Q3) ${selectedYear}`;
+      label = `3. čtvrtletí ${selectedYear}`;
     } else if (period === 'q4') {
       from = `${selectedYear}-10-01`;
       to = `${selectedYear}-12-31`;
-      label = `4. Kvartál (Q4) ${selectedYear}`;
+      label = `4. čtvrtletí ${selectedYear}`;
     } else if (period === 'whole_year') {
       from = `${selectedYear}-01-01`;
       to = `${selectedYear}-12-31`;
-      label = `Celý rok ${selectedYear}`;
+      label = `rok ${selectedYear}`;
     } else {
       from = customFrom;
       to = customTo;
-      label = `Období ${formatDateCs(customFrom)} – ${formatDateCs(customTo)}`;
+      label = `období ${formatDateCs(customFrom)} – ${formatDateCs(customTo)}`;
     }
 
     return { dateFrom: from, dateTo: to, periodLabel: label };
@@ -314,7 +298,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
     triggerHaptic('success');
 
     let csv = '\uFEFF'; // UTF-8 BOM for Excel
-    csv += `PŘEDÁVACÍ PROTOKOL PRO ÚČETNÍ – ${periodLabel.toUpperCase()}\r\n`;
+    csv += `Podklady pro účetní – ${periodLabel}\r\n`;
     csv += `Zhotovitel:;${contractor?.name || 'Živnostník'};IČO:;${contractor?.ico || ''}\r\n`;
     csv += `Období od:;${dateFrom};do:;${dateTo}\r\n\r\n`;
 
@@ -338,7 +322,7 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
     csv += `3. NÁKUPY MATERIÁLU A PROVOZNÍ VÝDAJE\r\n`;
     csv += `Datum;Smlouva;Dodavatel;Popis;Kategorie;Částka (Kč)\r\n`;
     filteredData.expenses.forEach((e) => {
-      csv += `"${e.date}";"${e.contractNumber}";"${e.supplier || ''}";"${e.title}";"${e.category}";${e.amount}\r\n`;
+      csv += `"${e.date}";"${e.contractNumber}";"${e.supplier || ''}";"${e.title}";"${expenseCategoryLabel(e.category)}";${e.amount}\r\n`;
     });
     csv += `Celkem výdaje:;;;;;${filteredData.sumExpenses}\r\n\r\n`;
 
@@ -410,6 +394,33 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
     window.location.href = url;
   };
 
+  const outline =
+    'min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors';
+  const chip = (on: boolean) =>
+    `min-h-11 px-3 inline-flex items-center justify-center rounded-md border font-medium cursor-pointer transition-colors ${
+      on
+        ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
+        : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
+    }`;
+  const count = (n: number, one: string, few: string, many: string) => `${n} ${n === 1 ? one : n >= 2 && n <= 4 ? few : many}`;
+  const tabs: { id: typeof activeTab; label: string }[] = [
+    { id: 'summary', label: 'Souhrn' },
+    { id: 'invoices', label: `Faktury (${filteredData.invoices.length})` },
+    { id: 'receipts', label: `Hotovost (${filteredData.cashReceipts.length})` },
+    { id: 'expenses', label: `Výdaje (${filteredData.expenses.length})` },
+    { id: 'trips', label: `Jízdy (${filteredData.trips.length})` },
+  ];
+  const th = 'px-4 py-2.5 font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap';
+  const td = 'px-4 py-3';
+  const tableBox = 'overflow-x-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md';
+  const emptyRow = (text: string) => (
+    <tr>
+      <td colSpan={5} className="px-4 py-5 text-slate-600 dark:text-slate-400">
+        {text}
+      </td>
+    </tr>
+  );
+
   return (
     <Dialog
       title="Podklady pro účetní"
@@ -419,452 +430,284 @@ export const AccountantExportModal: React.FC<AccountantExportModalProps> = ({
       closeOnBackdrop={false}
       onClose={onClose}
     >
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-[15px]">
+        {/* Období */}
+        <div className="space-y-2.5">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h3 className="font-display font-semibold text-xl text-slate-900 dark:text-white">Období</h3>
+            <label className="inline-flex items-center gap-2 text-slate-700 dark:text-slate-300">
+              Rok
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
+                className="min-h-11 px-3 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-semibold"
+              >
+                {[currentYear, currentYear - 1, currentYear - 2].map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div role="group" aria-label="Období" className="flex flex-wrap gap-2">
+            {[
+              { id: 'this_month', label: 'Tento měsíc' },
+              { id: 'last_month', label: 'Minulý měsíc' },
+              { id: 'q1', label: '1. čtvrtletí' },
+              { id: 'q2', label: '2. čtvrtletí' },
+              { id: 'q3', label: '3. čtvrtletí' },
+              { id: 'q4', label: '4. čtvrtletí' },
+              { id: 'whole_year', label: 'Celý rok' },
+            ].map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                aria-pressed={period === p.id}
+                onClick={() => {
+                  triggerHaptic('selection');
+                  setPeriod(p.id as PeriodType);
+                }}
+                className={chip(period === p.id)}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-        {/* Content body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
-          {/* Period Selector Bar */}
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                <Filter className="w-3.5 h-3.5 text-blue-600" />
-                Zvolte účetní období:
-              </span>
+        {/* Záložky */}
+        <div role="tablist" aria-label="Podklady" className="flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-800">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === t.id}
+              onClick={() => setActiveTab(t.id)}
+              className={`min-h-11 px-3 -mb-px border-b-2 font-semibold whitespace-nowrap cursor-pointer transition-colors ${
+                activeTab === t.id
+                  ? 'border-blue-600 text-blue-600 dark:border-blue-300 dark:text-blue-300'
+                  : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-slate-500">Rok:</span>
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-                  className="min-h-11 text-sm font-semibold px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
-                >
-                  {[currentYear, currentYear - 1, currentYear - 2].map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
-              {[
-                { id: 'this_month', label: 'Tento měsíc' },
-                { id: 'last_month', label: 'Minulý měsíc' },
-                { id: 'q1', label: '1. Kvartál (Q1)' },
-                { id: 'q2', label: '2. Kvartál (Q2)' },
-                { id: 'q3', label: '3. Kvartál (Q3)' },
-                { id: 'q4', label: '4. Kvartál (Q4)' },
-                { id: 'whole_year', label: 'Celý rok' },
-              ].map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('selection');
-                    setPeriod(p.id as PeriodType);
-                  }}
-                  className={`min-h-11 min-w-11 inline-flex items-center justify-center p-2 rounded-xl text-sm font-semibold transition-all cursor-pointer text-center ${
-                    period === p.id
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-400'
+        {/* Souhrn: jeden rámeček s řádky (vzor Přehledu) */}
+        {activeTab === 'summary' && (
+          <div className="space-y-5">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="px-5 py-4">
+                <div className="text-slate-600 dark:text-slate-400">Odhad zisku za {periodLabel}</div>
+                <div
+                  className={`font-display font-bold text-[40px] leading-none tabular-nums mt-1 ${
+                    filteredData.netProfit < 0 ? 'text-rose-700 dark:text-rose-400' : 'text-slate-900 dark:text-white'
                   }`}
                 >
-                  {p.label}
-                </button>
+                  {formatCurrency(filteredData.netProfit)}
+                </div>
+              </div>
+              {[
+                { label: `Vystavené faktury (${count(filteredData.invoices.length, 'faktura', 'faktury', 'faktur')})`, value: formatCurrency(filteredData.sumInvoices) },
+                { label: `z toho v hotovosti (${count(filteredData.cashReceipts.length, 'pokladní doklad', 'pokladní doklady', 'pokladních dokladů')})`, value: formatCurrency(filteredData.sumCashReceipts), sub: true },
+                { label: `Výdaje (${count(filteredData.expenses.length, 'doklad', 'doklady', 'dokladů')})`, value: `− ${formatCurrency(filteredData.sumExpenses)}` },
+                { label: `Kniha jízd (${filteredData.sumTripsKm} km)`, value: `− ${formatCurrency(filteredData.sumTrips)}` },
+              ].map((r) => (
+                <div key={r.label} className="px-5 py-3 flex items-baseline justify-between gap-4">
+                  <span className={`text-slate-600 dark:text-slate-400 ${r.sub ? 'pl-4' : ''}`}>{r.label}</span>
+                  <span className="font-display font-semibold text-xl tabular-nums text-slate-900 dark:text-white whitespace-nowrap">{r.value}</span>
+                </div>
               ))}
             </div>
-          </div>
+            <p className="text-slate-600 dark:text-slate-400">
+              Odhad zisku je příjem z faktur po odečtení výdajů a jízd. Je orientační – daňový základ určí účetní.
+            </p>
 
-          {/* Big KPI Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-              <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
-                Faktury (Příjmy)
-              </span>
-              <span className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white block">
-                {formatCurrency(filteredData.sumInvoices)}
-              </span>
-              <span className="text-[13px] font-semibold text-slate-500 mt-0.5 block">
-                {filteredData.invoices.length} vystavených faktur
-              </span>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-              <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
-                PPD v hotovosti
-              </span>
-              <span className="text-lg sm:text-xl font-semibold text-emerald-600 dark:text-emerald-400 block">
-                {formatCurrency(filteredData.sumCashReceipts)}
-              </span>
-              <span className="text-[13px] font-semibold text-slate-500 mt-0.5 block">
-                {filteredData.cashReceipts.length} pokladních dokladů
-              </span>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-              <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
-                Výdaje a materiál
-              </span>
-              <span className="text-lg sm:text-xl font-semibold text-rose-600 dark:text-rose-400 block">
-                {formatCurrency(filteredData.sumExpenses)}
-              </span>
-              <span className="text-[13px] font-semibold text-slate-500 mt-0.5 block">
-                {filteredData.expenses.length} nákupních účtenek
-              </span>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-              <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
-                Kniha jízd (PHM)
-              </span>
-              <span className="text-lg sm:text-xl font-semibold text-amber-600 dark:text-amber-400 block">
-                {formatCurrency(filteredData.sumTrips)}
-              </span>
-              <span className="text-[13px] font-semibold text-slate-500 mt-0.5 block">
-                {filteredData.sumTripsKm} km ujeto na stavby
-              </span>
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex border-b border-slate-200 dark:border-slate-800 gap-1 overflow-x-auto pb-1">
-            <button
-              type="button"
-              onClick={() => setActiveTab('summary')}
-              className={`min-h-11 pb-2 px-3 text-sm sm:text-sm font-semibold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
-                activeTab === 'summary'
-                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <FileSpreadsheet className="w-4 h-4" />
-              <span>Souhrnný protokol ({periodLabel})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('invoices')}
-              className={`min-h-11 pb-2 px-3 text-sm sm:text-sm font-semibold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
-                activeTab === 'invoices'
-                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <Receipt className="w-4 h-4" />
-              <span>Faktury ({filteredData.invoices.length})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('receipts')}
-              className={`min-h-11 pb-2 px-3 text-sm sm:text-sm font-semibold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
-                activeTab === 'receipts'
-                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <Banknote className="w-4 h-4" />
-              <span>PPD Hotovost ({filteredData.cashReceipts.length})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('expenses')}
-              className={`min-h-11 pb-2 px-3 text-sm sm:text-sm font-semibold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
-                activeTab === 'expenses'
-                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <DollarSign className="w-4 h-4" />
-              <span>Materiál ({filteredData.expenses.length})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('trips')}
-              className={`min-h-11 pb-2 px-3 text-sm sm:text-sm font-semibold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
-                activeTab === 'trips'
-                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <Car className="w-4 h-4" />
-              <span>Jízdy ({filteredData.trips.length})</span>
-            </button>
-          </div>
-
-          {/* TAB 1: SUMMARY PROTOCOL */}
-          {activeTab === 'summary' && (
-            <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+            {/* Předání účetní (podpisy pro vytištěný protokol) */}
+            <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400">
+              <div className="space-y-8">
                 <div>
-                  <h3 className="font-semibold text-base">Předávací protokol pro účetnictví</h3>
-                  <p className="text-sm text-slate-500">
-                    Podklad pro přiznání k DPH, daň z příjmů a kontrolní hlášení
-                  </p>
+                  Předal: <strong className="text-slate-900 dark:text-white">{contractor?.name || 'Živnostník'}</strong>
                 </div>
-                <div className="text-sm font-semibold text-slate-500 text-right">
-                  Vygenerováno: {formatDateCs(new Date().toISOString().split('T')[0])}
-                </div>
+                <div className="border-b border-slate-400 dark:border-slate-600" />
+                <div>Datum a podpis</div>
               </div>
-
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
-                  <span className="font-semibold text-slate-600 dark:text-slate-400">1. Celkové vystavené faktury za dílo:</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">{formatCurrency(filteredData.sumInvoices)}</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
-                  <span className="font-semibold text-slate-600 dark:text-slate-400">2. Z toho přijato v hotovosti (PPD):</span>
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(filteredData.sumCashReceipts)}</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
-                  <span className="font-semibold text-slate-600 dark:text-slate-400">3. Skutečné nákupy materiálu a subdodávky:</span>
-                  <span className="font-semibold text-rose-600 dark:text-rose-400">- {formatCurrency(filteredData.sumExpenses)}</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
-                  <span className="font-semibold text-slate-600 dark:text-slate-400">4. Cestovní náhrady dle Knihy jízd ({filteredData.sumTripsKm} km):</span>
-                  <span className="font-semibold text-rose-600 dark:text-rose-400">- {formatCurrency(filteredData.sumTrips)}</span>
-                </div>
-                <div className="flex justify-between py-2.5 bg-slate-50 dark:bg-slate-800/60 px-3 rounded-xl">
-                  <span className="font-semibold text-sm text-slate-900 dark:text-white">Odhadovaný čistý zisk za období:</span>
-                  <span className="font-semibold text-base text-blue-700 dark:text-blue-400">{formatCurrency(filteredData.netProfit)}</span>
-                </div>
-              </div>
-
-              {/* Handover signatures for accountant */}
-              <div className="pt-4 grid grid-cols-2 gap-6 border-t border-slate-100 dark:border-slate-800 text-[13px] text-slate-500">
-                <div className="space-y-8">
-                  <span>Předal zhotovitel: <strong>{contractor?.name || 'Živnostník'}</strong></span>
-                  <div className="border-b border-slate-300 dark:border-slate-700"></div>
-                  <span>Datum a podpis živnostníka</span>
-                </div>
-
-                <div className="space-y-8">
-                  <span>Převzala k zaúčtování účetní / poradce:</span>
-                  <div className="border-b border-slate-300 dark:border-slate-700"></div>
-                  <span>Datum a podpis účetní</span>
-                </div>
+              <div className="space-y-8">
+                <div>Převzala účetní</div>
+                <div className="border-b border-slate-400 dark:border-slate-600" />
+                <div>Datum a podpis</div>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* TAB 2: INVOICES TABLE */}
-          {activeTab === 'invoices' && (
-            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-100 dark:bg-slate-800 text-[13px] font-semibold text-slate-600 dark:text-slate-300">
-                  <tr>
-                    <th className="p-2.5">Číslo</th>
-                    <th className="p-2.5">Vystaveno</th>
-                    <th className="p-2.5">Odběratel</th>
-                    <th className="p-2.5 text-right">Částka</th>
-                    <th className="p-2.5 text-center">Stav</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {filteredData.invoices.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="p-4 text-center text-slate-400">
-                        Žádné faktury v tomto období.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredData.invoices.map((inv) => (
-                      <tr key={inv.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                        <td className="p-2.5 font-semibold text-blue-600">{inv.number}</td>
-                        <td className="p-2.5">{formatDateCs(inv.issueDate)}</td>
-                        <td className="p-2.5 font-medium">
+        {activeTab === 'invoices' && (
+          <div className={tableBox}>
+            <table className="w-full text-left">
+              <thead className="border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                  <th className={th}>Číslo</th>
+                  <th className={th}>Vystaveno</th>
+                  <th className={th}>Odběratel</th>
+                  <th className={`${th} text-right`}>Částka</th>
+                  <th className={th}>Stav</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {filteredData.invoices.length === 0
+                  ? emptyRow('V tomto období není žádná faktura.')
+                  : filteredData.invoices.map((inv) => (
+                      <tr key={inv.id}>
+                        <td className={`${td} font-semibold whitespace-nowrap`}>{inv.number}</td>
+                        <td className={`${td} whitespace-nowrap`}>{formatDateCs(inv.issueDate)}</td>
+                        <td className={td}>
                           {inv.clientName}
                           {(inv.reverseCharge || inv.note) && (
-                            <span className="block text-[13px] font-normal text-slate-600 dark:text-slate-400">
-                              {inv.reverseCharge ? 'daň odvede zákazník' : inv.note}
-                            </span>
+                            <span className="block text-slate-600 dark:text-slate-400">{inv.reverseCharge ? 'daň odvede zákazník' : inv.note}</span>
                           )}
                         </td>
-                        <td className="p-2.5 text-right font-semibold">{formatCurrency(inv.amount)}</td>
-                        <td className="p-2.5 text-center">
+                        <td className={`${td} text-right font-semibold tabular-nums whitespace-nowrap`}>{formatCurrency(inv.amount)}</td>
+                        <td className={td}>
                           <span
-                            className={`px-2 py-0.5 rounded-md text-[13px] font-semibold ${
+                            className={`inline-flex px-2.5 py-0.5 rounded-full font-medium whitespace-nowrap ${
                               inv.isPaid
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                                ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
                             }`}
                           >
                             {inv.isPaid ? 'Zaplaceno' : 'Neuhrazeno'}
                           </span>
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* TAB 3: CASH RECEIPTS */}
-          {activeTab === 'receipts' && (
-            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-100 dark:bg-slate-800 text-[13px] font-semibold text-slate-600 dark:text-slate-300">
-                  <tr>
-                    <th className="p-2.5">Číslo PPD</th>
-                    <th className="p-2.5">Datum</th>
-                    <th className="p-2.5">Přijato od</th>
-                    <th className="p-2.5">Účel</th>
-                    <th className="p-2.5 text-right">Částka</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {filteredData.cashReceipts.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="p-4 text-center text-slate-400">
-                        Žádné hotovostní pokladní doklady v tomto období.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredData.cashReceipts.map((r) => (
-                      <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                        <td className="p-2.5 font-semibold text-emerald-600">{r.receiptNumber}</td>
-                        <td className="p-2.5">{formatDateCs(r.issueDate)}</td>
-                        <td className="p-2.5 font-medium">{r.receivedFrom}</td>
-                        <td className="p-2.5 text-slate-500 truncate max-w-xs">{r.purposeDescription}</td>
-                        <td className="p-2.5 text-right font-semibold text-emerald-600">{formatCurrency(r.amount)}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* TAB 4: EXPENSES */}
-          {activeTab === 'expenses' && (
-            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-100 dark:bg-slate-800 text-[13px] font-semibold text-slate-600 dark:text-slate-300">
-                  <tr>
-                    <th className="p-2.5">Datum</th>
-                    <th className="p-2.5">Dodavatel</th>
-                    <th className="p-2.5">Popis nákupu</th>
-                    <th className="p-2.5">Kategorie</th>
-                    <th className="p-2.5 text-right">Částka</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {filteredData.expenses.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="p-4 text-center text-slate-400">
-                        Žádné výdaje v tomto období.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredData.expenses.map((e) => (
-                      <tr key={e.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                        <td className="p-2.5">{formatDateCs(e.date)}</td>
-                        <td className="p-2.5 font-semibold">{e.supplier || 'Neznámý'}</td>
-                        <td className="p-2.5 text-slate-700 dark:text-slate-300 truncate max-w-xs">{e.title}</td>
-                        <td className="p-2.5 text-[13px] font-semibold text-slate-500">{e.category}</td>
-                        <td className="p-2.5 text-right font-semibold text-rose-600">{formatCurrency(e.amount)}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* TAB 5: TRIPS */}
-          {activeTab === 'trips' && (
-            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-100 dark:bg-slate-800 text-[13px] font-semibold text-slate-600 dark:text-slate-300">
-                  <tr>
-                    <th className="p-2.5">Datum</th>
-                    <th className="p-2.5">Trasa</th>
-                    <th className="p-2.5 text-right">Km</th>
-                    <th className="p-2.5 text-right">Sazba</th>
-                    <th className="p-2.5 text-right">Náhrada</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {filteredData.trips.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="p-4 text-center text-slate-400">
-                        Žádné jízdy v tomto období.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredData.trips.map((t) => (
-                      <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                        <td className="p-2.5">{formatDateCs(t.date)}</td>
-                        <td className="p-2.5 font-medium">{t.origin} ➔ {t.destination}</td>
-                        <td className="p-2.5 text-right font-semibold">{t.distanceKm} km</td>
-                        <td className="p-2.5 text-right text-slate-500">{t.ratePerKm} Kč</td>
-                        <td className="p-2.5 text-right font-semibold text-amber-700 dark:text-amber-400">{formatCurrency(t.totalCost)}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Action Footer */}
-        <div className="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={handleExportCsv}
-              className="min-h-[44px] px-4 py-2 rounded-xl border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm sm:text-sm flex items-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
-              title="Exportovat tabulku do CSV (Pohoda / Excel)"
-            >
-              <FileSpreadsheet className="w-4 h-4" />
-              <span>Export do Excel / CSV</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleExportIsdoc}
-              className="min-h-[44px] px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm flex items-center gap-2 cursor-pointer transition-all"
-              title="Faktury jako elektronické doklady ISDOC – načte je Pohoda, Money, ABRA a další účetní programy"
-            >
-              <FileCode2 className="w-4 h-4" />
-              <span>Faktury v ISDOC (ZIP)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="min-h-[44px] px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm sm:text-sm flex items-center gap-2 cursor-pointer active:scale-95 transition-all"
-              title="Vytisknout předávací protokol pro účetní"
-            >
-              <Printer className="w-4 h-4" />
-              <span>Tisk protokolu</span>
-            </button>
+                    ))}
+              </tbody>
+            </table>
           </div>
+        )}
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleSendEmail}
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm sm:text-sm flex items-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
-              title="Odeslat souhrn účetní e-mailem"
-            >
-              <Mail className="w-4 h-4" />
-              <span>Odeslat účetní</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-800 dark:text-slate-200 font-semibold text-sm sm:text-sm cursor-pointer"
-            >
-              Zavřít
-            </button>
+        {activeTab === 'receipts' && (
+          <div className={tableBox}>
+            <table className="w-full text-left">
+              <thead className="border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                  <th className={th}>Doklad</th>
+                  <th className={th}>Datum</th>
+                  <th className={th}>Přijato od</th>
+                  <th className={th}>Účel</th>
+                  <th className={`${th} text-right`}>Částka</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {filteredData.cashReceipts.length === 0
+                  ? emptyRow('V tomto období není žádný pokladní doklad.')
+                  : filteredData.cashReceipts.map((r) => (
+                      <tr key={r.id}>
+                        <td className={`${td} font-semibold whitespace-nowrap`}>{r.receiptNumber}</td>
+                        <td className={`${td} whitespace-nowrap`}>{formatDateCs(r.issueDate)}</td>
+                        <td className={td}>{r.receivedFrom}</td>
+                        <td className={`${td} text-slate-600 dark:text-slate-400 truncate max-w-xs`}>{r.purposeDescription}</td>
+                        <td className={`${td} text-right font-semibold tabular-nums whitespace-nowrap`}>{formatCurrency(r.amount)}</td>
+                      </tr>
+                    ))}
+              </tbody>
+            </table>
           </div>
+        )}
+
+        {activeTab === 'expenses' && (
+          <div className={tableBox}>
+            <table className="w-full text-left">
+              <thead className="border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                  <th className={th}>Datum</th>
+                  <th className={th}>Co</th>
+                  <th className={th}>Kde</th>
+                  <th className={th}>Druh</th>
+                  <th className={`${th} text-right`}>Částka</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {filteredData.expenses.length === 0
+                  ? emptyRow('V tomto období není žádný výdaj.')
+                  : filteredData.expenses.map((e) => (
+                      <tr key={e.id}>
+                        <td className={`${td} whitespace-nowrap`}>{formatDateCs(e.date)}</td>
+                        <td className={`${td} font-semibold truncate max-w-xs`}>{e.title}</td>
+                        <td className={`${td} text-slate-600 dark:text-slate-400`}>{e.supplier || '–'}</td>
+                        <td className={`${td} text-slate-600 dark:text-slate-400 whitespace-nowrap`}>{expenseCategoryLabel(e.category)}</td>
+                        <td className={`${td} text-right font-semibold tabular-nums whitespace-nowrap`}>{formatCurrency(e.amount)}</td>
+                      </tr>
+                    ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeTab === 'trips' && (
+          <div className={tableBox}>
+            <table className="w-full text-left">
+              <thead className="border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                  <th className={th}>Datum</th>
+                  <th className={th}>Trasa</th>
+                  <th className={`${th} text-right`}>Km</th>
+                  <th className={`${th} text-right`}>Sazba</th>
+                  <th className={`${th} text-right`}>Náhrada</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {filteredData.trips.length === 0
+                  ? emptyRow('V tomto období není žádná jízda.')
+                  : filteredData.trips.map((t) => (
+                      <tr key={t.id}>
+                        <td className={`${td} whitespace-nowrap`}>{formatDateCs(t.date)}</td>
+                        <td className={td}>
+                          {t.origin} → {t.destination}
+                        </td>
+                        <td className={`${td} text-right tabular-nums whitespace-nowrap`}>{t.distanceKm} km</td>
+                        <td className={`${td} text-right tabular-nums text-slate-600 dark:text-slate-400 whitespace-nowrap`}>{t.ratePerKm} Kč</td>
+                        <td className={`${td} text-right font-semibold tabular-nums whitespace-nowrap`}>{formatCurrency(t.totalCost)}</td>
+                      </tr>
+                    ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Patička */}
+      <div className="px-4 sm:px-6 py-3.5 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button type="button" onClick={handleExportCsv} className={outline} title="Tabulka pro Excel nebo účetní program (CSV)">
+            <FileSpreadsheet className="w-[18px] h-[18px]" />
+            Tabulka CSV
+          </button>
+          <button
+            type="button"
+            onClick={handleExportIsdoc}
+            className={outline}
+            title="Faktury jako elektronické doklady ISDOC – načte je Pohoda, Money, ABRA a další účetní programy"
+          >
+            <FileCode2 className="w-[18px] h-[18px]" />
+            Faktury v ISDOC (ZIP)
+          </button>
+          <button type="button" onClick={handlePrint} className={outline}>
+            <Printer className="w-[18px] h-[18px]" />
+            Vytisknout
+          </button>
         </div>
-      </Dialog>
+        <button
+          type="button"
+          onClick={handleSendEmail}
+          className="min-h-11 px-5 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold cursor-pointer transition-colors"
+        >
+          <Mail className="w-[18px] h-[18px]" />
+          Odeslat účetní
+        </button>
+      </div>
+    </Dialog>
   );
 };

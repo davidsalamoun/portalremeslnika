@@ -2,20 +2,7 @@ import { getTripCost } from '../utils/tripCost';
 import React, { useState } from 'react';
 import { getSiteAddress } from '../utils/siteAddress';
 import { Dialog } from './Dialog';
-import {
-  X,
-  Plus,
-  Trash2,
-  Car,
-  Navigation,
-  MapPin,
-  Calendar,
-  Printer,
-  CheckCircle,
-  TrendingUp,
-  Share2,
-  Zap,
-} from 'lucide-react';
+import { Printer, Trash2 } from 'lucide-react';
 import { Contract, LogbookTrip, ContractExpense } from '../types/contract';
 import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
 
@@ -44,7 +31,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
   onToast,
 }) => {
   const [trips, setTrips] = useState<LogbookTrip[]>(contract.trips || []);
-  const [activeTab, setActiveTab] = useState<'batch' | 'single' | 'list'>('batch');
+  const [activeTab, setActiveTab] = useState<'batch' | 'single'>('single');
 
   const contractorAddress = contract.contractor.address || 'Sídlo zhotovitele';
   const clientAddress = getSiteAddress(contract) || 'Adresa stavby';
@@ -71,6 +58,15 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
   const [batchSelected, setBatchSelected] = useState<string[]>([]);
   const [batchVehicle, setBatchVehicle] = useState('Firemní dodávka');
   const [batchPurpose, setBatchPurpose] = useState('Montážní a stavební práce na zakázce');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [deleteTarget, setDeleteTarget] = useState<LogbookTrip | null>(null);
+  const showErrors = (next: Record<string, string>) => {
+    setErrors(next);
+    const first = Object.keys(next)[0];
+    if (first) document.getElementById(first)?.focus();
+    return !!first;
+  };
+  const clearError = (id: string) => setErrors((x) => (x[id] ? { ...x, [id]: '' } : x));
 
   if (!isOpen) return null;
 
@@ -113,14 +109,10 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
     }
     const oneWay = typeof batchOneWayKm === 'number' ? batchOneWayKm : parseFloat(String(batchOneWayKm));
     const rate = typeof batchRatePerKm === 'number' ? batchRatePerKm : parseFloat(String(batchRatePerKm));
-    if (isNaN(oneWay) || oneWay <= 0) {
-      if (onToast) onToast('error', 'Zadejte platnou vzdálenost jedné cesty v km.');
-      return;
-    }
-    if (isNaN(rate) || rate < 0) {
-      if (onToast) onToast('error', 'Zadejte sazbu za kilometr.');
-      return;
-    }
+    const next: Record<string, string> = {};
+    if (isNaN(oneWay) || oneWay <= 0) next['davka-km'] = 'Zadejte vzdálenost jedné cesty.';
+    if (isNaN(rate) || rate < 0) next['davka-sazba'] = 'Zadejte sazbu za kilometr.';
+    if (showErrors(next)) return;
 
     const dailyKm = Math.round(oneWay * 2);
     const dailyCost = Math.round(dailyKm * rate);
@@ -144,7 +136,6 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
       ...contract,
       trips: updatedTrips,
     });
-    setActiveTab('list');
     setBatchSelected([]);
 
     if (onToast) {
@@ -162,14 +153,10 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
     const km = typeof distanceKm === 'number' ? distanceKm : parseFloat(String(distanceKm));
     const rate = typeof ratePerKm === 'number' ? ratePerKm : parseFloat(String(ratePerKm));
 
-    if (isNaN(km) || km <= 0) {
-      if (onToast) onToast('error', 'Zadejte platný počet ujetých kilometrů.');
-      return;
-    }
-    if (isNaN(rate) || rate < 0) {
-      if (onToast) onToast('error', 'Zadejte platnou sazbu za kilometr.');
-      return;
-    }
+    const next: Record<string, string> = {};
+    if (isNaN(km) || km <= 0) next['jizda-km'] = 'Zadejte ujeté kilometry.';
+    if (isNaN(rate) || rate < 0) next['jizda-sazba'] = 'Zadejte sazbu za kilometr.';
+    if (showErrors(next)) return;
 
     const calculatedCost = Math.round(km * rate);
 
@@ -203,6 +190,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
   };
 
   const handleDeleteTrip = (id: string) => {
+    setDeleteTarget(null);
     const updatedTrips = trips.filter((t) => t.id !== id);
     setTrips(updatedTrips);
     onUpdateContract({
@@ -261,6 +249,41 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
     window.print();
   };
 
+  const field =
+    'min-h-11 w-full px-3 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white';
+  const label = 'block font-semibold text-slate-900 dark:text-slate-100 mb-1.5';
+  const outline =
+    'min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+  const primary =
+    'min-h-11 px-5 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+  const numberInput = (id: string, value: number | '', set: (v: number | '') => void, placeholder: string, min: string) => (
+    <>
+      <input
+        id={id}
+        type="number"
+        inputMode="decimal"
+        min={min}
+        step="0.5"
+        value={value}
+        onChange={(e) => {
+          set(e.target.value ? parseFloat(e.target.value) : '');
+          if (e.target.value) clearError(id);
+        }}
+        placeholder={placeholder}
+        aria-invalid={!!errors[id]}
+        aria-describedby={errors[id] ? `${id}-chyba` : undefined}
+        className={`${field} tabular-nums ${errors[id] ? '!border-rose-600' : ''}`}
+      />
+      {errors[id] && (
+        <p id={`${id}-chyba`} role="alert" className="mt-1 text-rose-700 dark:text-rose-400">
+          {errors[id]}
+        </p>
+      )}
+    </>
+  );
+  const tripWord = (n: number) => (n === 1 ? 'jízda' : n >= 2 && n <= 4 ? 'jízdy' : 'jízd');
+  const singleCost = Math.round((typeof distanceKm === 'number' ? distanceKm : 0) * (typeof ratePerKm === 'number' ? ratePerKm : 0));
+
   return (
     <Dialog
       title="Kniha jízd"
@@ -270,225 +293,188 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
       closeOnBackdrop={false}
       onClose={onClose}
     >
-
-        {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            <div className="p-4 rounded-xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80">
-              <span className="text-sm font-semibold text-blue-700 dark:text-blue-300 block mb-1">
-                Ujeto celkem
-              </span>
-              <span className="text-2xl font-semibold text-blue-950 dark:text-blue-100 block">
-                {totalKm} km
-              </span>
-              <span className="text-[13px] text-blue-600/80 dark:text-blue-300/80 mt-0.5 block">
-                {trips.length} {trips.length === 1 ? 'zaznamenaná jízda' : trips.length < 5 ? 'zaznamenané jízdy' : 'zaznamenaných jízd'}
-              </span>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-50/60 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80">
-              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-                Cestovní náhrady / Náklady
-              </span>
-              <span className="text-2xl font-semibold text-slate-950 dark:text-slate-100 block">
-                {formatCurrency(totalCost)}
-              </span>
-              <span className="text-[13px] text-slate-600/80 dark:text-slate-300/80 mt-0.5 block">
-                Kalkulováno dle sjednané sazby za km
-              </span>
-            </div>
-
-            <div className="p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 flex flex-col justify-between">
-              <div>
-                <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 block mb-1">
-                  Započíst do výdajů
-                </span>
-                <span className="text-sm text-emerald-800/80 dark:text-emerald-300/80 block">
-                  Přenést částku {formatCurrency(totalCost)} přímo do nákladů této zakázky.
-                </span>
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-[15px]">
+        {/* Souhrn: jeden rámeček s řádky (vzor Přehledu) */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="px-5 py-4 flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
+            <div>
+              <div className="text-slate-600 dark:text-slate-400">
+                Ujeto ({trips.length} {tripWord(trips.length)})
               </div>
-              <button
-                type="button"
-                onClick={handleSyncToExpenses}
-                className="min-h-11 mt-2.5 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold shadow-2xs transition-colors cursor-pointer"
-              >
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span>Zaúčtovat do ziskovosti</span>
-              </button>
+              <div className="font-display font-bold text-[40px] leading-none tabular-nums mt-1 text-slate-900 dark:text-white">{totalKm} km</div>
+            </div>
+            <div className="sm:text-right">
+              <div className="text-slate-600 dark:text-slate-400">Náhrady za jízdy</div>
+              <div className="font-display font-bold text-[40px] leading-none tabular-nums mt-1 text-slate-900 dark:text-white">{formatCurrency(totalCost)}</div>
             </div>
           </div>
-
-          {/* Navigation Tabs */}
-          <div className="flex border-b border-slate-200 dark:border-slate-800 gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveTab('batch')}
-              className={`min-h-11 pb-2.5 px-3 text-sm sm:text-sm font-semibold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
-                activeTab === 'batch'
-                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <Zap className="w-4 h-4 text-amber-500" />
-              <span>Více dní najednou</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('single')}
-              className={`min-h-11 pb-2.5 px-3 text-sm sm:text-sm font-semibold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
-                activeTab === 'single'
-                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Jednorázový zápis cesty</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('list')}
-              className={`min-h-11 pb-2.5 px-3 text-sm sm:text-sm font-semibold flex items-center gap-1.5 border-b-2 cursor-pointer transition-all ${
-                activeTab === 'list'
-                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <Car className="w-4 h-4" />
-              <span>Přehled jízd ({trips.length})</span>
+          <div className="px-5 py-3 flex flex-wrap items-center justify-between gap-3">
+            <span className="text-slate-600 dark:text-slate-400">Náhrady můžete přičíst k nákladům zakázky.</span>
+            <button type="button" onClick={handleSyncToExpenses} disabled={totalCost <= 0} className={outline}>
+              Započíst do nákladů
             </button>
           </div>
+        </div>
 
-          {/* TAB 1: BATCH TRIP GENERATOR */}
-          {activeTab === 'batch' && (
-            <div className="p-4 sm:p-5 rounded-xl border-2 border-blue-200 dark:border-blue-900/60 bg-blue-50/30 dark:bg-blue-950/20 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-amber-500" />
-                    <span>Zápis stejné cesty za více dní</span>
-                  </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
-                    Vyberte dny, kdy jste na stavbu opravdu jeli. Kniha jízd má odpovídat skutečným cestám.
-                  </p>
-                </div>
-              </div>
+        {/* Záložky */}
+        <div role="tablist" aria-label="Zápis jízdy" className="flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-800">
+          {[
+            { id: 'single' as const, label: 'Jedna jízda' },
+            { id: 'batch' as const, label: 'Více dní najednou' },
+          ].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === t.id}
+              onClick={() => {
+                setActiveTab(t.id);
+                setErrors({});
+              }}
+              className={`min-h-11 px-3 -mb-px border-b-2 font-semibold whitespace-nowrap cursor-pointer transition-colors ${
+                activeTab === t.id
+                  ? 'border-blue-600 text-blue-600 dark:border-blue-300 dark:text-blue-300'
+                  : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Od data (zahájení)
-                  </label>
-                  <input
-                    type="date"
-                    value={batchStartDate}
-                    onChange={(e) => setBatchStartDate(e.target.value)}
-                    className="min-h-11 w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Do data (dokončení)
-                  </label>
-                  <input
-                    type="date"
-                    value={batchEndDate}
-                    onChange={(e) => setBatchEndDate(e.target.value)}
-                    className="min-h-11 w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Vzdálenost 1 cesta (km)
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    step="0.5"
-                    value={batchOneWayKm}
-                    onChange={(e) => setBatchOneWayKm(e.target.value ? parseFloat(e.target.value) : '')}
-                    placeholder="km"
-                    className="min-h-11 w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
-                  />
-                  <span className="text-[13px] text-slate-400 mt-0.5 block">
-                    Tam i zpět denně: {calculatedBatchKm} km
-                  </span>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Sazba (Kč/km)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    value={batchRatePerKm}
-                    onChange={(e) => setBatchRatePerKm(e.target.value ? parseFloat(e.target.value) : '')}
-                    placeholder="Kč/km"
-                    className="min-h-11 w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
-                  />
-                </div>
-              </div>
-
-              {/* Addresses & Vehicles */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Odkud → kam
-                  </label>
-                  <div className="text-sm font-medium text-slate-700 dark:text-slate-300 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                    {contractorAddress} ➔ <strong>{clientAddress}</strong>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Vozidlo a účel
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="text"
-                      value={batchVehicle}
-                      onChange={(e) => setBatchVehicle(e.target.value)}
-                      placeholder="Vozidlo"
-                      className="min-h-11 px-2.5 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
-                    />
-                    <input
-                      type="text"
-                      value={batchPurpose}
-                      onChange={(e) => setBatchPurpose(e.target.value)}
-                      placeholder="Účel"
-                      className="min-h-11 px-2.5 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Options */}
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                <label className="flex items-center gap-2 cursor-pointer font-semibold text-sm text-slate-700 dark:text-slate-300 select-none">
-                  <input
-                    type="checkbox"
-                    checked={batchWorkdaysOnly}
-                    onChange={(e) => setBatchWorkdaysOnly(e.target.checked)}
-                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-                  />
-                  <span>Pouze pracovní dny (vynechat soboty a neděle)</span>
+        {/* Jedna jízda */}
+        {activeTab === 'single' && (
+          <form onSubmit={handleAddTrip} className="space-y-4" noValidate>
+            <div className="grid grid-cols-2 sm:grid-cols-12 gap-3">
+              <div className="col-span-2 sm:col-span-3">
+                <label htmlFor="jizda-datum" className={label}>
+                  Datum
                 </label>
-
-                <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  Vybráno {selectedDays.length} z {batchDays.length} dnů · {calculatedBatchTotalKm} km ·{' '}
-                  {formatCurrency(calculatedBatchTotalCost)}
-                </div>
+                <input id="jizda-datum" type="date" value={date} onChange={(e) => setDate(e.target.value)} className={field} />
               </div>
+              <div className="col-span-2 sm:col-span-5">
+                <label htmlFor="jizda-ucel" className={label}>
+                  Účel cesty
+                </label>
+                <select id="jizda-ucel" value={purpose} onChange={(e) => setPurpose(e.target.value)} className={field}>
+                  {COMMON_PURPOSES.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-span-2 sm:col-span-4">
+                <label htmlFor="jizda-vozidlo" className={label}>
+                  Vozidlo / SPZ
+                </label>
+                <input
+                  id="jizda-vozidlo"
+                  type="text"
+                  value={vehicle}
+                  onChange={(e) => setVehicle(e.target.value)}
+                  placeholder="např. Ford Transit / 1AB 1234"
+                  className={field}
+                />
+              </div>
+              <div className="col-span-2 sm:col-span-6">
+                <label htmlFor="jizda-odkud" className={label}>
+                  Odkud
+                </label>
+                <input id="jizda-odkud" type="text" value={origin} onChange={(e) => setOrigin(e.target.value)} className={field} />
+              </div>
+              <div className="col-span-2 sm:col-span-6">
+                <label htmlFor="jizda-kam" className={label}>
+                  Kam
+                </label>
+                <input id="jizda-kam" type="text" value={destination} onChange={(e) => setDestination(e.target.value)} className={field} />
+              </div>
+              <div className="sm:col-span-3">
+                <label htmlFor="jizda-km" className={label}>
+                  Ujeto km
+                </label>
+                {numberInput('jizda-km', distanceKm, setDistanceKm, 'tam i zpět', '1')}
+              </div>
+              <div className="sm:col-span-3">
+                <label htmlFor="jizda-sazba" className={label}>
+                  Sazba (Kč/km)
+                </label>
+                {numberInput('jizda-sazba', ratePerKm, setRatePerKm, 'Kč za km', '0')}
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+              <button type="submit" className={primary}>
+                Zapsat jízdu
+              </button>
+              <span className="text-slate-600 dark:text-slate-400">
+                Náhrada <strong className="font-display font-semibold text-xl text-slate-900 dark:text-white tabular-nums">{formatCurrency(singleCost)}</strong>
+              </span>
+            </div>
+          </form>
+        )}
 
-              {/* Dny v rozsahu: zapíšou se jen zaškrtnuté */}
-              {batchDays.length > 0 && (
+        {/* Více dní najednou: zapíšou se jen vybrané dny */}
+        {activeTab === 'batch' && (
+          <div className="space-y-4">
+            <p className="text-slate-600 dark:text-slate-400">
+              Stejná cesta za více dní. Vyberte dny, kdy jste na stavbu opravdu jeli – kniha jízd má odpovídat skutečným cestám.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div>
+                <label htmlFor="davka-od" className={label}>
+                  Od
+                </label>
+                <input id="davka-od" type="date" value={batchStartDate} onChange={(e) => setBatchStartDate(e.target.value)} className={field} />
+              </div>
+              <div>
+                <label htmlFor="davka-do" className={label}>
+                  Do
+                </label>
+                <input id="davka-do" type="date" value={batchEndDate} onChange={(e) => setBatchEndDate(e.target.value)} className={field} />
+              </div>
+              <div>
+                <label htmlFor="davka-km" className={label}>
+                  Jedna cesta (km)
+                </label>
+                {numberInput('davka-km', batchOneWayKm, setBatchOneWayKm, 'km', '1')}
+              </div>
+              <div>
+                <label htmlFor="davka-sazba" className={label}>
+                  Sazba (Kč/km)
+                </label>
+                {numberInput('davka-sazba', batchRatePerKm, setBatchRatePerKm, 'Kč za km', '0')}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="davka-vozidlo" className={label}>
+                  Vozidlo
+                </label>
+                <input id="davka-vozidlo" type="text" value={batchVehicle} onChange={(e) => setBatchVehicle(e.target.value)} className={field} />
+              </div>
+              <div>
+                <label htmlFor="davka-ucel" className={label}>
+                  Účel
+                </label>
+                <input id="davka-ucel" type="text" value={batchPurpose} onChange={(e) => setBatchPurpose(e.target.value)} className={field} />
+              </div>
+            </div>
+            <p className="text-slate-600 dark:text-slate-400">
+              Trasa: {contractorAddress} → {clientAddress}
+              {calculatedBatchKm > 0 && <> · tam i zpět {calculatedBatchKm} km denně</>}
+            </p>
+            <label className="min-h-11 inline-flex items-center gap-2.5 cursor-pointer text-slate-900 dark:text-slate-100 select-none">
+              <input
+                type="checkbox"
+                checked={batchWorkdaysOnly}
+                onChange={(e) => setBatchWorkdaysOnly(e.target.checked)}
+                className="w-5 h-5 accent-slate-900 dark:accent-white"
+              />
+              Jen pracovní dny
+            </label>
+            {batchDays.length > 0 && (
+              <div className="space-y-2">
+                <div className="font-semibold text-slate-900 dark:text-slate-100">Dny, kdy jste jeli na stavbu</div>
                 <div role="group" aria-label="Dny, kdy jste jeli na stavbu" className="flex flex-wrap gap-2">
                   {batchDays.map((day) => {
                     const on = batchSelected.includes(day);
@@ -498,7 +484,7 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                         type="button"
                         aria-pressed={on}
                         onClick={() => toggleBatchDay(day)}
-                        className={`min-h-11 px-3 rounded-md border text-sm font-medium cursor-pointer transition-colors ${
+                        className={`min-h-11 px-3 rounded-md border font-medium cursor-pointer transition-colors ${
                           on
                             ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
                             : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -509,287 +495,100 @@ export const LogbookModal: React.FC<LogbookModalProps> = ({
                     );
                   })}
                 </div>
-              )}
-
-              {/* Action button */}
-              <button
-                type="button"
-                onClick={handleGenerateBatchTrips}
-                disabled={selectedDays.length === 0}
-                className="min-h-11 w-full py-3 px-4 rounded-md bg-amber-400 hover:bg-amber-300 text-slate-900 border-[1.5px] border-slate-900 disabled:opacity-50 font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
-              >
-                <span>
-                  Zapsat vybrané jízdy ({selectedDays.length})
-                </span>
+              </div>
+            )}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+              <button type="button" onClick={handleGenerateBatchTrips} disabled={selectedDays.length === 0} className={primary}>
+                Zapsat vybrané jízdy ({selectedDays.length})
               </button>
+              <span className="text-slate-600 dark:text-slate-400">
+                {calculatedBatchTotalKm} km · {formatCurrency(calculatedBatchTotalCost)}
+              </span>
             </div>
-          )}
-
-          {/* TAB 2: SINGLE TRIP FORM */}
-          {activeTab === 'single' && (
-            <div className="p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                <Plus className="w-4 h-4 text-blue-600" />
-                <span>Zapsat novou jízdu na stavbu</span>
-              </h3>
-
-            <form onSubmit={handleAddTrip} className="space-y-3.5">
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                {/* Datum */}
-                <div className="sm:col-span-3">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Datum jízdy
-                  </label>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="min-h-11 w-full px-2.5 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
-                    required
-                  />
-                </div>
-
-                {/* Účel */}
-                <div className="sm:col-span-5">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Účel cesty
-                  </label>
-                  <select
-                    value={purpose}
-                    onChange={(e) => setPurpose(e.target.value)}
-                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
-                  >
-                    {COMMON_PURPOSES.map((p) => (
-                      <option key={p} value={p}>
-                        {p}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Vozidlo */}
-                <div className="sm:col-span-4">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Vozidlo / SPZ
-                  </label>
-                  <input
-                    type="text"
-                    value={vehicle}
-                    onChange={(e) => setVehicle(e.target.value)}
-                    placeholder="např. Ford Transit / 1AB 1234"
-                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
-                  />
-                </div>
-              </div>
-
-              {/* Trasa Odkud - Kam */}
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                <div className="sm:col-span-6">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Odkud</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={origin}
-                    onChange={(e) => setOrigin(e.target.value)}
-                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
-                    required
-                  />
-                </div>
-
-                <div className="sm:col-span-6">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Cíl cesty (kam / stavba)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
-                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Km + Sazba + Tlačítko */}
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-                <div className="sm:col-span-3">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Ujeto km (tam i zpět) *
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    step="0.5"
-                    value={distanceKm}
-                    onChange={(e) => setDistanceKm(e.target.value ? parseFloat(e.target.value) : '')}
-                    placeholder="tam i zpět"
-                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
-                    required
-                  />
-                </div>
-
-                <div className="sm:col-span-3">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Sazba (Kč/km) *
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    value={ratePerKm}
-                    onChange={(e) => setRatePerKm(e.target.value ? parseFloat(e.target.value) : '')}
-                    placeholder="Kč za km"
-                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
-                    required
-                  />
-                </div>
-
-                <div className="sm:col-span-3">
-                  <div className="text-sm font-semibold text-slate-500 mb-1">Náhrada za jízdu:</div>
-                  <div className="py-2 text-base font-semibold text-blue-700 dark:text-blue-300">
-                    {formatCurrency(
-                      Math.round(
-                        (typeof distanceKm === 'number' ? distanceKm : 0) *
-                          (typeof ratePerKm === 'number' ? ratePerKm : 0)
-                      )
-                    )}
-                  </div>
-                </div>
-
-                <div className="sm:col-span-3">
-                  <button
-                    type="submit"
-                    className="min-h-11 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors shadow-xs cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Zapsat jízdu</span>
-                  </button>
-                </div>
-              </div>
-            </form>
           </div>
         )}
 
-          {/* Tabulka jízd */}
-          <div>
-            <div className="flex items-center justify-between mb-2.5">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                Přehled uskutečněných jízd ({trips.length})
-              </h3>
-              {trips.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handlePrint}
-                  className="min-h-11 min-w-11 inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300 hover:text-blue-600 font-medium cursor-pointer"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>Vytisknout knihu jízd</span>
-                </button>
-              )}
-            </div>
-
-            {trips.length === 0 ? (
-              <div className="text-center py-8 px-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-                <Car className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                  Zatím jste nezaznamenali žádnou jízdu k této zakázce.
-                </p>
-                <p className="text-sm text-slate-400 mt-1">
-                  Po každé cestě na stavbu stačí zapsat kilometry výše.
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                <table className="w-full text-left text-sm sm:text-sm">
-                  <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[13px]">
-                    <tr>
-                      <th className="py-2.5 px-3">Datum</th>
-                      <th className="py-2.5 px-3">Trasa</th>
-                      <th className="py-2.5 px-3 hidden sm:table-cell">Účel jízdy</th>
-                      <th className="py-2.5 px-3 text-right">Km</th>
-                      <th className="py-2.5 px-3 text-right hidden sm:table-cell">Sazba</th>
-                      <th className="py-2.5 px-3 text-right">Náhrada</th>
-                      <th className="py-2.5 px-3 text-right">Akce</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                    {trips.map((tr) => (
-                      <tr
-                        key={tr.id}
-                        className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                      >
-                        <td className="py-2.5 px-3 text-slate-500 whitespace-nowrap">
-                          {formatDateCs(tr.date)}
-                        </td>
-                        <td className="py-2.5 px-3 text-slate-800 dark:text-slate-200">
-                          <div className="font-medium text-sm sm:text-sm">{tr.destination}</div>
-                          <div className="text-[13px] text-slate-400 truncate max-w-xs">
-                            z: {tr.origin}
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 hidden sm:table-cell text-sm">
-                          {tr.purpose}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-semibold text-slate-900 dark:text-white whitespace-nowrap">
-                          {tr.distanceKm} km
-                        </td>
-                        <td className="py-2.5 px-3 text-right text-slate-500 hidden sm:table-cell">
-                          {tr.ratePerKm} Kč/km
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-semibold text-blue-700 dark:text-blue-300 whitespace-nowrap">
-                          {formatCurrency(tr.totalCost)}
-                        </td>
-                        <td className="py-2.5 px-3 text-right">
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteTrip(tr.id)}
-                            className="min-h-11 min-w-11 inline-flex items-center justify-center p-1 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
-                            title="Smazat jízdu"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="bg-slate-50 dark:bg-slate-800/80 font-semibold border-t border-slate-200 dark:border-slate-700">
-                    <tr>
-                      <td colSpan={2} className="py-2.5 px-3 text-slate-700 dark:text-slate-300">
-                        Celkem kniha jízd:
-                      </td>
-                      <td className="hidden sm:table-cell"></td>
-                      <td className="py-2.5 px-3 text-right text-slate-900 dark:text-white">
-                        {totalKm} km
-                      </td>
-                      <td className="hidden sm:table-cell"></td>
-                      <td className="py-2.5 px-3 text-right text-blue-700 dark:text-blue-300">
-                        {formatCurrency(totalCost)}
-                      </td>
-                      <td></td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
+        {/* Jízdy */}
+        <section aria-labelledby="jizdy-nadpis" className="space-y-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <h3 id="jizdy-nadpis" className="font-display font-semibold text-xl text-slate-900 dark:text-white">
+              Jízdy
+            </h3>
+            {trips.length > 0 && (
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="min-h-11 inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-300 font-semibold underline underline-offset-2 cursor-pointer"
+              >
+                <Printer className="w-4 h-4" />
+                Vytisknout knihu jízd
+              </button>
             )}
           </div>
-        </div>
+          {trips.length === 0 ? (
+            <p className="px-5 py-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md text-slate-600 dark:text-slate-300">
+              Zatím žádné jízdy. Po každé cestě na stavbu stačí zapsat kilometry.
+            </p>
+          ) : (
+            <ul className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md divide-y divide-slate-100 dark:divide-slate-800">
+              {trips.map((tr) => (
+                <li key={tr.id} className="px-5 py-3 flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-slate-900 dark:text-white">
+                      {tr.origin} → {tr.destination}
+                    </div>
+                    <div className="text-slate-600 dark:text-slate-400">
+                      {[formatDateCs(tr.date), tr.purpose, Number.isFinite(Number(tr.ratePerKm)) ? `${tr.distanceKm} km × ${tr.ratePerKm} Kč` : `${tr.distanceKm} km`].filter(Boolean).join(' · ')}
+                    </div>
+                  </div>
+                  <span className="font-display font-semibold text-xl tabular-nums text-slate-900 dark:text-white whitespace-nowrap">
+                    {formatCurrency(getTripCost(tr))}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(tr)}
+                    aria-label={`Smazat jízdu ${formatDateCs(tr.date)}`}
+                    title="Smazat jízdu"
+                    className="min-h-11 min-w-11 -mr-2 inline-flex items-center justify-center rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 flex items-center justify-between shrink-0">
-          <div className="text-sm text-slate-500 dark:text-slate-400">
-            Jízdy se ukládají k zakázce a jdou do podkladů pro účetní.
+      {/* Patička */}
+      <div className="px-4 sm:px-6 py-3.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0">
+        <span className="text-slate-600 dark:text-slate-400">Jízdy se ukládají k zakázce a jdou do podkladů pro účetní.</span>
+        <button type="button" onClick={onClose} className={outline}>
+          Hotovo
+        </button>
+      </div>
+
+      {deleteTarget && (
+        <Dialog title="Smazat jízdu?" onClose={() => setDeleteTarget(null)}>
+          <div className="space-y-5 text-[15px]">
+            <p>
+              Jízda {formatDateCs(deleteTarget.date)} ({deleteTarget.distanceKm} km, {formatCurrency(getTripCost(deleteTarget))}) se odstraní z knihy jízd.
+            </p>
+            <div className="flex flex-wrap justify-end gap-2.5">
+              <button type="button" onClick={() => setDeleteTarget(null)} className={outline}>
+                Zpět
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteTrip(deleteTarget.id)}
+                className="min-h-11 px-4 inline-flex items-center justify-center rounded-md border-[1.5px] border-rose-700 text-rose-700 dark:border-rose-400 dark:text-rose-300 font-semibold hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+              >
+                Smazat jízdu
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-11 inline-flex items-center justify-center px-4 py-2 rounded-lg bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-semibold text-sm transition-colors cursor-pointer shadow-xs"
-          >
-            Hotovo
-          </button>
-        </div>
-      </Dialog>
+        </Dialog>
+      )}
+    </Dialog>
   );
 };

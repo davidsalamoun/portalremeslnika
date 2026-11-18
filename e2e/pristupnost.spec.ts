@@ -52,3 +52,37 @@ plain('přístupnost úvodní stránky a přihlášení', async ({ page, context
   all.push(...(await audit(page, 'Přihlášení')));
   expect(all, all.join('\n')).toEqual([]);
 });
+
+test('přístupnost oken nástrojů stavby', async ({ app }) => {
+  test.setTimeout(180000);
+  const all: string[] = [];
+  await app.getByRole('button', { name: 'Kalkulačka na obhlídce' }).first().click();
+  await app.getByRole('dialog').waitFor();
+  all.push(...(await audit(app, 'Kalkulačka')));
+  await app.keyboard.press('Escape');
+  await app.getByRole('button', { name: /Podklady pro účetní|Pro účetní/ }).first().click();
+  await app.getByRole('dialog').waitFor();
+  all.push(...(await audit(app, 'Podklady pro účetní')));
+  await app.keyboard.press('Escape');
+  // Náklady a zisk přes „Vyfotit účtenku“, pak ostatní okna z nástrojů stavby téže zakázky
+  await app.getByRole('button', { name: 'Vyfotit účtenku' }).click();
+  await app.getByRole('dialog', { name: 'Vyfotit účtenku' }).getByRole('button', { name: /Malování kanceláří/ }).click();
+  await app.getByRole('dialog', { name: 'Náklady a zisk' }).waitFor();
+  all.push(...(await audit(app, 'Okno Náklady a zisk')));
+  await app.keyboard.press('Escape');
+  await app.locator('#nahled-faze').waitFor();
+  for (const name of ['Kniha jízd', 'Stavební deník']) {
+    const menu = app.getByRole('button', { name: /Nástroje stavby/ });
+    if (await menu.isVisible()) await menu.click();
+    else await app.getByRole('button', { name: 'Další', exact: true }).click();
+    const trigger = new RegExp(`^${name}`);
+    await app.getByRole('button', { name: trigger }).or(app.getByRole('menuitem', { name: trigger })).first().click();
+    const dialog = app.getByRole('dialog', { name });
+    await dialog.waitFor();
+    if (name === 'Stavební deník') await dialog.getByRole('button', { name: 'Zapsat den na stavbě' }).click();
+    all.push(...(await audit(app, `Okno ${name}`)));
+    await app.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+  }
+  expect(all, all.join('\n')).toEqual([]);
+});

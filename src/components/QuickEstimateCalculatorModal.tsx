@@ -1,20 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Dialog } from './Dialog';
-import {
-  X,
-  Calculator,
-  ArrowRight,
-  Send,
-  Copy,
-  Clock,
-  Layers,
-  SquareSplitVertical,
-  Paintbrush,
-  Hammer,
-  Zap,
-  ShieldCheck,
-  Check
-} from 'lucide-react';
+import { Copy, Check, ArrowRight } from 'lucide-react';
 import { formatCurrency } from '../utils/numberToWordsCs';
 import { triggerHaptic } from '../utils/haptics';
 
@@ -41,7 +27,6 @@ interface QuickEstimateCalculatorModalProps {
 interface TradeFormula {
   id: string;
   title: string;
-  iconName: 'layers' | 'squareSplit' | 'brush' | 'hammer' | 'zap';
   unit: string;
   defaultQty: number;
   laborRatePerUnit: number;
@@ -55,7 +40,6 @@ const TRADES: TradeFormula[] = [
   {
     id: 'tiles',
     title: 'Obklady a dlažba',
-    iconName: 'layers',
     unit: 'm²',
     defaultQty: 30,
     laborRatePerUnit: 700,
@@ -67,7 +51,6 @@ const TRADES: TradeFormula[] = [
   {
     id: 'drywall',
     title: 'Sádrokartony a příčky',
-    iconName: 'squareSplit',
     unit: 'm²',
     defaultQty: 45,
     laborRatePerUnit: 500,
@@ -79,7 +62,6 @@ const TRADES: TradeFormula[] = [
   {
     id: 'paint',
     title: 'Malířské práce a stěrky',
-    iconName: 'brush',
     unit: 'm²',
     defaultQty: 100,
     laborRatePerUnit: 140,
@@ -91,7 +73,6 @@ const TRADES: TradeFormula[] = [
   {
     id: 'floor',
     title: 'Vinylové podlahy a stěrka',
-    iconName: 'hammer',
     unit: 'm²',
     defaultQty: 50,
     laborRatePerUnit: 380,
@@ -103,7 +84,6 @@ const TRADES: TradeFormula[] = [
   {
     id: 'electro',
     title: 'Elektroinstalace bytu',
-    iconName: 'zap',
     unit: 'm² bytu',
     defaultQty: 60,
     laborRatePerUnit: 650,
@@ -121,7 +101,7 @@ export const QuickEstimateCalculatorModal: React.FC<QuickEstimateCalculatorModal
   onToast,
 }) => {
   const [selectedTradeId, setSelectedTradeId] = useState<string>('tiles');
-  const [quantity, setQuantity] = useState<number>(30);
+  const [quantity, setQuantity] = useState<number | ''>('');
   const [qualityTier, setQualityTier] = useState<'standard' | 'premium'>('standard');
   const [includeBuffer, setIncludeBuffer] = useState<boolean>(true); // 10% rezerva na prořez a neočekávané
   const [copied, setCopied] = useState<boolean>(false);
@@ -131,14 +111,14 @@ export const QuickEstimateCalculatorModal: React.FC<QuickEstimateCalculatorModal
   }, [selectedTradeId]);
 
   const calculation = useMemo(() => {
-    const qty = Math.max(1, quantity || 1);
+    const qty = typeof quantity === 'number' && quantity > 0 ? quantity : 0;
     const qualityMultiplier = qualityTier === 'premium' ? 1.25 : 1.0;
     const bufferMultiplier = includeBuffer ? 1.1 : 1.0;
 
     const laborPrice = Math.round(qty * selectedTrade.laborRatePerUnit * qualityMultiplier);
     const materialPrice = Math.round(qty * selectedTrade.materialRatePerUnit * qualityMultiplier * bufferMultiplier);
     const totalPrice = laborPrice + materialPrice;
-    const estimatedDays = Math.max(1, Math.ceil(qty * selectedTrade.daysPerUnitRatio));
+    const estimatedDays = qty > 0 ? Math.max(1, Math.ceil(qty * selectedTrade.daysPerUnitRatio)) : 0;
 
     return {
       qty,
@@ -151,19 +131,26 @@ export const QuickEstimateCalculatorModal: React.FC<QuickEstimateCalculatorModal
 
   if (!isOpen) return null;
 
+  const daysText = (n: number) => `${n} ${n === 1 ? 'pracovní den' : n >= 2 && n <= 4 ? 'pracovní dny' : 'pracovních dnů'}`;
+  const hasQty = calculation.qty > 0;
+
   const estimateText = `Dobrý den, posílám orientační kalkulaci pro "${selectedTrade.title}" v rozsahu cca ${calculation.qty} ${selectedTrade.unit}:
 • Práce: ${formatCurrency(calculation.laborPrice)}
 • Materiál a stavební chemie (orientačně): ${formatCurrency(calculation.materialPrice)}
 • Celkový předběžný odhad: ${formatCurrency(calculation.totalPrice)}
-• Předpokládaná doba realizace: cca ${calculation.estimatedDays} ${calculation.estimatedDays === 1 ? 'pracovní den' : calculation.estimatedDays < 5 ? 'pracovní dny' : 'pracovních dní'}.
+• Předpokládaná doba realizace: cca ${daysText(calculation.estimatedDays)}.
 Přesnou cenovou nabídku s položkovým rozpočtem vám rád připravím.`;
 
-  const handleCopyEstimate = () => {
+  const handleCopyEstimate = async () => {
     triggerHaptic('light');
-    navigator.clipboard.writeText(estimateText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    onToast('success', 'Orientační kalkulace byla zkopírována do schránky.');
+    try {
+      await navigator.clipboard.writeText(estimateText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      onToast('success', 'Odhad je zkopírovaný – vložte ho do zprávy zákazníkovi.');
+    } catch {
+      onToast('error', 'Odhad se nepodařilo zkopírovat.');
+    }
   };
 
   const handleApply = () => {
@@ -195,168 +182,129 @@ Přesnou cenovou nabídku s položkovým rozpočtem vám rád připravím.`;
     onClose();
   };
 
-  const renderTradeIcon = (iconName: TradeFormula['iconName'], isSelected: boolean) => {
-    const iconClass = isSelected ? 'w-4 h-4 text-white' : 'w-4 h-4 text-slate-600 dark:text-slate-400';
-    switch (iconName) {
-      case 'layers': return <Layers className={iconClass} />;
-      case 'squareSplit': return <SquareSplitVertical className={iconClass} />;
-      case 'brush': return <Paintbrush className={iconClass} />;
-      case 'hammer': return <Hammer className={iconClass} />;
-      case 'zap': return <Zap className={isSelected ? 'w-4 h-4 text-amber-300' : 'w-4 h-4 text-amber-500'} />;
-      default: return <Layers className={iconClass} />;
-    }
-  };
+  const chip = (on: boolean) =>
+    `min-h-11 px-3 inline-flex items-center rounded-md border font-medium cursor-pointer transition-colors ${
+      on
+        ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
+        : 'border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
+    }`;
+  const qualityMultiplier = qualityTier === 'premium' ? 1.25 : 1;
 
   return (
-    <Dialog
-      title="Kalkulačka na obhlídce"
-      subtitle="Rychlý odhad ceny na místě."
-      size="xl"
-      closeOnBackdrop={false}
-      onClose={onClose}
-    >
-
-        {/* Trade Selector */}
+    <Dialog title="Kalkulačka na obhlídce" subtitle="Rychlý odhad ceny na místě." size="xl" closeOnBackdrop={false} onClose={onClose}>
+      <div className="space-y-5 text-[15px]">
         <div>
-          <label className="block text-[13px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
-            Zvolte řemeslný obor:
-          </label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {TRADES.map((t) => {
-              const isSelected = selectedTradeId === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setSelectedTradeId(t.id);
-                    setQuantity(t.defaultQty);
-                  }}
-                  className={`min-h-11 min-w-11 p-2.5 rounded-lg border text-left flex items-center gap-2 transition-colors cursor-pointer ${
-                    isSelected
-                      ? 'bg-slate-900 text-amber-400 dark:bg-slate-800 border-slate-900 dark:border-slate-700 font-semibold shadow-xs'
-                      : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
-                  }`}
-                >
-                  <span>{renderTradeIcon(t.iconName, isSelected)}</span>
-                  <span className="text-sm truncate font-medium">{t.title}</span>
-                </button>
-              );
-            })}
+          <div className="font-semibold text-slate-900 dark:text-slate-100 mb-1.5">Druh práce</div>
+          <div role="group" aria-label="Druh práce" className="flex flex-wrap gap-2">
+            {TRADES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                aria-pressed={selectedTradeId === t.id}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setSelectedTradeId(t.id);
+                }}
+                className={chip(selectedTradeId === t.id)}
+              >
+                {t.title}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Quantity & Quality Inputs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 text-[13px]">
-              Rozsah díla ({selectedTrade.unit}):
+            <label htmlFor="kalk-rozsah" className="block font-semibold text-slate-900 dark:text-slate-100 mb-1.5">
+              Rozsah ({selectedTrade.unit})
             </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min="1"
-                value={quantity || ''}
-                onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
-                className="min-h-11 w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-lg font-semibold tabular-nums text-slate-900 dark:text-white text-center focus:ring-2 focus:ring-amber-500"
-              />
-              <span className="text-sm font-semibold text-slate-500 shrink-0">
-                {selectedTrade.unit}
-              </span>
-            </div>
+            <input
+              id="kalk-rozsah"
+              type="number"
+              inputMode="decimal"
+              min="1"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value === '' ? '' : parseFloat(e.target.value))}
+              placeholder={`např. ${selectedTrade.defaultQty}`}
+              className="min-h-11 w-full px-3 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white tabular-nums"
+            />
           </div>
-
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 text-[13px]">
-              Třída materiálu a chemie:
-            </label>
-            <div className="grid grid-cols-2 gap-1.5 h-10">
-              <button
-                type="button"
-                onClick={() => setQualityTier('standard')}
-                className={`min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
-                  qualityTier === 'standard'
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
-                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
-                }`}
-              >
-                Standard
+            <div className="font-semibold text-slate-900 dark:text-slate-100 mb-1.5">Materiál</div>
+            <div role="group" aria-label="Materiál" className="flex flex-wrap gap-2">
+              <button type="button" aria-pressed={qualityTier === 'standard'} onClick={() => setQualityTier('standard')} className={chip(qualityTier === 'standard')}>
+                Běžný
               </button>
-              <button
-                type="button"
-                onClick={() => setQualityTier('premium')}
-                className={`min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
-                  qualityTier === 'premium'
-                    ? 'bg-amber-500 text-slate-950 shadow-xs'
-                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
-                }`}
-              >
-                Prémiový (+25 %)
+              <button type="button" aria-pressed={qualityTier === 'premium'} onClick={() => setQualityTier('premium')} className={chip(qualityTier === 'premium')}>
+                Lepší (+25 %)
               </button>
             </div>
           </div>
         </div>
 
-        {/* 10% Reserve Checkbox */}
-        <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+        <label className="min-h-11 flex items-center gap-2.5 text-slate-900 dark:text-slate-100 cursor-pointer select-none">
           <input
             type="checkbox"
             checked={includeBuffer}
             onChange={(e) => setIncludeBuffer(e.target.checked)}
-            className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500"
+            className="w-5 h-5 shrink-0 accent-slate-900 dark:accent-white"
           />
-          <span>Zahrnout +10 % technologickou rezervu na prořez materiálu a nečekané vícepráce</span>
+          Přidat 10 % na prořez a nečekané práce
         </label>
 
-        {/* Calculation Result Card */}
-        <div className="p-4 rounded-lg bg-slate-900 dark:bg-slate-950 text-white border border-slate-800 space-y-3 shadow-md">
-          <div className="flex items-baseline justify-between">
-            <span className="text-[13px] font-semibold text-amber-400">
-              Doporučená cena zakázky bez DPH
-            </span>
-            <div className="flex items-center gap-1.5 text-sm text-slate-300">
-              <Clock className="w-3.5 h-3.5 text-amber-400" />
-              <span>cca {calculation.estimatedDays} {calculation.estimatedDays === 1 ? 'pracovní den' : 'pracovní dny'}</span>
+        {/* Výsledek: bílý rámeček s velkým číslem (vzor Přehledu) */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md divide-y divide-slate-100 dark:divide-slate-800" aria-live="polite">
+          <div className="px-5 py-4">
+            <div className="text-slate-600 dark:text-slate-400">Orientační cena</div>
+            <div className="font-display font-bold text-[40px] leading-none tabular-nums mt-1 text-slate-900 dark:text-white">
+              {hasQty ? formatCurrency(calculation.totalPrice) : '–'}
             </div>
+            {!hasQty && <div className="mt-1.5 text-slate-600 dark:text-slate-400">Zadejte rozsah práce.</div>}
           </div>
-
-          <div className="text-3xl sm:text-4xl font-semibold tabular-nums text-white">
-            {formatCurrency(calculation.totalPrice)}
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800 text-sm">
-            <div className="bg-slate-800/60 p-2 rounded border border-slate-700/60">
-              <span className="text-slate-400 text-[13px] block">Odměna za práci:</span>
-              <strong className="text-sm tabular-nums font-semibold text-white">{formatCurrency(calculation.laborPrice)}</strong>
-            </div>
-            <div className="bg-slate-800/60 p-2 rounded border border-slate-700/60">
-              <span className="text-slate-400 text-[13px] block">Materiál a chemie:</span>
-              <strong className="text-sm tabular-nums font-semibold text-amber-400">{formatCurrency(calculation.materialPrice)}</strong>
-            </div>
-          </div>
+          {hasQty && (
+            <>
+              <div className="px-5 py-3 flex items-baseline justify-between gap-4">
+                <span className="text-slate-600 dark:text-slate-400">Práce</span>
+                <span className="font-display font-semibold text-xl tabular-nums text-slate-900 dark:text-white">{formatCurrency(calculation.laborPrice)}</span>
+              </div>
+              <div className="px-5 py-3 flex items-baseline justify-between gap-4">
+                <span className="text-slate-600 dark:text-slate-400">Materiál</span>
+                <span className="font-display font-semibold text-xl tabular-nums text-slate-900 dark:text-white">{formatCurrency(calculation.materialPrice)}</span>
+              </div>
+              <div className="px-5 py-3 flex items-baseline justify-between gap-4">
+                <span className="text-slate-600 dark:text-slate-400">Doba práce</span>
+                <span className="font-semibold text-slate-900 dark:text-white">cca {daysText(calculation.estimatedDays)}</span>
+              </div>
+            </>
+          )}
         </div>
+        <p className="text-slate-600 dark:text-slate-400">
+          Počítá se s průměrnými sazbami {formatCurrency(Math.round(selectedTrade.laborRatePerUnit * qualityMultiplier))} za práci a{' '}
+          {formatCurrency(Math.round(selectedTrade.materialRatePerUnit * qualityMultiplier))} za materiál na {selectedTrade.unit}, ne s vaším ceníkem. Ve smlouvě
+          ceny upravíte.
+        </p>
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-3 pt-1">
-          <button
-            type="button"
-            onClick={handleCopyEstimate}
-            className="min-h-11 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-sm transition-colors cursor-pointer"
-          >
-            {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-            <span>{copied ? 'Zkopírováno!' : 'Zkopírovat pro SMS / WhatsApp'}</span>
-          </button>
-
+        <div className="flex flex-wrap gap-2.5">
           <button
             type="button"
             onClick={handleApply}
-            className="min-h-11 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-sm transition-colors cursor-pointer shadow-xs"
+            disabled={!hasQty}
+            className="min-h-11 px-5 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <ArrowRight className="w-4 h-4" />
-            <span>Převést do Smlouvy o dílo</span>
+            <ArrowRight className="w-[18px] h-[18px]" />
+            Převést do smlouvy
+          </button>
+          <button
+            type="button"
+            onClick={handleCopyEstimate}
+            disabled={!hasQty}
+            className="min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {copied ? <Check className="w-[18px] h-[18px]" /> : <Copy className="w-[18px] h-[18px]" />}
+            {copied ? 'Zkopírováno' : 'Zkopírovat do zprávy'}
           </button>
         </div>
-      </Dialog>
+      </div>
+    </Dialog>
   );
 };

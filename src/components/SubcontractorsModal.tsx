@@ -210,7 +210,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
       item.taskDescription ? `• Činnost: ${item.taskDescription}` : '',
       `• Celková odměna: ${formatCurrency(total)}`,
       `• Již vyplaceno: ${formatCurrency(item.paidAmount || 0)}`,
-      remaining > 0 ? `• Zbývá doplatit: ${formatCurrency(remaining)}` : '• Stav: ZCELA VYPLACENO',
+      remaining > 0 ? `• Zbývá doplatit: ${formatCurrency(remaining)}` : '• Stav: vše vyplaceno',
       ``,
       `Potvrzení o odvedené práci a vyplacené odměně.`,
     ]
@@ -235,46 +235,44 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
           {/* Summary KPI Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60">
-              <span className="text-[13px] font-semibold text-amber-700 dark:text-amber-400 block mb-1">
+            <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <span className="text-sm text-slate-600 dark:text-slate-400 block mb-1">
                 Odpracováno
               </span>
-              <div className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white flex items-baseline gap-1">
+              <div className="font-display text-2xl font-semibold text-slate-900 dark:text-white flex items-baseline gap-1">
                 <span>{totalHours}</span>
                 <span className="text-sm font-semibold text-slate-500 font-sans">hod</span>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-              <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
+            <div className="p-3.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <span className="text-sm text-slate-600 dark:text-slate-400 block mb-1">
                 Celkem pro partu
               </span>
-              <div className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">
+              <div className="font-display text-2xl font-semibold text-slate-900 dark:text-white">
                 {formatCurrency(totalCost)}
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/60">
-              <span className="text-[13px] font-semibold text-emerald-700 dark:text-emerald-400 block mb-1">
+            <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <span className="text-sm text-slate-600 dark:text-slate-400 block mb-1">
                 Vyplaceno zálohou
               </span>
-              <div className="text-xl sm:text-2xl font-semibold text-emerald-700 dark:text-emerald-300">
+              <div className="font-display text-2xl font-semibold text-slate-900 dark:text-white">
                 {formatCurrency(totalPaid)}
               </div>
             </div>
 
             <div className={`p-3.5 rounded-xl border ${
               totalRemaining > 0
-                ? 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-300 dark:border-rose-900/60'
-                : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700'
+                ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
             }`}>
-              <span className={`text-[13px] font-semibold block mb-1 ${
-                totalRemaining > 0 ? 'text-rose-700 dark:text-rose-400' : 'text-slate-400'
-              }`}>
+              <span className="text-sm text-slate-600 dark:text-slate-400 block mb-1">
                 Zbývá doplatit
               </span>
               <div className={`text-xl sm:text-2xl font-semibold ${
-                totalRemaining > 0 ? 'text-rose-700 dark:text-rose-300' : 'text-slate-900 dark:text-white'
+                'font-display text-slate-900 dark:text-white'
               }`}>
                 {formatCurrency(totalRemaining)}
               </div>
@@ -285,7 +283,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
           <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1">
             <button
               onClick={() => setIsAdding(!isAdding)}
-              className="min-h-11 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold shadow-xs active:scale-95 transition-all cursor-pointer"
+              className="min-h-11 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>{isAdding ? 'Zavřít formulář' : 'Zapsat směnu / úkol parťáka'}</span>
@@ -294,10 +292,10 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={handleSyncToExpenses}
-                className="min-h-11 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
+                className="min-h-11 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold cursor-pointer transition-colors"
                 title="Zapsat náklady na partu do celkových výdajů stavby"
               >
-                <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                <DollarSign className="w-3.5 h-3.5" />
                 <span>Propis do nákladů stavby</span>
               </button>
             </div>
@@ -468,7 +466,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="min-h-11 inline-flex items-center justify-center px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold shadow-sm cursor-pointer transition-colors"
+                  className="min-h-11 inline-flex items-center justify-center px-5 py-2 rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-300 text-slate-900 text-sm font-semibold cursor-pointer transition-colors"
                 >
                   Uložit záznam práce
                 </button>
@@ -483,7 +481,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
             </h4>
 
             {subcontractors.length === 0 ? (
-              <div className="p-8 text-center rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="p-8 text-center rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
                 <Users className="w-8 h-8 mx-auto text-slate-400" />
                 <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                   Zatím nemáte zapsaného žádného parťáka ani brigádníka
@@ -536,7 +534,7 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                             </span>
                           )}
                           <span>
-                            Vyplaceno: <strong className="text-emerald-600">{formatCurrency(item.paidAmount || 0)}</strong>
+                            Vyplaceno: <strong className="text-slate-900 dark:text-white">{formatCurrency(item.paidAmount || 0)}</strong>
                           </span>
                           {remaining > 0 && (
                             <span className="text-rose-600 font-semibold">
@@ -557,21 +555,21 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
                             onClick={() => handleTogglePaid(item.id)}
                             className={`min-h-11 inline-flex items-center justify-center text-[13px] font-semibold px-2.5 py-1 rounded-md cursor-pointer transition-colors ${
                               item.isFullyPaid
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 hover:bg-emerald-50'
+                                ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                : 'border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
                             }`}
                           >
-                            {item.isFullyPaid ? '✓ Vyplaceno celkem' : 'Označit vyplaceno'}
+                            {item.isFullyPaid ? 'Vyplaceno' : 'Označit vyplaceno'}
                           </button>
                         </div>
 
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => handleSendWhatsApp(item)}
-                            className="min-h-11 min-w-11 inline-flex items-center justify-center p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 cursor-pointer transition-all"
+                            className="min-h-11 min-w-11 inline-flex items-center justify-center p-2 rounded-xl border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-all"
                             title="Odeslat parťákovi souhrn na WhatsApp"
                           >
-                            <Send className="w-4 h-4 text-emerald-600" />
+                            <Send className="w-4 h-4" />
                           </button>
 
                           <button
@@ -592,13 +590,13 @@ export const SubcontractorsModal: React.FC<SubcontractorsModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex items-center justify-between">
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <span className="text-sm text-slate-500 font-medium">
             Celkem nákladů na partu: <strong>{formatCurrency(totalCost)}</strong>
           </span>
           <button
             onClick={onClose}
-            className="min-h-11 inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-sm font-semibold cursor-pointer transition-colors"
+            className="min-h-11 inline-flex items-center justify-center px-5 py-2.5 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold cursor-pointer transition-colors"
           >
             Hotovo
           </button>

@@ -1,25 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { Dialog } from './Dialog';
-import {
-  X,
-  Plus,
-  Trash2,
-  DollarSign,
-  TrendingUp,
-  Receipt,
-  Camera,
-  Upload,
-  Calendar,
-  Building,
-  Tag,
-  Percent,
-  CheckCircle,
-  FileSpreadsheet,
-  Printer,
-} from 'lucide-react';
+import { Trash2, Camera, Check } from 'lucide-react';
 import { Contract, ContractExpense, ExpenseCategory } from '../types/contract';
 import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
 import { compressImageFile } from '../utils/imageCompression';
+import { EXPENSE_CATEGORY_LABELS } from '../utils/expenseCategories';
 
 interface ExpensesAndProfitModalProps {
   isOpen: boolean;
@@ -29,31 +14,6 @@ interface ExpensesAndProfitModalProps {
   onToast?: (type: 'success' | 'error' | 'info', text: string) => void;
 }
 
-const CATEGORY_META: Record<
-  ExpenseCategory,
-  { label: string; badgeClass: string }
-> = {
-  material: {
-    label: 'Materiál na stavbu',
-    badgeClass: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700',
-  },
-  tools: {
-    label: 'Nářadí a půjčovna',
-    badgeClass: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700',
-  },
-  subcontractor: {
-    label: 'Subdodavatel / Pomocník',
-    badgeClass: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700',
-  },
-  travel: {
-    label: 'Doprava a PHM',
-    badgeClass: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700',
-  },
-  other: {
-    label: 'Ostatní výdaje',
-    badgeClass: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700',
-  },
-};
 
 export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
   isOpen,
@@ -72,6 +32,8 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
   const [receiptPhotoUrl, setReceiptPhotoUrl] = useState<string | undefined>(undefined);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [selectedReceiptPreview, setSelectedReceiptPreview] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ContractExpense | null>(null);
+  const [errors, setErrors] = useState<{ title?: string; amount?: string }>({});
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -90,12 +52,6 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
   // Čistý zisk a marže
   const netProfit = totalIncome - totalExpenses;
   const marginPercent = totalIncome > 0 ? Math.round((netProfit / totalIncome) * 100) : 0;
-
-  // Subtotals per category
-  const expensesByCategory = expenses.reduce((acc, curr) => {
-    acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
-    return acc;
-  }, {} as Record<ExpenseCategory, number>);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -116,13 +72,13 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
 
   const handleAddExpense = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) {
-      if (onToast) onToast('error', 'Zadejte název výdaje.');
-      return;
-    }
     const numAmount = typeof amount === 'number' ? amount : parseFloat(String(amount));
-    if (isNaN(numAmount) || numAmount <= 0) {
-      if (onToast) onToast('error', 'Zadejte platnou částku výdaje větší než 0 Kč.');
+    const nextErrors: { title?: string; amount?: string } = {};
+    if (!title.trim()) nextErrors.title = 'Napište, za co výdaj byl.';
+    if (isNaN(numAmount) || numAmount <= 0) nextErrors.amount = 'Zadejte částku větší než 0 Kč.';
+    setErrors(nextErrors);
+    if (nextErrors.title || nextErrors.amount) {
+      document.getElementById(nextErrors.title ? 'vydaj-nazev' : 'vydaj-castka')?.focus();
       return;
     }
 
@@ -161,14 +117,7 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
   };
 
   const handleDeleteExpense = (id: string) => {
-    const itemToDelete = expenses.find((e) => e.id === id);
-    let confirmed = true;
-    try {
-      confirmed = window.confirm(`Opravdu chcete smazat výdaj „${itemToDelete?.title || 'tento výdaj'}“?`);
-    } catch {
-      confirmed = true;
-    }
-    if (!confirmed) return;
+    setDeleteTarget(null);
 
     const updatedExpenses = expenses.filter((e) => e.id !== id);
     setExpenses(updatedExpenses);
@@ -182,6 +131,19 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
     if (onToast) onToast('info', 'Výdaj byl odstraněn.');
   };
 
+  const field =
+    'min-h-11 w-full px-3 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white';
+  const label = 'block font-semibold text-slate-900 dark:text-slate-100 mb-1.5';
+  const outline =
+    'min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors disabled:opacity-60';
+  const chip = (on: boolean) =>
+    `min-h-11 px-3 inline-flex items-center rounded-md border font-medium cursor-pointer transition-colors ${
+      on
+        ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
+        : 'border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
+    }`;
+  const expenseWord = (n: number) => (n === 1 ? 'výdaj' : n >= 2 && n <= 4 ? 'výdaje' : 'výdajů');
+
   return (
     <Dialog
       title="Náklady a zisk"
@@ -191,418 +153,228 @@ export const ExpensesAndProfitModal: React.FC<ExpensesAndProfitModalProps> = ({
       closeOnBackdrop={false}
       onClose={onClose}
     >
-
-        {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-          {/* KPI Dashboard */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {/* Příjmy celkem */}
-            <div className="p-3.5 sm:p-4 rounded-xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80">
-              <span className="text-sm font-semibold text-blue-700 dark:text-blue-300 block mb-1">
-                Příjmy celkem
-              </span>
-              <span className="text-lg sm:text-2xl font-semibold text-blue-950 dark:text-blue-100 block">
-                {formatCurrency(totalIncome)}
-              </span>
-              <span className="text-[13px] text-blue-600/80 dark:text-blue-300/80 mt-0.5 block">
-                Základ {formatCurrency(contract.price)}
-                {totalAmendments !== 0 && (
-                  <span> {totalAmendments > 0 ? `+${formatCurrency(totalAmendments)}` : formatCurrency(totalAmendments)}</span>
-                )}
-              </span>
-            </div>
-
-            {/* Skutečné náklady */}
-            <div className="p-3.5 sm:p-4 rounded-xl bg-rose-50/60 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/80">
-              <span className="text-sm font-semibold text-rose-700 dark:text-rose-300 block mb-1">
-                Skutečné náklady
-              </span>
-              <span className="text-lg sm:text-2xl font-semibold text-rose-950 dark:text-rose-100 block">
-                {formatCurrency(totalExpenses)}
-              </span>
-              <span className="text-[13px] text-rose-600/80 dark:text-rose-300/80 mt-0.5 block">
-                {expenses.length} {expenses.length === 1 ? 'zaznamenaný výdaj' : expenses.length < 5 ? 'zaznamenané výdaje' : 'zaznamenaných výdajů'}
-              </span>
-            </div>
-
-            {/* Čistý zisk */}
-            <div
-              className={`p-3.5 sm:p-4 rounded-xl border ${
-                netProfit >= 0
-                  ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800'
-                  : 'bg-red-50/70 dark:bg-red-950/40 border-red-300 dark:border-red-800'
-              }`}
-            >
-              <span
-                className={`text-sm font-semibold block mb-1 ${
-                  netProfit >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-700 dark:text-red-300'
-                }`}
-              >
-                Čistý zisk zakázky
-              </span>
-              <span
-                className={`text-lg sm:text-2xl font-semibold block ${
-                  netProfit >= 0 ? 'text-emerald-950 dark:text-emerald-100' : 'text-red-950 dark:text-red-100'
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-[15px]">
+        {/* Souhrn: jeden rámeček s řádky (vzor Přehledu) */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="px-5 py-4 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <div className="text-slate-600 dark:text-slate-400">
+                {netProfit >= 0 ? 'Zůstane po odečtení nákladů' : 'Zakázka je ve ztrátě'}
+              </div>
+              <div
+                className={`font-display font-bold text-[40px] leading-none tabular-nums mt-1 ${
+                  netProfit >= 0 ? 'text-slate-900 dark:text-white' : 'text-rose-700 dark:text-rose-400'
                 }`}
               >
                 {formatCurrency(netProfit)}
-              </span>
-              <span
-                className={`text-[13px] font-medium mt-0.5 block ${
-                  netProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
-                }`}
-              >
-                {netProfit >= 0 ? 'Výdělek po odečtení nákladů' : 'Zakázka je ve ztrátě'}
-              </span>
-            </div>
-
-            {/* Zisková marže */}
-            <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
-              <span className="text-sm font-semibold text-slate-600 dark:text-slate-300 block mb-1">
-                Zisková marže
-              </span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-lg sm:text-2xl font-semibold text-slate-900 dark:text-white">
-                  {marginPercent}%
-                </span>
-                <span className="text-sm text-slate-500 dark:text-slate-400">
-                  z tržeb
-                </span>
-              </div>
-              {/* Progress bar marže */}
-              <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 mt-2 overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-300 ${
-                    marginPercent >= 50
-                      ? 'bg-emerald-500'
-                      : marginPercent >= 25
-                      ? 'bg-amber-500'
-                      : 'bg-rose-500'
-                  }`}
-                  style={{ width: `${Math.max(0, Math.min(100, marginPercent))}%` }}
-                />
               </div>
             </div>
-          </div>
-
-          {/* Form: Přidat nový náklad */}
-          <div className="p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                <Plus className="w-4 h-4 text-emerald-600" />
-                <span>Přidat náklad / výdaj k této zakázce</span>
-              </h3>
-            </div>
-
-            <form onSubmit={handleAddExpense} className="space-y-3.5">
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                {/* Název položky */}
-                <div className="sm:col-span-5">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Název výdaje / materiálu *
-                  </label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="např. Nákup lepidla a hydroizolace"
-                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
-                    required
-                  />
+            {totalIncome > 0 && (
+              <div className="w-full sm:w-56 text-left sm:text-right">
+                <div className="text-slate-600 dark:text-slate-400">{marginPercent} % z ceny díla</div>
+                <div className="mt-2 h-2 rounded-sm bg-slate-200 dark:bg-slate-700 overflow-hidden" aria-hidden="true">
+                  <div className="h-full bg-slate-900 dark:bg-white" style={{ width: `${Math.max(0, Math.min(100, marginPercent))}%` }} />
                 </div>
-
-                {/* Dodavatel / Obchod */}
-                <div className="sm:col-span-3">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Dodavatel / Prodejna
-                  </label>
-                  <input
-                    type="text"
-                    value={supplier}
-                    onChange={(e) => setSupplier(e.target.value)}
-                    placeholder="např. DEK, Hornbach, OBI"
-                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
-                  />
-                </div>
-
-                {/* Částka v Kč */}
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Částka (Kč) *
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value ? parseFloat(e.target.value) : '')}
-                    placeholder="Kč"
-                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
-                    required
-                  />
-                </div>
-
-                {/* Datum */}
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Datum výdaje
-                  </label>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="min-h-11 w-full px-2.5 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
-                  />
-                </div>
-              </div>
-
-              {/* Kategorie + Foto účtenky */}
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-                <div className="sm:col-span-4">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Kategorie nákladu
-                  </label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
-                    className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
-                  >
-                    {(Object.keys(CATEGORY_META) as ExpenseCategory[]).map((catKey) => (
-                      <option key={catKey} value={catKey}>
-                        {CATEGORY_META[catKey].label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="sm:col-span-5">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Fotka účtenky / faktury z nákupu
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handlePhotoUpload}
-                      className="hidden"
-                      id="expense-receipt-upload"
-                    />
-                    <label
-                      htmlFor="expense-receipt-upload"
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 bg-white dark:bg-slate-900 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors shadow-2xs"
-                    >
-                      <Camera className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>{isUploadingPhoto ? 'Zpracovávám...' : receiptPhotoUrl ? 'Změnit fotku' : 'Vyfotit / nahrát účtenku'}</span>
-                    </label>
-
-                    {receiptPhotoUrl && (
-                      <div className="flex items-center gap-1.5">
-                        <img
-                          src={receiptPhotoUrl}
-                          alt="Účtenka"
-                          onClick={() => setSelectedReceiptPreview(receiptPhotoUrl)}
-                          className="w-8 h-8 rounded object-cover border border-slate-300 cursor-pointer hover:opacity-80"
-                          title="Kliknutím zvětšit"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setReceiptPhotoUrl(undefined)}
-                          className="min-h-11 min-w-11 inline-flex items-center justify-center text-sm text-red-500 hover:underline"
-                        >
-                          Smazat foto
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="sm:col-span-3 sm:self-end">
-                  <button
-                    type="submit"
-                    className="min-h-11 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 border-[1.5px] border-slate-900 font-semibold text-sm transition-colors shadow-xs cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Uložit výdaj</span>
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-
-          {/* Přehled výdajů podle kategorií */}
-          {expenses.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-                Rozpad nákladů:
-              </span>
-              {(Object.keys(CATEGORY_META) as ExpenseCategory[]).map((catKey) => {
-                const catSum = expensesByCategory[catKey] || 0;
-                if (catSum === 0) return null;
-                const meta = CATEGORY_META[catKey];
-                return (
-                  <span
-                    key={catKey}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm font-medium border ${meta.badgeClass}`}
-                  >
-                    <span>{meta.label}:</span>
-                    <strong className=" tabular-nums font-semibold">{formatCurrency(catSum)}</strong>
-                  </span>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Tabulka zaznamenaných výdajů */}
-          <div>
-            <div className="flex items-center justify-between mb-2.5">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                Položkový seznam výdajů ({expenses.length})
-              </h3>
-              {expenses.length > 0 && (
-                <span className="text-sm font-semibold text-slate-500">
-                  Celkem: <strong>{formatCurrency(totalExpenses)}</strong>
-                </span>
-              )}
-            </div>
-
-            {expenses.length === 0 ? (
-              <div className="text-center py-8 px-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-                <Receipt className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                  K této zakázce zatím nemáte zadané žádné výdaje.
-                </p>
-                <p className="text-sm text-slate-400 mt-1">
-                  Přidejte nákupy materiálu a nářadí výše, abyste okamžitě viděli svůj reálný čistý zisk.
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                <table className="w-full text-left text-sm sm:text-sm">
-                  <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[13px]">
-                    <tr>
-                      <th className="py-2.5 px-3">Datum</th>
-                      <th className="py-2.5 px-3">Položka / Název výdaje</th>
-                      <th className="py-2.5 px-3 hidden sm:table-cell">Dodavatel</th>
-                      <th className="py-2.5 px-3 hidden md:table-cell">Kategorie</th>
-                      <th className="py-2.5 px-3 text-center">Účtenka</th>
-                      <th className="py-2.5 px-3 text-right">Částka</th>
-                      <th className="py-2.5 px-3 text-right">Akce</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                    {expenses.map((exp) => {
-                      const meta = CATEGORY_META[exp.category];
-                      return (
-                        <tr
-                          key={exp.id}
-                          className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                        >
-                          <td className="py-2.5 px-3 text-slate-500 whitespace-nowrap">
-                            {formatDateCs(exp.date)}
-                          </td>
-                          <td className="py-2.5 px-3 font-medium text-slate-900 dark:text-white">
-                            <div>{exp.title}</div>
-                            {exp.notes && (
-                              <div className="text-[13px] text-slate-400 italic">{exp.notes}</div>
-                            )}
-                          </td>
-                          <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 hidden sm:table-cell">
-                            {exp.supplier || '—'}
-                          </td>
-                          <td className="py-2.5 px-3 hidden md:table-cell">
-                            <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium border ${meta.badgeClass}`}
-                            >
-                              <span>{meta.label}</span>
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3 text-center">
-                            {exp.receiptPhotoUrl ? (
-                              <button
-                                type="button"
-                                onClick={() => setSelectedReceiptPreview(exp.receiptPhotoUrl || null)}
-                                className="min-h-11 min-w-11 inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-                                title="Zobrazit fotku účtenky"
-                              >
-                                <Camera className="w-3.5 h-3.5" />
-                                <span>Foto</span>
-                              </button>
-                            ) : (
-                              <span className="text-slate-300 dark:text-slate-600 text-sm">—</span>
-                            )}
-                          </td>
-                          <td className="py-2.5 px-3 text-right font-semibold text-slate-900 dark:text-white whitespace-nowrap">
-                            {formatCurrency(exp.amount)}
-                          </td>
-                          <td className="py-2.5 px-3 text-right">
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteExpense(exp.id)}
-                              className="min-h-11 min-w-11 inline-flex items-center justify-center p-1 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
-                              title="Smazat výdaj"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                  <tfoot className="bg-slate-50 dark:bg-slate-800/80 font-semibold border-t border-slate-200 dark:border-slate-700">
-                    <tr>
-                      <td colSpan={2} className="py-2.5 px-3 text-slate-700 dark:text-slate-300">
-                        Celkem výdaje:
-                      </td>
-                      <td colSpan={3} className="hidden sm:table-cell"></td>
-                      <td className="py-2.5 px-3 text-right text-rose-600 dark:text-rose-400">
-                        {formatCurrency(totalExpenses)}
-                      </td>
-                      <td></td>
-                    </tr>
-                  </tfoot>
-                </table>
               </div>
             )}
           </div>
-        </div>
-
-        {/* Modal Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 flex items-center justify-between shrink-0">
-          <div className="text-sm text-slate-500 dark:text-slate-400">
-            Výdaje se ukládají k zakázce a promítnou se do Financí.
+          <div className="px-5 py-3 flex items-baseline justify-between gap-4">
+            <span className="text-slate-600 dark:text-slate-400">Cena díla{totalAmendments !== 0 ? ' včetně víceprací' : ''}</span>
+            <span className="font-display font-semibold text-xl tabular-nums text-slate-900 dark:text-white">{formatCurrency(totalIncome)}</span>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-11 inline-flex items-center justify-center px-4 py-2 rounded-lg bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-semibold text-sm transition-colors cursor-pointer shadow-xs"
-          >
-            Hotovo
-          </button>
+          <div className="px-5 py-3 flex items-baseline justify-between gap-4">
+            <span className="text-slate-600 dark:text-slate-400">
+              Náklady ({expenses.length} {expenseWord(expenses.length)})
+            </span>
+            <span className="font-display font-semibold text-xl tabular-nums text-slate-900 dark:text-white">
+              {totalExpenses > 0 ? `− ${formatCurrency(totalExpenses)}` : formatCurrency(0)}
+            </span>
+          </div>
         </div>
-      
 
-      {/* Lightbox / Zvětšená účtenka */}
-      {selectedReceiptPreview && (
-        <div
-          className="fixed inset-0 z-60 bg-black/80 flex items-center justify-center p-4 animate-in fade-in duration-100"
-          onClick={() => setSelectedReceiptPreview(null)}
-        >
-          <div className="relative max-w-2xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-xl overflow-hidden p-2 shadow-2xl">
-            <button
-              onClick={() => setSelectedReceiptPreview(null)}
-              className="absolute top-3 right-3 p-1.5 rounded-full bg-slate-900/70 text-white hover:bg-black transition-colors"
-            >
-              <X className="w-5 h-5" />
+        {/* Přidat výdaj */}
+        <form onSubmit={handleAddExpense} className="space-y-4" noValidate>
+          <h3 className="font-display font-semibold text-xl text-slate-900 dark:text-white">Přidat výdaj</h3>
+          <div className="grid grid-cols-2 lg:grid-cols-[2fr_1.3fr_1fr_1fr] gap-3">
+            <div className="col-span-2 lg:col-span-1">
+              <label htmlFor="vydaj-nazev" className={label}>
+                Co jste koupili
+              </label>
+              <input
+                id="vydaj-nazev"
+                type="text"
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  if (errors.title && e.target.value.trim()) setErrors((x) => ({ ...x, title: undefined }));
+                }}
+                placeholder="např. lepidlo a hydroizolace"
+                aria-invalid={!!errors.title}
+                aria-describedby={errors.title ? 'vydaj-nazev-chyba' : undefined}
+                className={`${field} ${errors.title ? '!border-rose-600' : ''}`}
+              />
+              {errors.title && (
+                <p id="vydaj-nazev-chyba" role="alert" className="mt-1 text-rose-700 dark:text-rose-400">
+                  {errors.title}
+                </p>
+              )}
+            </div>
+            <div className="col-span-2 lg:col-span-1">
+              <label htmlFor="vydaj-dodavatel" className={label}>
+                Kde <span className="font-normal text-slate-600 dark:text-slate-400">(nepovinné)</span>
+              </label>
+              <input id="vydaj-dodavatel" type="text" value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder="např. DEK, Hornbach" className={field} />
+            </div>
+            <div>
+              <label htmlFor="vydaj-castka" className={label}>
+                Částka (Kč)
+              </label>
+              <input
+                id="vydaj-castka"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                value={amount}
+                onChange={(e) => {
+                  const v = e.target.value === '' ? '' : parseFloat(e.target.value);
+                  setAmount(v);
+                  if (errors.amount && typeof v === 'number' && v > 0) setErrors((x) => ({ ...x, amount: undefined }));
+                }}
+                aria-invalid={!!errors.amount}
+                aria-describedby={errors.amount ? 'vydaj-castka-chyba' : undefined}
+                className={`${field} tabular-nums ${errors.amount ? '!border-rose-600' : ''}`}
+              />
+              {errors.amount && (
+                <p id="vydaj-castka-chyba" role="alert" className="mt-1 text-rose-700 dark:text-rose-400">
+                  {errors.amount}
+                </p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="vydaj-datum" className={label}>
+                Datum
+              </label>
+              <input id="vydaj-datum" type="date" value={date} onChange={(e) => setDate(e.target.value)} className={field} />
+            </div>
+          </div>
+          <div role="group" aria-label="Druh výdaje" className="flex flex-wrap gap-2">
+            {(Object.keys(EXPENSE_CATEGORY_LABELS) as ExpenseCategory[]).map((key) => (
+              <button key={key} type="button" aria-pressed={category === key} onClick={() => setCategory(key)} className={chip(category === key)}>
+                {EXPENSE_CATEGORY_LABELS[key]}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoUpload} className="hidden" />
+            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploadingPhoto} className={outline}>
+              <Camera className="w-[18px] h-[18px]" />
+              <span>{isUploadingPhoto ? 'Zpracovávám fotku…' : receiptPhotoUrl ? 'Vyfotit znovu' : 'Vyfotit účtenku'}</span>
             </button>
-            <img
-              src={selectedReceiptPreview}
-              alt="Detail účtenky"
-              className="max-h-[82vh] max-w-full object-contain rounded"
-            />
+            {receiptPhotoUrl && (
+              <span className="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                <Check className="w-4 h-4" />
+                Fotka účtenky je připravená
+              </span>
+            )}
+            <button
+              type="submit"
+              className="min-h-11 px-5 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold cursor-pointer transition-colors"
+            >
+              Uložit výdaj
+            </button>
           </div>
-        </div>
+        </form>
+
+        {/* Výdaje */}
+        <section aria-labelledby="vydaje-nadpis" className="space-y-2.5">
+          <div className="flex items-baseline justify-between gap-3">
+            <h3 id="vydaje-nadpis" className="font-display font-semibold text-xl text-slate-900 dark:text-white">
+              Výdaje
+            </h3>
+            {expenses.length > 0 && <span className="text-slate-600 dark:text-slate-400">celkem {formatCurrency(totalExpenses)}</span>}
+          </div>
+          {expenses.length === 0 ? (
+            <p className="px-5 py-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md text-slate-600 dark:text-slate-300">
+              Zatím žádné výdaje. Zapište nákupy materiálu, nářadí nebo dopravu a uvidíte, kolik vám ze zakázky zůstane.
+            </p>
+          ) : (
+            <ul className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md divide-y divide-slate-100 dark:divide-slate-800">
+              {expenses.map((exp) => (
+                <li key={exp.id} className="px-5 py-3 flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-slate-900 dark:text-white">{exp.title}</div>
+                    <div className="text-slate-600 dark:text-slate-400">
+                      {[formatDateCs(exp.date), exp.supplier, EXPENSE_CATEGORY_LABELS[exp.category]].filter(Boolean).join(' · ')}
+                      {exp.receiptPhotoUrl && (
+                        <>
+                          {' · '}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedReceiptPreview(exp.receiptPhotoUrl || null)}
+                            className="text-blue-600 dark:text-blue-300 underline underline-offset-2 cursor-pointer"
+                          >
+                            účtenka
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    {exp.notes && <div className="text-slate-600 dark:text-slate-400">{exp.notes}</div>}
+                  </div>
+                  <span className="font-display font-semibold text-xl tabular-nums text-slate-900 dark:text-white whitespace-nowrap">
+                    {formatCurrency(exp.amount)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(exp)}
+                    aria-label={`Smazat výdaj ${exp.title}`}
+                    title="Smazat výdaj"
+                    className="min-h-11 min-w-11 -mr-2 inline-flex items-center justify-center rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+
+      {/* Patička */}
+      <div className="px-4 sm:px-6 py-3.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0">
+        <span className="text-slate-600 dark:text-slate-400">Výdaje se ukládají k zakázce a promítnou se do Financí.</span>
+        <button type="button" onClick={onClose} className={outline}>
+          Hotovo
+        </button>
+      </div>
+
+      {/* Zvětšená účtenka */}
+      {selectedReceiptPreview && (
+        <Dialog title="Účtenka" size="2xl" onClose={() => setSelectedReceiptPreview(null)}>
+          <img src={selectedReceiptPreview} alt="Fotka účtenky" className="max-h-[75vh] w-full object-contain" />
+        </Dialog>
+      )}
+
+      {/* Potvrzení smazání */}
+      {deleteTarget && (
+        <Dialog title="Smazat výdaj?" onClose={() => setDeleteTarget(null)}>
+          <div className="space-y-5 text-[15px]">
+            <p>
+              Výdaj <strong>{deleteTarget.title}</strong> ({formatCurrency(deleteTarget.amount)}) se odstraní ze zakázky.
+            </p>
+            <div className="flex flex-wrap justify-end gap-2.5">
+              <button type="button" onClick={() => setDeleteTarget(null)} className={outline}>
+                Zpět
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteExpense(deleteTarget.id)}
+                className="min-h-11 px-4 inline-flex items-center justify-center rounded-md border-[1.5px] border-rose-700 text-rose-700 dark:border-rose-400 dark:text-rose-300 font-semibold hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+              >
+                Smazat výdaj
+              </button>
+            </div>
+          </div>
+        </Dialog>
       )}
     </Dialog>
   );

@@ -340,7 +340,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                 }}
                 className={`min-h-11 inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
                   !isCreatingNew && selectedProtocolId === p.id
-                    ? 'bg-slate-600 text-white shadow-xs'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
                     : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                 }`}
               >
@@ -355,7 +355,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
               triggerHaptic('selection');
               setIsCreatingNew(true);
             }}
-            className="min-h-11 px-3.5 py-1.5 rounded-xl bg-slate-600 hover:bg-slate-700 text-white font-semibold text-sm flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="min-h-11 px-3.5 py-1.5 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm flex items-center gap-1.5 cursor-pointer transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Vystavit nový protokol</span>
@@ -523,11 +523,12 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                       aria-pressed={result === 'vyhovuje'}
                       className={`min-h-11 inline-flex items-center justify-center px-3 py-1 rounded-xl text-sm font-semibold cursor-pointer transition-all ${
                         result === 'vyhovuje'
-                          ? 'bg-emerald-600 text-white shadow-xs'
-                          : 'bg-white dark:bg-slate-800 text-slate-600'
+                          ? 'bg-emerald-700 text-white'
+                          : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100'
                       }`}
                     >
-                      ✓ Vyhovuje
+                      <Check className="w-4 h-4 mr-1.5" aria-hidden="true" />
+                      Vyhovuje
                     </button>
                     <button
                       type="button"
@@ -538,11 +539,12 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                       aria-pressed={result === 'nevyhovuje'}
                       className={`min-h-11 inline-flex items-center justify-center px-3 py-1 rounded-xl text-sm font-semibold cursor-pointer transition-all ${
                         result === 'nevyhovuje'
-                          ? 'bg-rose-600 text-white shadow-xs'
-                          : 'bg-white dark:bg-slate-800 text-slate-600'
+                          ? 'bg-rose-700 text-white'
+                          : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100'
                       }`}
                     >
-                      ✗ Nevyhovuje
+                      <X className="w-4 h-4 mr-1.5" aria-hidden="true" />
+                      Nevyhovuje
                     </button>
                   </div>
 
@@ -633,7 +635,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                       className="min-h-11 p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-left font-semibold cursor-pointer"
                     >
                       <span className="text-[13px] text-slate-400 block">Zkoušku provedl (Technik)</span>
-                      <span>{contractorSignature ? '✓ Podepsáno' : '+ Podepsat prstem'}</span>
+                      <span>{contractorSignature ? 'Podepsáno' : 'Podepsat prstem'}</span>
                     </button>
 
                     <button
@@ -642,7 +644,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                       className="min-h-11 p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-left font-semibold cursor-pointer"
                     >
                       <span className="text-[13px] text-slate-400 block">Za objednatele / TDI</span>
-                      <span>{clientSignature ? '✓ Podepsáno' : '+ Podepsat prstem'}</span>
+                      <span>{clientSignature ? 'Podepsáno' : 'Podepsat prstem'}</span>
                     </button>
                   </div>
                 )}
@@ -653,13 +655,13 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                 <button
                   type="button"
                   onClick={() => setIsCreatingNew(false)}
-                  className="min-h-11 inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100"
+                  className="min-h-11 inline-flex items-center justify-center px-4 py-2.5 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold cursor-pointer"
                 >
                   Zrušit
                 </button>
                 <button
                   type="submit"
-                  className="min-h-11 px-5 py-2.5 rounded-xl bg-slate-600 hover:bg-slate-700 text-white font-semibold text-sm sm:text-sm flex items-center gap-2 shadow-md cursor-pointer active:scale-95 transition-all"
+                  className="min-h-11 px-5 py-2.5 rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold text-sm flex items-center gap-2 cursor-pointer transition-colors"
                 >
                   <Check className="w-4 h-4 stroke-[3]" />
                   <span>Vystavit a uložit protokol ({protocolNumber})</span>
@@ -796,7 +798,7 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
                   <button
                     type="button"
                     onClick={() => handleShareWhatsApp(selectedProtocol)}
-                    className="min-h-[42px] px-3.5 py-2 rounded-xl border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    className="min-h-11 px-3.5 py-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm flex items-center gap-1.5 cursor-pointer transition-all"
                   >
                     <Share2 className="w-4 h-4" />
                     <span>Sdílet protokol (WhatsApp)</span>
@@ -832,14 +834,14 @@ export const TechnicalProtocolsModal: React.FC<TechnicalProtocolsModalProps> = (
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 flex items-center justify-between shrink-0">
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
           <div className="text-[13px] text-slate-500 font-medium">
             Protokoly se ukládají k zakázce a jdou do její složky.
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="min-h-11 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-800 dark:text-slate-200 font-semibold text-sm"
+            className="min-h-11 inline-flex items-center justify-center px-4 py-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm cursor-pointer"
           >
             Zavřít
           </button>

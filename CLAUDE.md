@@ -54,7 +54,7 @@ Proměnné (případně `STRIPE_SECRET_KEY`) se nastavují v projektu na Vercelu
 ## Vzhled
 
 Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2aA4MkA), zaveden po částech:
-část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; část 2 (hotovo) = přehled, zakázky, faktury, formulář smlouvy s rozpočtem; část 3 = klienti, kalendář, finance, archiv, nastavení a mobilní nabídka „Více“ (hotovo), lišta náhledu dokumentů a lišty jednotlivých dokladů (hotovo); rámy a hlavičky všech oken (hotovo); obsah oken podpis, odeslání, výběr z ceníku, nový dodatek a nový pokladní doklad (hotovo); u ostatních oken (nástroje stavby, náklady, podklady pro účetní, účet, kalkulačka, zkoušky a protokoly, fotodokumentace, podpis zákazníka na zařízení) jsou sjednocené písmo, řezy, barvy a výška ovládacích prvků, rozvržení zůstává původní. Beze změny je jen Složka zakázky (tisková sestava) a okna placení (vypnuté).
+část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; část 2 (hotovo) = přehled, zakázky, faktury, formulář smlouvy s rozpočtem; část 3 = klienti, kalendář, finance, archiv, nastavení a mobilní nabídka „Více“ (hotovo), lišta náhledu dokumentů a lišty jednotlivých dokladů (hotovo); rámy a hlavičky všech oken (hotovo); obsah oken podpis, odeslání, výběr z ceníku, nový dodatek a nový pokladní doklad (hotovo); okna Náklady a zisk, Podklady pro účetní, Kniha jízd, Stavební deník a Kalkulačka jsou přestavěná podle vzoru Přehledu (souhrn v jednom rámečku s velkým číslem, formulář s popisky nad poli, seznam řádků, smazání potvrzené oknem); u ostatních oken (parťáci, půjčené nářadí, nákupní seznam, harmonogram, účet, zkoušky a protokoly, fotodokumentace, podpis zákazníka na zařízení) jsou sjednocené písmo, řezy, barvy, tlačítka a výška ovládacích prvků, rozvržení zůstává původní. Beze změny je jen Složka zakázky (tisková sestava) a okna placení (vypnuté).
 
 - **Barvy** jsou v `src/index.css` v bloku `@theme` jako přemapované palety Tailwindu, takže stávající třídy platí dál:
   `slate-*` = grafit a papír (text `slate-900` #1A1D21, pozadí `slate-50` #F4F5F2), `blue-*` = razítková modrá
@@ -84,6 +84,9 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   parametry, naměřené hodnoty, výsledek ani popis průběhu (hodnota podle normy je jen nápověda v poli) a podpis zákazníka
   nepřebírají ze smlouvy; kniha jízd (`LogbookModal.tsx`) zapíše více dní najednou jen u dnů, které uživatel vybere,
   a nepředvyplňuje kilometry ani sazbu. Částka jízdy se v součtech bere přes `getTripCost` (`utils/tripCost.ts`).
+  Stavební deník (`SiteLogbookModal.tsx`) nepředvyplňuje počasí, teplotu, počet lidí ani hodiny a počasí „nezjišťuje“
+  (rychlé volby jen doplní slovo). Kalkulačka na obhlídce ukazuje „Orientační cenu“ až po zadání rozsahu a vypisuje
+  průměrné sazby, ze kterých počítá (nejsou z ceníku uživatele). Názvy druhů výdajů jsou v `utils/expenseCategories.ts`.
   „Vyfotit účtenku“ na přehledu otevře výběr zakázky a její okno Náklady a zisk (`initialOpenExpenses` v náhledu).
 - **Formuláře** (vzor `ContractForm.tsx`, `BudgetItemsEditor.tsx`): popisek nad polem, pole vysoké aspoň 44 px s linkou
   1,5 px, volby jako přepínací tlačítka (`aria-pressed`), chyba červeně pod polem (`role="alert"`) a zmizí po opravě;
