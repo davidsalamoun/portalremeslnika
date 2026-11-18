@@ -80,6 +80,17 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   nepředvybere), termín, adresu stavby, podpisy, čísla ani fotky. Nahoře je pruh, ze které zakázky vychází.
   `formPreset` v `App.tsx` (také předvybraný klient z tlačítka „Nová smlouva“ v Klientech) platí jen pro jedno
   založení formuláře a zapomene se po odchodu ze záložky.
+- **Úprava uložené zakázky** („Upravit“ v liště náhledu, na mobilu v nabídce Další možnosti): formulář smlouvy v režimu
+  úprav (`formPreset.edit`) mění klienta, popis, cenu/rozpočet, zálohu, termín, adresu stavby a DPH; číslo, druh dokumentu
+  a datum uzavření zůstávají. Jde jen, dokud ji nezamyká podpis klienta, vystavená faktura (i starší číslo od založení),
+  předání ani dodatek (`getEditLock` v `utils/contractEdit.ts`) – potom se mění dodatkem. Nepodepsaný odkaz k online
+  podpisu se při uložení úpravy zruší (`revokePendingSignShare`); když ho klient mezitím podepsal nebo není signál,
+  úprava se neuloží.
+- **Koncept formuláře smlouvy:** rozepsaný formulář (nová smlouva i úprava) se průběžně ukládá jen v zařízení (klíč
+  `contract_form_draft` přes `storage.ts`, do účtu se neposílá) a obnoví se po přepnutí záložky i po návratu z náhledu
+  s pruhem „Pokračujete v rozepsané smlouvě“ a volbou „Začít znovu“. Neobnoví se přes novější pokyn k otevření formuláře
+  (`formPreset.key`: šablona, klient, podle jiné zakázky, kalkulačka). Maže se uložením zakázky, uložením nebo zrušením
+  úpravy a odhlášením.
 - **Nástroje stavby a záznamy** nesmí nic předstírat: zkušební protokoly (`TechnicalProtocolsModal.tsx`) nepředvyplňují
   parametry, naměřené hodnoty, výsledek ani popis průběhu (hodnota podle normy je jen nápověda v poli) a podpis zákazníka
   nepřebírají ze smlouvy; kniha jízd (`LogbookModal.tsx`) zapíše více dní najednou jen u dnů, které uživatel vybere,

@@ -12,6 +12,7 @@ async function fillNewContract(app: Page, description: string, price: string) {
 }
 
 async function saveInPreview(app: Page) {
+  await app.locator('.contract-page').first().waitFor();
   const save = app.getByRole('button', { name: 'Uložit', exact: true });
   if (await save.isVisible()) await save.click();
   else {
@@ -22,6 +23,7 @@ async function saveInPreview(app: Page) {
 }
 
 async function clickEdit(app: Page) {
+  await app.locator('.contract-page').first().waitFor();
   const edit = app.getByRole('button', { name: 'Upravit', exact: true });
   if (await edit.isVisible()) await edit.click();
   else {
@@ -43,6 +45,7 @@ test('rozepsaná smlouva přežije přepnutí záložky a jde začít znovu', as
   await app.locator('#price-input').fill('25000');
   await app.waitForTimeout(600);
   await openTab(app, 'Klienti');
+  await app.getByRole('heading', { level: 1, name: 'Klienti' }).waitFor();
   await openTab(app, 'Nová smlouva');
   await expect(app.getByRole('status').filter({ hasText: 'Pokračujete v rozepsané smlouvě.' })).toBeVisible();
   await expect(app.locator('#work-desc')).toHaveValue('Oprava fasády po zatečení');
