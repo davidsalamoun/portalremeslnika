@@ -5,6 +5,7 @@ import { BudgetItem, PriceListTemplateItem } from '../types/contract';
 import { formatCurrency } from '../utils/numberToWordsCs';
 import { getStoredPriceList } from '../utils/storage';
 import { triggerHaptic } from '../utils/haptics';
+import { isSamplePriceItem } from '../data/defaultPriceList';
 
 export type EstimateForContract = { description: string; items: Omit<BudgetItem, 'id'>[] };
 
@@ -52,6 +53,8 @@ export const QuickEstimateCalculatorModal: React.FC<QuickEstimateCalculatorModal
   const reserve = includeReserve ? Math.round(material * 0.1) : 0;
   const total = labor + material + reserve;
   const hasEstimate = total > 0;
+  // Položky odhadu, které mají pořád ukázkovou cenu z výchozího ceníku (ne cenu uživatele)
+  const sampleCount = new Set(lines.filter((l) => isSamplePriceItem(l.item)).map((l) => l.item.id)).size;
 
   if (!isOpen) return null;
 
@@ -244,13 +247,30 @@ export const QuickEstimateCalculatorModal: React.FC<QuickEstimateCalculatorModal
                     <span className="text-slate-600 dark:text-slate-400">Práce</span>
                     <span className="font-display font-semibold text-xl tabular-nums text-slate-900 dark:text-white">{formatCurrency(labor)}</span>
                   </div>
-                  <div className="px-5 py-3 flex items-baseline justify-between gap-4">
-                    <span className="text-slate-600 dark:text-slate-400">Materiál{reserve > 0 ? ' včetně rezervy' : ''}</span>
-                    <span className="font-display font-semibold text-xl tabular-nums text-slate-900 dark:text-white">{formatCurrency(material + reserve)}</span>
-                  </div>
+                  {material > 0 && (
+                    <div className="px-5 py-3 flex items-baseline justify-between gap-4">
+                      <span className="text-slate-600 dark:text-slate-400">Materiál{reserve > 0 ? ' včetně rezervy' : ''}</span>
+                      <span className="font-display font-semibold text-xl tabular-nums text-slate-900 dark:text-white">{formatCurrency(material + reserve)}</span>
+                    </div>
+                  )}
                 </>
               )}
             </div>
+            {hasEstimate && sampleCount > 0 && (
+              <p className="px-4 py-3 border-l-[3px] border-blue-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                {sampleCount === 1 ? '1 položka má' : `${sampleCount} ${sampleCount <= 4 ? 'položky mají' : 'položek má'}`} ukázkovou cenu z aplikace, ne
+                vaši.{' '}
+                {onOpenPriceList && (
+                  <button
+                    type="button"
+                    onClick={onOpenPriceList}
+                    className="min-h-11 inline-flex items-center text-blue-600 dark:text-blue-300 font-medium underline underline-offset-2 cursor-pointer"
+                  >
+                    Upravit ceník
+                  </button>
+                )}
+              </p>
+            )}
 
             <div className="flex flex-wrap gap-2.5">
               <button

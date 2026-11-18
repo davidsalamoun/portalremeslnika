@@ -75,6 +75,8 @@ test('kalkulačka počítá z ceníku a převede rozpočet do formuláře smlouv
   await dialog.getByRole('spinbutton', { name: /Pokládka keramického obkladu/ }).fill('10');
   // 10 m² × 650 Kč z výchozího ceníku
   await expect(dialog.getByText('Orientační cena').locator('..')).toContainText(/6\s500/);
+  // Výchozí ceník má ukázkové ceny – kalkulačka na to upozorní
+  await expect(dialog).toContainText('1 položka má ukázkovou cenu z aplikace, ne vaši.');
   await dialog.getByRole('button', { name: 'Převést do smlouvy' }).click();
   await expect(dialog).toHaveCount(0);
   await expect(app.getByRole('status').filter({ hasText: 'Rozpočet z kalkulačky na obhlídce.' })).toBeVisible();
@@ -94,6 +96,6 @@ test('podklady pro účetní: druh výdaje česky, souhrn v jednom rámečku', a
 
 test('kalkulačka: odkaz Upravit ceník otevře ceník v nastavení', async ({ app }) => {
   await app.getByRole('button', { name: 'Kalkulačka na obhlídce' }).first().click();
-  await app.getByRole('dialog', { name: 'Kalkulačka na obhlídce' }).getByRole('button', { name: 'Upravit ceník' }).click();
+  await app.getByRole('dialog', { name: 'Kalkulačka na obhlídce' }).getByRole('button', { name: 'Upravit ceník' }).first().click();
   await expect(app.getByRole('tab', { name: 'Ceník' })).toHaveAttribute('aria-selected', 'true');
 });

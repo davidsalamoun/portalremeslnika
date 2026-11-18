@@ -88,7 +88,8 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   (rychlé volby jen doplní slovo). Kalkulačka na obhlídce (`QuickEstimateCalculatorModal.tsx`) počítá jen z položek
   a cen uživatelova ceníku (`getStoredPriceList`) a množství, která zadá; rezerva 10 % k materiálu je samostatný řádek.
   „Převést do smlouvy“ předá rozpočet do formuláře přes `formPreset.estimate` (pruh „Rozpočet z kalkulačky na obhlídce“,
-  klient se vybírá); „Upravit ceník“ otevře Nastavení na záložce Ceník. Názvy druhů výdajů jsou v `utils/expenseCategories.ts`.
+  klient se vybírá); „Upravit ceník“ otevře Nastavení na záložce Ceník.
+  Položky s nezměněnou ukázkovou cenou výchozího ceníku (`isSamplePriceItem`) kalkulačka pod výsledkem vyjmenuje počtem. Názvy druhů výdajů jsou v `utils/expenseCategories.ts`.
   „Vyfotit účtenku“ na přehledu otevře výběr zakázky a její okno Náklady a zisk (`initialOpenExpenses` v náhledu).
 - **Formuláře** (vzor `ContractForm.tsx`, `BudgetItemsEditor.tsx`): popisek nad polem, pole vysoké aspoň 44 px s linkou
   1,5 px, volby jako přepínací tlačítka (`aria-pressed`), chyba červeně pod polem (`role="alert"`) a zmizí po opravě;
