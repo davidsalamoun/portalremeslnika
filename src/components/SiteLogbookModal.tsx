@@ -1,27 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { Dialog, dialogActionButton } from './Dialog';
-import {
-  X,
-  Plus,
-  Trash2,
-  Calendar,
-  CloudSun,
-  Sun,
-  CloudRain,
-  Snowflake,
-  Users,
-  Clock,
-  FileText,
-  Camera,
-  Printer,
-  CheckCircle,
-  AlertTriangle,
-  Package,
-  Layers,
-  ChevronDown,
-} from 'lucide-react';
+import { X, Plus, Trash2, Camera, Printer } from 'lucide-react';
 import { Contract, SiteLogEntry, ContractPhoto } from '../types/contract';
 import { formatDateCs } from '../utils/numberToWordsCs';
+import { compressImageFile } from '../utils/imageCompression';
 import { VoiceDictationButton } from './VoiceDictationButton';
 
 interface SiteLogbookModalProps {
@@ -32,12 +14,8 @@ interface SiteLogbookModalProps {
   onToast?: (type: 'success' | 'error' | 'info', text: string) => void;
 }
 
-const WEATHER_PRESETS = [
-  { label: 'Slunečno, 22 °C', icon: Sun, desc: 'Jasno, sucho, bez srážek, ideální podmínky' },
-  { label: 'Oblačno, 17 °C', icon: CloudSun, desc: 'Polojasno až oblačno, sucho' },
-  { label: 'Deštivo, 13 °C', icon: CloudRain, desc: 'Mírný déšť, vlhko, mokré procesy omezeny' },
-  { label: 'Mráz, -2 °C', icon: Snowflake, desc: 'Mrazivé počasí, zákaz mokrých venkovních prací' },
-];
+// Rychlé doplnění počasí – jen slova, teplotu zapisuje uživatel sám
+const WEATHER_WORDS = ['Slunečno', 'Polojasno', 'Zataženo', 'Déšť', 'Sníh', 'Mráz'];
 
 export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
   isOpen,
@@ -48,73 +26,76 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
 }) => {
   const [logs, setLogs] = useState<SiteLogEntry[]>(contract.siteLogs || []);
 
-  // Form states for new entry
+  // Nový zápis: nic se nepředvyplňuje kromě dnešního data
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [weather, setWeather] = useState(WEATHER_PRESETS[0].label);
-  const [temperature, setTemperature] = useState<number | ''>(20);
-  const [workersCount, setWorkersCount] = useState<number | ''>(2);
-  const [hoursWorked, setHoursWorked] = useState<number | ''>(8);
+  const [weather, setWeather] = useState('');
+  const [temperature, setTemperature] = useState<number | ''>('');
+  const [workersCount, setWorkersCount] = useState<number | ''>('');
+  const [hoursWorked, setHoursWorked] = useState<number | ''>('');
   const [workDescription, setWorkDescription] = useState('');
   const [issues, setIssues] = useState('');
   const [materialsDelivered, setMaterialsDelivered] = useState('');
   const [photos, setPhotos] = useState<ContractPhoto[]>([]);
   const [isAdding, setIsAdding] = useState(false);
+  const [isProcessingPhotos, setIsProcessingPhotos] = useState(false);
+  const [descriptionError, setDescriptionError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<SiteLogEntry | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
-  // Auto weather simulation / fetcher
-  const handleAutoWeather = () => {
-    // Current season/month temperature approximation for Czechia
-    const month = new Date().getMonth();
-    let temp = 18;
-    let label = 'Polojasno, 18 °C';
-    if (month >= 11 || month <= 2) {
-      temp = 2;
-      label = 'Chladno, 2 °C';
-    } else if (month >= 5 && month <= 7) {
-      temp = 24;
-      label = 'Slunečno, 24 °C';
-    }
-    setTemperature(temp);
-    setWeather(label);
-    if (onToast) onToast('info', `Počasí načteno: ${label}`);
-  };
-
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const newPhoto: ContractPhoto = {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (files.length === 0) return;
+    setIsProcessingPhotos(true);
+    try {
+      const added: ContractPhoto[] = [];
+      for (const file of files) {
+        added.push({
           id: `photo_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-          dataUrl: reader.result as string,
-          caption: 'Záznam ze stavby ' + date,
+          dataUrl: await compressImageFile(file),
+          caption: `Záznam ze stavby ${formatDateCs(date)}`,
           category: 'progress',
           createdAt: new Date().toISOString(),
-        };
-        setPhotos((prev) => [...prev, newPhoto]);
-      };
-      reader.readAsDataURL(file);
-    });
+        });
+      }
+      setPhotos((prev) => [...prev, ...added]);
+    } catch (err) {
+      console.error(err);
+      onToast?.('error', 'Fotku se nepodařilo zpracovat.');
+    } finally {
+      setIsProcessingPhotos(false);
+    }
+  };
+
+  const resetForm = () => {
+    setWeather('');
+    setTemperature('');
+    setWorkersCount('');
+    setHoursWorked('');
+    setWorkDescription('');
+    setIssues('');
+    setMaterialsDelivered('');
+    setPhotos([]);
+    setDescriptionError('');
   };
 
   const handleAddLog = (e: React.FormEvent) => {
     e.preventDefault();
     if (!workDescription.trim()) {
-      if (onToast) onToast('error', 'Vyplňte prosím popis provedených prací.');
+      setDescriptionError('Napište, co se ten den na stavbě dělalo.');
+      document.getElementById('denik-popis')?.focus();
       return;
     }
 
     const newLog: SiteLogEntry = {
       id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       date,
-      weather,
+      weather: weather.trim() || undefined,
       temperature: typeof temperature === 'number' ? temperature : undefined,
-      workersCount: typeof workersCount === 'number' ? workersCount : 1,
-      hoursWorked: typeof hoursWorked === 'number' ? hoursWorked : 8,
+      workersCount: typeof workersCount === 'number' ? workersCount : undefined,
+      hoursWorked: typeof hoursWorked === 'number' ? hoursWorked : undefined,
       workDescription: workDescription.trim(),
       issues: issues.trim() || undefined,
       materialsDelivered: materialsDelivered.trim() || undefined,
@@ -122,23 +103,20 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
       createdAt: new Date().toISOString(),
     };
 
-    const updatedLogs = [newLog, ...logs];
+    const updatedLogs = [newLog, ...logs].sort((x, y) => y.date.localeCompare(x.date));
     setLogs(updatedLogs);
     onUpdateContract({
       ...contract,
       siteLogs: updatedLogs,
     });
 
-    // Reset form
-    setWorkDescription('');
-    setIssues('');
-    setMaterialsDelivered('');
-    setPhotos([]);
+    resetForm();
     setIsAdding(false);
-    if (onToast) onToast('success', 'Denní zápis byl přidán do stavebního deníku.');
+    onToast?.('success', 'Zápis je uložený ve stavebním deníku.');
   };
 
   const handleDeleteLog = (id: string) => {
+    setDeleteTarget(null);
     const updated = logs.filter((l) => l.id !== id);
     setLogs(updated);
     onUpdateContract({
@@ -153,340 +131,327 @@ export const SiteLogbookModal: React.FC<SiteLogbookModalProps> = ({
   };
 
   const totalHours = logs.reduce((sum, l) => sum + (l.hoursWorked || 0), 0);
+  const photoDays = logs.filter((l) => l.photos && l.photos.length > 0).length;
+  const plural = (n: number, one: string, few: string, many: string) => `${n} ${n === 1 ? one : n >= 2 && n <= 4 ? few : many}`;
+
+  const field =
+    'min-h-11 w-full px-3 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white';
+  const label = 'block font-semibold text-slate-900 dark:text-slate-100 mb-1.5';
+  const outline =
+    'min-h-11 px-4 inline-flex items-center justify-center gap-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors disabled:opacity-60';
+  const numberField = (id: string, value: number | '', set: (v: number | '') => void, step = '1', min = '0') => (
+    <input
+      id={id}
+      type="number"
+      inputMode="decimal"
+      min={min}
+      step={step}
+      value={value}
+      onChange={(e) => set(e.target.value === '' ? '' : Number(e.target.value))}
+      className={`${field} tabular-nums`}
+    />
+  );
 
   return (
     <Dialog
       title="Stavební deník"
       subtitle={<>smlouva {contract.contractNumber}</>}
       size="2xl"
-      actions={<button type="button" onClick={handlePrint} className={dialogActionButton}><Printer className="w-4 h-4" /><span className="hidden sm:inline">Tisk</span></button>}
+      actions={
+        <button type="button" onClick={handlePrint} aria-label="Vytisknout deník" className={dialogActionButton}>
+          <Printer className="w-4 h-4" />
+          <span className="hidden sm:inline">Tisk</span>
+        </button>
+      }
       bare
       closeOnBackdrop={false}
       onClose={onClose}
     >
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-[15px]">
+        {/* Souhrn v jednom řádku */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-5 py-4 flex flex-wrap items-baseline gap-x-6 gap-y-1">
+          <span>
+            <span className="font-display font-bold text-[32px] leading-none tabular-nums text-slate-900 dark:text-white">{logs.length}</span>{' '}
+            <span className="text-slate-600 dark:text-slate-400">{logs.length === 1 ? 'den' : logs.length >= 2 && logs.length <= 4 ? 'dny' : 'dnů'} na stavbě</span>
+          </span>
+          <span>
+            <span className="font-display font-bold text-[32px] leading-none tabular-nums text-slate-900 dark:text-white">{totalHours}</span>{' '}
+            <span className="text-slate-600 dark:text-slate-400">h odpracováno</span>
+          </span>
+          <span>
+            <span className="font-display font-bold text-[32px] leading-none tabular-nums text-slate-900 dark:text-white">{photoDays}</span>{' '}
+            <span className="text-slate-600 dark:text-slate-400">{photoDays === 1 ? 'den' : photoDays >= 2 && photoDays <= 4 ? 'dny' : 'dnů'} s fotkami</span>
+          </span>
+        </div>
 
-        {/* Content body */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">
-          {/* Summary stats */}
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-lg border border-slate-200 dark:border-slate-800">
-              <div className="text-xl font-semibold tabular-nums text-slate-900 dark:text-white">
-                {logs.length}
+        {!isAdding && (
+          <button type="button" onClick={() => setIsAdding(true)} className={outline}>
+            <Plus className="w-[18px] h-[18px]" />
+            Zapsat den na stavbě
+          </button>
+        )}
+
+        {/* Nový zápis */}
+        {isAdding && (
+          <form onSubmit={handleAddLog} className="space-y-4" noValidate>
+            <h3 className="font-display font-semibold text-xl text-slate-900 dark:text-white">Nový zápis</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="col-span-2 sm:col-span-1">
+                <label htmlFor="denik-datum" className={label}>
+                  Datum
+                </label>
+                <input id="denik-datum" type="date" value={date} onChange={(e) => setDate(e.target.value)} className={field} />
               </div>
-              <div className="text-[13px] text-slate-500 font-semibold">Dnů na stavbě</div>
-            </div>
-            <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-lg border border-slate-200 dark:border-slate-800">
-              <div className="text-xl font-semibold tabular-nums text-amber-600 dark:text-amber-400">
-                {totalHours} h
-              </div>
-              <div className="text-[13px] text-slate-500 font-semibold">Odpracováno</div>
-            </div>
-            <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-lg border border-slate-200 dark:border-slate-800">
-              <div className="text-xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
-                {logs.filter((l) => l.photos && l.photos.length > 0).length}
-              </div>
-              <div className="text-[13px] text-slate-500 font-semibold">S fotodokumentací</div>
-            </div>
-          </div>
-
-          {/* Tlačítko přidat nový záznam */}
-          {!isAdding && (
-            <button
-              type="button"
-              onClick={() => setIsAdding(true)}
-              className="min-h-11 w-full py-3 px-4 rounded-lg border-2 border-dashed border-amber-500/50 hover:border-amber-500 hover:bg-amber-500/5 text-slate-900 dark:text-amber-400 font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Zapsat dnešní den na stavbě (počasí, práce, fotky)</span>
-            </button>
-          )}
-
-          {/* Formulář pro nový zápis */}
-          {isAdding && (
-            <form
-              onSubmit={handleAddLog}
-              className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-300 dark:border-slate-700 space-y-4 shadow-xs"
-            >
-              <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-amber-500" />
-                  Nový denní zápis do stavebního deníku
-                </h4>
-                <button
-                  type="button"
-                  onClick={() => setIsAdding(false)}
-                  className="min-h-11 min-w-11 inline-flex items-center justify-center text-sm text-slate-500 hover:text-slate-800"
-                >
-                  Zrušit
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-                    Datum:
-                  </label>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      Počasí:
-                    </label>
-                    <button
-                      type="button"
-                      onClick={handleAutoWeather}
-                      className="min-h-11 min-w-11 text-[13px] text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer inline-flex items-center gap-1"
-                    >
-                      <CloudSun className="w-3.5 h-3.5" />
-                      <span>Zjistit aktuální</span>
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    value={weather}
-                    onChange={(e) => setWeather(e.target.value)}
-                    placeholder="Slunečno, 20 °C"
-                    className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-                      Pracovníků:
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      value={workersCount}
-                      onChange={(e) => setWorkersCount(parseInt(e.target.value) || '')}
-                      className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-                      Hodin:
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      value={hoursWorked}
-                      onChange={(e) => setHoursWorked(parseFloat(e.target.value) || '')}
-                      className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
-                    />
-                  </div>
-                </div>
-              </div>
-
               <div>
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    Popis provedených prací a technologických postupů: *
-                  </label>
-                  <VoiceDictationButton
-                    onTranscript={(spokenText) => {
-                      setWorkDescription((prev) => (prev ? `${prev} ${spokenText}` : spokenText));
-                    }}
-                    buttonText="Diktovat"
-                  />
-                </div>
-                <textarea
-                  value={workDescription}
-                  onChange={(e) => setWorkDescription(e.target.value)}
-                  placeholder="Např. Pokládka hydroizolační stěrky ve 2 vrstvách s bandážemi v rozích, vysekání drážek pro elektroinstalaci, penetrace podkladu pod obklady."
-                  rows={3}
-                  className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                <label htmlFor="denik-pracovnici" className={label}>
+                  Pracovníků
+                </label>
+                {numberField('denik-pracovnici', workersCount, setWorkersCount, '1', '1')}
+              </div>
+              <div>
+                <label htmlFor="denik-hodiny" className={label}>
+                  Hodin celkem
+                </label>
+                {numberField('denik-hodiny', hoursWorked, setHoursWorked, '0.5')}
+              </div>
+              <div className="col-span-2 sm:col-span-1">
+                <label htmlFor="denik-teplota" className={label}>
+                  Teplota (°C)
+                </label>
+                <input
+                  id="denik-teplota"
+                  type="number"
+                  inputMode="numeric"
+                  value={temperature}
+                  onChange={(e) => setTemperature(e.target.value === '' ? '' : Number(e.target.value))}
+                  className={`${field} tabular-nums`}
                 />
               </div>
+            </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-                    Dodaný materiál / stroje:
-                  </label>
-                  <input
-                    type="text"
-                    value={materialsDelivered}
-                    onChange={(e) => setMaterialsDelivered(e.target.value)}
-                    placeholder="např. 25 pytlů lepidla C2TE, lešení"
-                    className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-                    Překážky, závady nebo zpoždění:
-                  </label>
-                  <input
-                    type="text"
-                    value={issues}
-                    onChange={(e) => setIssues(e.target.value)}
-                    placeholder="např. Nezapojená elektřina ze strany investora"
-                    className="min-h-11 w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              {/* Fotografie */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <Camera className="w-3.5 h-3.5 text-blue-600" />
-                    Fotodokumentace k dnešnímu dni ({photos.length}):
-                  </label>
+            <div>
+              <label htmlFor="denik-pocasi" className={label}>
+                Počasí <span className="font-normal text-slate-600 dark:text-slate-400">(nepovinné)</span>
+              </label>
+              <input
+                id="denik-pocasi"
+                type="text"
+                value={weather}
+                onChange={(e) => setWeather(e.target.value)}
+                placeholder="např. polojasno, sucho"
+                className={field}
+              />
+              <div className="flex flex-wrap gap-2 mt-2">
+                {WEATHER_WORDS.map((w) => (
                   <button
+                    key={w}
                     type="button"
-                    onClick={() => photoInputRef.current?.click()}
-                    className="min-h-11 min-w-11 inline-flex items-center justify-center text-sm text-blue-600 dark:text-blue-400 font-semibold cursor-pointer"
+                    onClick={() => setWeather(w)}
+                    className="min-h-11 px-3 rounded-md border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-medium hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                   >
-                    + Přidat foto ze stavby
+                    {w}
                   </button>
-                  <input
-                    ref={photoInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handlePhotoUpload}
-                    className="hidden"
-                  />
-                </div>
-
-                {photos.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    {photos.map((p, idx) => (
-                      <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden border">
-                        <img src={p.dataUrl} alt="Foto" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => setPhotos((prev) => prev.filter((_, i) => i !== idx))}
-                          className="absolute top-0.5 right-0.5 bg-red-600 text-white rounded-full p-0.5"
-                        >
-                          <X className="w-2.5 h-2.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2 border-t border-slate-200 dark:border-slate-700">
-                <button
-                  type="button"
-                  onClick={() => setIsAdding(false)}
-                  className="min-h-11 inline-flex items-center justify-center px-4 py-2 text-sm rounded-lg font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
-                >
-                  Zrušit
-                </button>
-                <button
-                  type="submit"
-                  className="min-h-11 inline-flex items-center justify-center px-5 py-2 text-sm rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold cursor-pointer shadow-xs transition-colors"
-                >
-                  Uložit denní záznam
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* Seznam existujících záznamů stavebního deníku */}
-          <div className="space-y-3">
-            <h4 className="font-semibold text-slate-900 dark:text-white text-sm">
-              Historie zápisů v deníku ({logs.length})
-            </h4>
-
-            {logs.length === 0 ? (
-              <div className="text-center py-8 text-slate-400 text-sm">
-                Zatím nebyl vytvořen žádný denní záznam. Přidejte první zápis tlačítkem výše.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {logs.map((log) => (
-                  <div
-                    key={log.id}
-                    className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-xs space-y-2.5"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className=" font-semibold text-sm text-slate-900 dark:text-white">
-                          {formatDateCs(log.date)}
-                        </span>
-                        {log.weather && (
-                          <span className="text-sm px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-700 dark:text-slate-300 flex items-center gap-1 border border-slate-200 dark:border-slate-700">
-                            <CloudSun className="w-3.5 h-3.5 text-amber-500" />
-                            {log.weather}
-                          </span>
-                        )}
-                        <span className="text-sm text-slate-500 flex items-center gap-1">
-                          <Users className="w-3.5 h-3.5" />
-                          {log.workersCount || 1} prac. · {log.hoursWorked || 8} h
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteLog(log.id)}
-                        className="min-h-11 min-w-11 inline-flex items-center justify-center text-slate-400 hover:text-red-600 p-1 rounded-md"
-                        title="Smazat záznam"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">
-                      {log.workDescription}
-                    </p>
-
-                    {log.materialsDelivered && (
-                      <div className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                        <Package className="w-3.5 h-3.5 text-blue-500" />
-                        <span>Materiál: {log.materialsDelivered}</span>
-                      </div>
-                    )}
-
-                    {log.issues && (
-                      <div className="text-sm text-amber-700 dark:text-amber-400 flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 p-2 rounded-lg">
-                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                        <span>Překážka / záznam: {log.issues}</span>
-                      </div>
-                    )}
-
-                    {log.photos && log.photos.length > 0 && (
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {log.photos.map((p, idx) => (
-                          <img
-                            key={idx}
-                            src={p.dataUrl}
-                            alt="Foto stavby"
-                            className="w-14 h-14 object-cover rounded-lg border border-slate-200"
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
                 ))}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
 
-        {/* Footer */}
-        <div className="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between">
-          <span className="text-sm text-slate-400">
-            Zápisy se ukládají k zakázce.
-          </span>
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-11 inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-          >
-            Zavřít
-          </button>
-        </div>
-      </Dialog>
+            <div>
+              <div className="flex items-end justify-between gap-2 mb-1.5">
+                <label htmlFor="denik-popis" className="font-semibold text-slate-900 dark:text-slate-100">
+                  Co se dělalo
+                </label>
+                <VoiceDictationButton
+                  onTranscript={(spokenText) => {
+                    setWorkDescription((prev) => (prev ? `${prev} ${spokenText}` : spokenText));
+                    setDescriptionError('');
+                  }}
+                  buttonText="Diktovat"
+                />
+              </div>
+              <textarea
+                id="denik-popis"
+                value={workDescription}
+                onChange={(e) => {
+                  setWorkDescription(e.target.value);
+                  if (e.target.value.trim()) setDescriptionError('');
+                }}
+                placeholder="např. hydroizolační stěrka ve dvou vrstvách, bandáže v rozích, penetrace podkladu"
+                rows={3}
+                aria-invalid={!!descriptionError}
+                aria-describedby={descriptionError ? 'denik-popis-chyba' : undefined}
+                className={`w-full px-3 py-2.5 rounded-md border-[1.5px] bg-white dark:bg-slate-950 text-slate-900 dark:text-white ${
+                  descriptionError ? 'border-rose-600' : 'border-slate-900 dark:border-slate-500'
+                }`}
+              />
+              {descriptionError && (
+                <p id="denik-popis-chyba" role="alert" className="mt-1 text-rose-700 dark:text-rose-400">
+                  {descriptionError}
+                </p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="denik-material" className={label}>
+                  Dodaný materiál a technika <span className="font-normal text-slate-600 dark:text-slate-400">(nepovinné)</span>
+                </label>
+                <input
+                  id="denik-material"
+                  type="text"
+                  value={materialsDelivered}
+                  onChange={(e) => setMaterialsDelivered(e.target.value)}
+                  placeholder="např. lepidlo C2TE, lešení"
+                  className={field}
+                />
+              </div>
+              <div>
+                <label htmlFor="denik-prekazky" className={label}>
+                  Překážky a zdržení <span className="font-normal text-slate-600 dark:text-slate-400">(nepovinné)</span>
+                </label>
+                <input
+                  id="denik-prekazky"
+                  type="text"
+                  value={issues}
+                  onChange={(e) => setIssues(e.target.value)}
+                  placeholder="např. chyběla elektřina na stavbě"
+                  className={field}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <input ref={photoInputRef} type="file" accept="image/*" multiple onChange={handlePhotoUpload} className="hidden" />
+              <button type="button" onClick={() => photoInputRef.current?.click()} disabled={isProcessingPhotos} className={outline}>
+                <Camera className="w-[18px] h-[18px]" />
+                {isProcessingPhotos ? 'Zpracovávám fotky…' : photos.length > 0 ? `Přidat další fotku (${photos.length})` : 'Přidat fotky ze stavby'}
+              </button>
+              {photos.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {photos.map((p, idx) => (
+                    <div key={p.id} className="relative w-20 h-20 rounded-md overflow-hidden border border-slate-200 dark:border-slate-700">
+                      <img src={p.dataUrl} alt={`Fotka ${idx + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setPhotos((prev) => prev.filter((x) => x.id !== p.id))}
+                        aria-label={`Odebrat fotku ${idx + 1}`}
+                        className="absolute top-0 right-0 min-h-11 min-w-11 inline-flex items-start justify-end p-1 cursor-pointer"
+                      >
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-slate-900/80 text-white">
+                          <X className="w-3.5 h-3.5" />
+                        </span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-2.5">
+              <button
+                type="submit"
+                className="min-h-11 px-5 inline-flex items-center justify-center rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold cursor-pointer transition-colors"
+              >
+                Uložit zápis
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  resetForm();
+                  setIsAdding(false);
+                }}
+                className={outline}
+              >
+                Zrušit
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Zápisy */}
+        <section aria-labelledby="denik-zapisy" className="space-y-2.5">
+          <h3 id="denik-zapisy" className="font-display font-semibold text-xl text-slate-900 dark:text-white">
+            Zápisy
+          </h3>
+          {logs.length === 0 ? (
+            <p className="px-5 py-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md text-slate-600 dark:text-slate-300">
+              Zatím žádné zápisy. Po každém dni na stavbě zapište, co se udělalo – hodí se při předání i při sporu o termín.
+            </p>
+          ) : (
+            <ul className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md divide-y divide-slate-100 dark:divide-slate-800">
+              {logs.map((log) => {
+                const meta = [
+                  log.weather && (log.temperature !== undefined ? `${log.weather}, ${log.temperature} °C` : log.weather),
+                  !log.weather && log.temperature !== undefined ? `${log.temperature} °C` : '',
+                  log.workersCount ? plural(log.workersCount, 'pracovník', 'pracovníci', 'pracovníků') : '',
+                  log.hoursWorked ? `${log.hoursWorked} h` : '',
+                ].filter(Boolean);
+                return (
+                  <li key={log.id} className="px-5 py-3.5 flex gap-4">
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="font-semibold text-slate-900 dark:text-white">
+                        {formatDateCs(log.date)}
+                        {meta.length > 0 && <span className="font-normal text-slate-600 dark:text-slate-400"> · {meta.join(' · ')}</span>}
+                      </div>
+                      <p className="text-slate-800 dark:text-slate-200 whitespace-pre-line">{log.workDescription}</p>
+                      {log.materialsDelivered && <p className="text-slate-600 dark:text-slate-400">Materiál: {log.materialsDelivered}</p>}
+                      {log.issues && <p className="text-slate-900 dark:text-slate-100">Překážka: {log.issues}</p>}
+                      {log.photos && log.photos.length > 0 && (
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {log.photos.map((p, idx) => (
+                            <img
+                              key={p.id || idx}
+                              src={p.dataUrl}
+                              alt={`Fotka ze stavby ${formatDateCs(log.date)}`}
+                              className="w-16 h-16 object-cover rounded-md border border-slate-200 dark:border-slate-700"
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteTarget(log)}
+                      aria-label={`Smazat zápis ${formatDateCs(log.date)}`}
+                      title="Smazat zápis"
+                      className="min-h-11 min-w-11 -mr-2 -mt-1.5 inline-flex items-center justify-center rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      </div>
+
+      {/* Patička */}
+      <div className="px-4 sm:px-6 py-3.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0">
+        <span className="text-slate-600 dark:text-slate-400">Zápisy se ukládají k zakázce.</span>
+        <button type="button" onClick={onClose} className={outline}>
+          Hotovo
+        </button>
+      </div>
+
+      {deleteTarget && (
+        <Dialog title="Smazat zápis?" onClose={() => setDeleteTarget(null)}>
+          <div className="space-y-5 text-[15px]">
+            <p>Zápis ze dne {formatDateCs(deleteTarget.date)} se odstraní ze stavebního deníku i s fotkami.</p>
+            <div className="flex flex-wrap justify-end gap-2.5">
+              <button type="button" onClick={() => setDeleteTarget(null)} className={outline}>
+                Zpět
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteLog(deleteTarget.id)}
+                className="min-h-11 px-4 inline-flex items-center justify-center rounded-md border-[1.5px] border-rose-700 text-rose-700 dark:border-rose-400 dark:text-rose-300 font-semibold hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+              >
+                Smazat zápis
+              </button>
+            </div>
+          </div>
+        </Dialog>
+      )}
+    </Dialog>
   );
 };

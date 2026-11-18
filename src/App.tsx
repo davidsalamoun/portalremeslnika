@@ -17,6 +17,7 @@ import {
   CalendarEvent,
   LeadStage,
   AppBackupData,
+  BudgetItem,
 } from './types/contract';
 import {
   getContractorProfile,
@@ -155,7 +156,13 @@ export default function App() {
   // Selected trade template for 1-click contract creation
   const [selectedTradeTemplate, setSelectedTradeTemplate] = useState<string | null>(null);
   // Předvyplnění formuláře Nová smlouva: klient (z Klientů) nebo jiná zakázka jako základ; key vynutí nové založení formuláře
-  const [formPreset, setFormPreset] = useState<{ key: number; clientId?: string; base?: Contract } | null>(null);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<'cenik' | undefined>(undefined);
+  const [formPreset, setFormPreset] = useState<{
+    key: number;
+    clientId?: string;
+    base?: Contract;
+    estimate?: { description: string; items: Omit<BudgetItem, 'id'>[] };
+  } | null>(null);
   // Předvyplnění platí jen pro formulář, ze kterého se vychází; po odchodu z něj se zapomene
   useEffect(() => {
     if (activeTab !== 'nova-smlouva') setFormPreset(null);
@@ -590,21 +597,19 @@ export default function App() {
   };
 
   // Apply on-site estimate to contract form
-  const handleApplyEstimateToContract = (estimate: {
-    tradeTitle: string;
-    description: string;
-    price: number;
-    days: number;
-    items: any[];
-  }) => {
+  /** Kalkulačka na obhlídce: rozpočet z položek ceníku se předá do formuláře nové smlouvy */
+  const handleApplyEstimateToContract = (estimate: { description: string; items: Omit<BudgetItem, 'id'>[] }) => {
     if (!isProUser(contractor) && contracts.length >= PRO_CONFIG.maxFreeContracts) {
       handleOpenPaywall(
         `V bezplatném tarifu máte vytvořeno ${contracts.length} ze 3 povolených smluv. Přejděte na Mistr PRO pro neomezenou tvorbu smluv a nabídek.`
       );
       return;
     }
+    setSelectedTradeTemplate(null);
+    setFormPreset({ key: Date.now(), estimate });
+    setPreviewContract(null);
     setActiveTab('nova-smlouva');
-    addToast('success', `Orientační rozpočet byl předvyplněn.`);
+    window.scrollTo({ top: 0 });
   };
 
   // Tab change
@@ -618,6 +623,7 @@ export default function App() {
       }
     }
     setFormPreset(null);
+    setSettingsInitialTab(undefined);
     setActiveTab(tab);
     setPreviewContract(null);
   };
@@ -737,6 +743,7 @@ export default function App() {
                     setFormPreset(null);
                     setActiveTab('nova-smlouva');
                   } else {
+                    setSettingsInitialTab(key === 'pricelist' ? 'cenik' : undefined);
                     setActiveTab('nastaveni');
                     // Podpis je v Nastavení níž – po vykreslení stránky se k němu posune
                     if (key === 'signature') {
@@ -866,6 +873,7 @@ export default function App() {
                 initialTemplateId={selectedTradeTemplate}
                 initialClientId={formPreset?.clientId}
                 baseContract={formPreset?.base}
+                estimate={formPreset?.estimate}
                 onOpenSettings={() => setActiveTab('nastaveni')}
                 onOpenNewClientDialog={handleOpenNewClientDialog}
                 onEditClient={handleEditClient}
@@ -917,6 +925,8 @@ export default function App() {
             {/* Nastavení profilu zhotovitele */}
             {activeTab === 'nastaveni' && (
               <SettingsPage
+                key={settingsInitialTab ?? 'udaje'}
+                initialTab={settingsInitialTab}
                 initialProfile={contractor}
                 onSave={handleSaveContractor}
                 onPreloadSample={handleSeedSampleData}
@@ -962,13 +972,22 @@ export default function App() {
         />
       )}
 
-      {/* Rychlá kalkulačka na obhlídce */}
-      <QuickEstimateCalculatorModal
-        isOpen={isEstimateCalculatorOpen}
-        onClose={() => setIsEstimateCalculatorOpen(false)}
-        onApplyToContract={handleApplyEstimateToContract}
-        onToast={addToast}
-      />
+      {/* Rychlá kalkulačka na obhlídce (ceník se načte při každém otevření) */}
+      {isEstimateCalculatorOpen && (
+        <QuickEstimateCalculatorModal
+          isOpen
+          onClose={() => setIsEstimateCalculatorOpen(false)}
+          onApplyToContract={handleApplyEstimateToContract}
+          onOpenPriceList={() => {
+            setIsEstimateCalculatorOpen(false);
+            setFormPreset(null);
+            setPreviewContract(null);
+            setSettingsInitialTab('cenik');
+            setActiveTab('nastaveni');
+          }}
+          onToast={addToast}
+        />
+      )}
 
       {/* Kioskový režim předání telefonu zákazníkovi k podpisu */}
       {signingKioskContract && (

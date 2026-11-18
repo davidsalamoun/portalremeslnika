@@ -37,6 +37,7 @@ import { Metr } from './Logo';
 import { Dialog } from './Dialog';
 import { GettingStarted } from './GettingStarted';
 import { getGettingStartedSteps, GettingStartedKey } from '../utils/gettingStarted';
+import { hasCustomizedPriceList } from '../utils/storage';
 
 const EVENT_TYPE_LABELS: Record<CalendarEventType, string> = {
   realizace: 'Realizace',
@@ -325,7 +326,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       )}
 
       {onGettingStartedStep && (
-        <GettingStarted steps={getGettingStartedSteps(contractor, clientsCount, contracts)} onStep={onGettingStartedStep} />
+        <GettingStarted steps={getGettingStartedSteps(contractor, clientsCount, contracts, hasCustomizedPriceList())} onStep={onGettingStartedStep} />
       )}
 
       {/* Dnes */}

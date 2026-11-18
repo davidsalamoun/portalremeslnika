@@ -90,7 +90,12 @@ test.describe('faktura plátce DPH', () => {
 test.describe('prázdný účet', () => {
   test.use({ seed: 'empty' });
   test('průvodce prvním spuštěním a prázdné seznamy', async ({ app }) => {
-    await expect(app.getByText(/Hotovo 0 ze 4 kroků/)).toBeVisible();
+    await expect(app.getByText(/Hotovo 0 ze 5 kroků/)).toBeVisible();
+    // Krok ceníku otevře Nastavení rovnou na záložce Ceník
+    await app.getByRole('button', { name: 'Otevřít ceník' }).click();
+    await expect(app.getByRole('tab', { name: 'Ceník' })).toHaveAttribute('aria-selected', 'true');
+    await openTab(app, 'Přehled');
+    await expect(app.getByText(/Hotovo 0 ze 5 kroků/)).toBeVisible();
     for (const tab of ['Zakázky', 'Faktury', 'Klienti', 'Archiv', 'Finance']) {
       await openTab(app, tab);
       await expectNoOverflow(app);

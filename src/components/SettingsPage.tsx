@@ -55,6 +55,8 @@ interface SettingsPageProps {
   onToast?: (type: 'success' | 'error' | 'info', text: string) => void;
   onOpenPaywall?: () => void;
   onOpenInvoiceModal?: () => void;
+  /** Otevřít rovnou záložku (např. Ceník z kalkulačky na obhlídce) */
+  initialTab?: 'udaje' | 'cenik' | 'zaloha';
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
@@ -65,8 +67,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   onToast,
   onOpenPaywall,
   onOpenInvoiceModal,
+  initialTab,
 }) => {
-  const [tab, setTab] = useState<SettingsTab>('udaje');
+  const [tab, setTab] = useState<SettingsTab>(initialTab ?? 'udaje');
   const [name, setName] = useState('');
   const [ico, setIco] = useState('');
   const [dic, setDic] = useState('');

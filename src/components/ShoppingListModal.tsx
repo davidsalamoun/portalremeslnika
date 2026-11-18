@@ -296,7 +296,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
                     key={p.name}
                     type="button"
                     onClick={() => handleApplyPreset(idx)}
-                    className="min-h-11 min-w-11 inline-flex items-center justify-center p-2.5 text-left rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800/80 hover:border-amber-500 text-sm font-semibold text-slate-900 dark:text-white shadow-2xs cursor-pointer active:scale-95 transition-all"
+                    className="min-h-11 min-w-11 inline-flex items-center justify-center p-2.5 text-left rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800/80 hover:border-amber-500 text-sm font-semibold text-slate-900 dark:text-white cursor-pointer transition-all"
                   >
                     + {p.name}
                   </button>
@@ -308,7 +308,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
           {/* Add item bar (Optimized for mobile touch input) */}
           <form
             onSubmit={handleAddItem}
-            className="p-3 rounded-xl border-2 border-dashed border-amber-300 dark:border-amber-800/80 bg-amber-50/50 dark:bg-amber-950/20 space-y-2"
+            className="p-3 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2"
           >
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <input
@@ -352,7 +352,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
                 <button
                   type="submit"
                   disabled={!newName.trim()}
-                  className="min-h-11 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-semibold text-sm flex items-center justify-center gap-1 shadow-sm cursor-pointer active:scale-95 transition-all"
+                  className="min-h-11 px-4 py-2.5 rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-300 text-slate-900 disabled:opacity-40 font-semibold text-sm flex items-center justify-center gap-1 cursor-pointer transition-all"
                 >
                   <Plus className="w-4 h-4" />
                   <span className="hidden sm:inline">Přidat</span>
@@ -390,17 +390,17 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
                 <div
                   key={item.id}
                   onClick={() => handleToggleBought(item.id)}
-                  className={`p-3 rounded-xl border transition-all flex items-center justify-between gap-3 cursor-pointer select-none active:scale-99 ${
+                  className={`p-3 rounded-xl border transition-all flex items-center justify-between gap-3 cursor-pointer select-none ${
                     item.isBought
                       ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/60'
-                      : 'bg-white dark:bg-slate-850 border-slate-200 dark:border-slate-800 hover:border-amber-400'
+                      : 'bg-white dark:bg-slate-850 border-slate-200 dark:border-slate-800 hover:border-slate-400'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 transition-all ${
                         item.isBought
-                          ? 'bg-emerald-600 text-white shadow-xs'
+                          ? 'bg-emerald-700 text-white'
                           : 'border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900'
                       }`}
                     >
@@ -426,7 +426,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
                   <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                     {item.isBought && (
                       <span className="text-[13px] font-semibold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                        V KOŠÍKU ✓
+                        V košíku
                       </span>
                     )}
                     <button
@@ -445,12 +445,12 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
         </div>
 
         {/* Action Footer */}
-        <div className="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 flex flex-wrap items-center justify-between gap-2.5">
+        <div className="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleShareWhatsApp}
-              className="min-h-[44px] px-4 py-2 rounded-xl border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm sm:text-sm flex items-center gap-2 shadow-sm cursor-pointer active:scale-95 transition-all"
+              className="min-h-11 px-4 py-2 rounded-xl border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm sm:text-sm flex items-center gap-2 cursor-pointer transition-all"
               title="Odeslat nákupní seznam kolegům nebo závozu do WhatsAppu"
             >
               <Share2 className="w-4 h-4" />
@@ -460,7 +460,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
             <button
               type="button"
               onClick={handlePrint}
-              className="min-h-[44px] px-3 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm flex items-center gap-1.5 cursor-pointer"
+              className="min-h-11 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm flex items-center gap-1.5 cursor-pointer"
               title="Vytisknout papírový lístek do stavebnin"
             >
               <Printer className="w-4 h-4" />
@@ -473,7 +473,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
               <button
                 type="button"
                 onClick={handleSyncToExpenses}
-                className="min-h-[44px] px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm sm:text-sm flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95 transition-all"
+                className="min-h-11 px-4 py-2 rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold text-sm flex items-center gap-1.5 cursor-pointer transition-all"
                 title="Zapsat nakoupené položky do výdajů zakázky"
               >
                 <DollarSign className="w-4 h-4" />
@@ -484,7 +484,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 font-semibold text-sm sm:text-sm text-slate-800 dark:text-slate-200 cursor-pointer"
+              className="min-h-11 px-4 py-2 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm cursor-pointer"
             >
               Hotovo
             </button>

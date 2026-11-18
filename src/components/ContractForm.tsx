@@ -48,6 +48,8 @@ interface ContractFormProps {
   initialClientId?: string | null;
   /** Zakázka, ze které se převezme popis, rozpočet, cena, záloha a DPH (ne klient, termín, adresa stavby ani podpisy) */
   baseContract?: Contract | null;
+  /** Rozpočet z kalkulačky na obhlídce (položky z ceníku uživatele) */
+  estimate?: { description: string; items: Omit<BudgetItem, 'id'>[] } | null;
   onOpenSettings: () => void;
   onOpenNewClientDialog: () => void;
   onEditClient?: (client: Client) => void;
@@ -62,6 +64,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   initialTemplateId,
   initialClientId,
   baseContract,
+  estimate,
   onOpenSettings,
   onOpenNewClientDialog,
   onEditClient,
@@ -71,18 +74,20 @@ export const ContractForm: React.FC<ContractFormProps> = ({
 }) => {
   // Nová zakázka podle jiné: převzaté údaje (jen při založení formuláře)
   const base = baseContract || null;
-  const basePrice = base && base.price > 0 ? base.price : 0;
+  const est = !base && estimate && estimate.items.length > 0 ? estimate : null;
+  const estTotal = est ? est.items.reduce((sum, it) => sum + (it.totalPrice || 0), 0) : 0;
+  const basePrice = base && base.price > 0 ? base.price : estTotal;
   const baseAdvance = base && !!base.advanceAmount && base.advanceAmount > 0 ? base.advanceAmount : 0;
   // U nové zakázky podle jiné musí uživatel klienta vybrat sám (nepředvybírat prvního ze seznamu)
-  const [requireClientChoice] = useState(!!base && !initialClientId);
+  const [requireClientChoice] = useState((!!base || !!est) && !initialClientId);
 
   const [docKind, setDocKind] = useState<'contract' | 'quote' | 'invoice'>(base?.docKind === 'quote' || base?.docKind === 'invoice' ? base.docKind : 'contract');
   const isInvoiceOnly = docKind === 'invoice';
   const [pricingType, setPricingType] = useState<'fixed' | 'budget'>(
-    base?.pricingType === 'budget' && base.items && base.items.length > 0 ? 'budget' : 'fixed'
+    est || (base?.pricingType === 'budget' && base.items && base.items.length > 0) ? 'budget' : 'fixed'
   );
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>(() =>
-    (base?.items || []).map((it, i) => ({ ...it, id: `item_${Date.now()}_${i}` }))
+    (base?.items || est?.items || []).map((it, i) => ({ ...it, id: `item_${Date.now()}_${i}` }))
   );
   const [isListening, setIsListening] = useState(false);
 
@@ -94,7 +99,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
           ? clients[0].id
           : '',
     docKind: 'contract',
-    workDescription: base?.workDescription || '',
+    workDescription: base?.workDescription || est?.description || '',
     price: basePrice || '',
     deliveryDate: '',
     advanceAmount: baseAdvance || '',
@@ -451,6 +456,14 @@ export const ContractForm: React.FC<ContractFormProps> = ({
           </span>{' '}
           Převzali jsme popis díla,
           {base.items && base.items.length > 0 ? ' rozpočet,' : ''} cenu{baseAdvance ? ', zálohu' : ''} a DPH. Vyberte klienta a doplňte termín.
+        </div>
+      )}
+
+      {/* Rozpočet z kalkulačky na obhlídce */}
+      {est && (
+        <div role="status" className="max-w-3xl px-4 py-3 border-l-[3px] border-blue-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+          <span className="font-semibold text-slate-900 dark:text-white">Rozpočet z kalkulačky na obhlídce.</span> Položky a ceny jsou z vašeho
+          ceníku – zkontrolujte množství, vyberte klienta a doplňte termín.
         </div>
       )}
 

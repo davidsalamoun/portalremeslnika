@@ -234,30 +234,30 @@ export const ToolRentalModal: React.FC<ToolRentalModalProps> = ({
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
           {/* Summary KPI Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <div className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-900/60">
-              <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-400 block mb-1">
+            <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <span className="text-sm text-slate-600 dark:text-slate-400 block mb-1">
                 Aktivně půjčeno
               </span>
-              <div className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white flex items-baseline gap-1">
+              <div className="font-display text-2xl font-semibold text-slate-900 dark:text-white flex items-baseline gap-1">
                 <span>{activeRentalsCount}</span>
                 <span className="text-sm font-semibold text-slate-500 font-sans">strojů na stavbě</span>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-              <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
+            <div className="p-3.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <span className="text-sm text-slate-600 dark:text-slate-400 block mb-1">
                 Naběhlé půjčovné celkem
               </span>
-              <div className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">
+              <div className="font-display text-2xl font-semibold text-slate-900 dark:text-white">
                 {formatCurrency(totalCost)}
               </div>
             </div>
 
-            <div className="col-span-2 sm:col-span-1 p-3.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/60">
-              <span className="text-[13px] font-semibold text-emerald-700 dark:text-emerald-400 block mb-1">
+            <div className="col-span-2 sm:col-span-1 p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <span className="text-sm text-slate-600 dark:text-slate-400 block mb-1">
                 Vratné kauce celkem
               </span>
-              <div className="text-xl sm:text-2xl font-semibold text-emerald-700 dark:text-emerald-300">
+              <div className="font-display text-2xl font-semibold text-slate-900 dark:text-white">
                 {formatCurrency(
                   toolRentals
                     .filter((t) => !t.isReturned && t.deposit)
@@ -271,18 +271,18 @@ export const ToolRentalModal: React.FC<ToolRentalModalProps> = ({
           <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1">
             <button
               onClick={() => setIsAdding(!isAdding)}
-              className="min-h-11 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold shadow-xs active:scale-95 transition-all cursor-pointer"
+              className="min-h-11 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>{isAdding ? 'Zavřít formulář' : '+ Půjčit stroj / nářadí'}</span>
+              <span>{isAdding ? 'Zavřít formulář' : 'Půjčit stroj nebo nářadí'}</span>
             </button>
 
             <button
               onClick={handleSyncToExpenses}
-              className="min-h-11 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
+              className="min-h-11 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold cursor-pointer transition-colors"
               title="Přičíst naběhlé půjčovné do skutečných nákladů stavby"
             >
-              <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+              <DollarSign className="w-3.5 h-3.5" />
               <span>Zapsat do nákladů stavby</span>
             </button>
           </div>
@@ -409,7 +409,7 @@ export const ToolRentalModal: React.FC<ToolRentalModalProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="min-h-11 inline-flex items-center justify-center px-5 py-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold shadow-sm cursor-pointer transition-colors"
+                  className="min-h-11 inline-flex items-center justify-center px-5 py-2 rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-300 text-slate-900 text-sm font-semibold cursor-pointer transition-colors"
                 >
                   Uložit výpůjčku
                 </button>
@@ -424,7 +424,7 @@ export const ToolRentalModal: React.FC<ToolRentalModalProps> = ({
             </h4>
 
             {toolRentals.length === 0 ? (
-              <div className="p-8 text-center rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="p-8 text-center rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
                 <Wrench className="w-8 h-8 mx-auto text-slate-400" />
                 <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                   Žádná technika z půjčovny není zapsána
@@ -491,16 +491,16 @@ export const ToolRentalModal: React.FC<ToolRentalModalProps> = ({
                           ) : isOverdue ? (
                             <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-rose-800 dark:text-rose-200 bg-rose-200 dark:bg-rose-900 px-2.5 py-0.5 rounded-md">
                               <AlertTriangle className="w-3 h-3" />
-                              PO TERMÍNU VRÁCENÍ!
+                              Po termínu vrácení
                             </span>
                           ) : isDueToday ? (
-                            <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-amber-900 dark:text-amber-200 bg-amber-200 dark:bg-amber-900 px-2.5 py-0.5 rounded-md">
+                            <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-slate-900 dark:text-white border border-slate-900 dark:border-slate-300 px-2.5 py-0.5 rounded-md">
                               <Clock className="w-3 h-3" />
-                              VRÁTIT DNES DO 16:00!
+                              Vrátit dnes
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 px-2 py-0.5 rounded-md">
-                              ✓ V termínu (běží {days}. den)
+                              V termínu ({days}. den)
                             </span>
                           )}
                         </div>
@@ -521,10 +521,10 @@ export const ToolRentalModal: React.FC<ToolRentalModalProps> = ({
                             className={`min-h-11 inline-flex items-center justify-center text-[13px] font-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-colors shadow-2xs ${
                               item.isReturned
                                 ? 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-                                : 'bg-emerald-600 hover:bg-emerald-700 text-white font-semibold'
+                                : 'border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
                             }`}
                           >
-                            {item.isReturned ? 'Znovu označit zapůjčeno' : '✓ Vrátit stroj'}
+                            {item.isReturned ? 'Znovu označit zapůjčeno' : 'Vrátit stroj'}
                           </button>
                         </div>
 
@@ -532,10 +532,10 @@ export const ToolRentalModal: React.FC<ToolRentalModalProps> = ({
                           {!item.isReturned && (
                             <button
                               onClick={() => handleSendReminder(item)}
-                              className="min-h-11 min-w-11 inline-flex items-center justify-center p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 cursor-pointer transition-all"
+                              className="min-h-11 min-w-11 inline-flex items-center justify-center p-2 rounded-xl border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-all"
                               title="Odeslat připomínku k vrácení na WhatsApp"
                             >
-                              <Send className="w-4 h-4 text-emerald-600" />
+                              <Send className="w-4 h-4" />
                             </button>
                           )}
 
@@ -557,13 +557,13 @@ export const ToolRentalModal: React.FC<ToolRentalModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex items-center justify-between">
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <span className="text-sm text-slate-500 font-medium">
             Celkem naběhlé půjčovné: <strong>{formatCurrency(totalCost)}</strong>
           </span>
           <button
             onClick={onClose}
-            className="min-h-11 inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-sm font-semibold cursor-pointer transition-colors"
+            className="min-h-11 inline-flex items-center justify-center px-5 py-2.5 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold cursor-pointer transition-colors"
           >
             Hotovo
           </button>
