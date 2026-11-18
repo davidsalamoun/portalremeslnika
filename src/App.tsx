@@ -743,6 +743,7 @@ export default function App() {
                     setFormPreset(null);
                     setActiveTab('nova-smlouva');
                   } else {
+                    setSettingsInitialTab(key === 'pricelist' ? 'cenik' : undefined);
                     setActiveTab('nastaveni');
                     // Podpis je v Nastavení níž – po vykreslení stránky se k němu posune
                     if (key === 'signature') {

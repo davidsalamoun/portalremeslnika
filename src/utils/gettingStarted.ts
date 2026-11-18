@@ -1,10 +1,10 @@
 import { Contract, ContractorProfile } from '../types/contract';
 
 /**
- * Průvodce prvním spuštěním na přehledu: čtyři kroky, které dělí nový účet od první smlouvy.
+ * Průvodce prvním spuštěním na přehledu: pět kroků, které dělí nový účet od první smlouvy.
  * Krok je hotový podle skutečných dat, nic se zvlášť neukládá – jen volba „Skrýt“ na tomto zařízení.
  */
-export type GettingStartedKey = 'profile' | 'signature' | 'client' | 'contract';
+export type GettingStartedKey = 'profile' | 'signature' | 'pricelist' | 'client' | 'contract';
 
 export interface GettingStartedStep {
   key: GettingStartedKey;
@@ -18,6 +18,8 @@ export function getGettingStartedSteps(
   contractor: ContractorProfile | null | undefined,
   clientsCount: number,
   contracts: Pick<Contract, 'id'>[],
+  /** Ceník už nemá jen ukázkové ceny (`isPriceListCustomized`) */
+  priceListCustomized = false,
 ): GettingStartedStep[] {
   const profileDone = !!(contractor?.name?.trim() && contractor.ico?.trim() && contractor.address?.trim() && contractor.bankAccount?.trim());
   return [
@@ -34,6 +36,13 @@ export function getGettingStartedSteps(
       hint: 'Podepíšete se jednou prstem nebo myší a podpis se vloží do každé smlouvy, protokolu i dokladu.',
       action: 'Přidat podpis',
       done: !!contractor?.signature,
+    },
+    {
+      key: 'pricelist',
+      title: 'Upravte si ceník na své ceny',
+      hint: 'Ceník obsahuje ukázkové ceny. Přepište je na své – rozpočty smluv a kalkulačka na obhlídce z nich počítají.',
+      action: 'Otevřít ceník',
+      done: priceListCustomized,
     },
     {
       key: 'client',

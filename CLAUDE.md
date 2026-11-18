@@ -137,8 +137,9 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   Snímky jsou v `public/landing/` z aplikace s testovacími daty – při změně vzhledu je přegenerovat. Texty o ceně
   a datech musí odpovídat skutečnosti.
 - **Průvodce prvním spuštěním** (`components/GettingStarted.tsx`, kroky v `utils/gettingStarted.ts`): na přehledu, dokud
-  nejsou hotové čtyři kroky (údaje, podpis, klient, první smlouva) nebo ho uživatel neskryje (klíč
-  `getting_started_hidden` v localStorage, jen na tomto zařízení). Hotovost kroku se počítá z dat, neukládá se.
+  nejsou hotové kroky (údaje, podpis, ceník, klient, první smlouva) nebo ho uživatel neskryje (klíč
+  `getting_started_hidden` v localStorage, jen na tomto zařízení). Hotovost kroku se počítá z dat, neukládá se. Ceník je hotový, když v něm není jen ukázkový výchozí ceník
+  (`isPriceListCustomized` v `data/defaultPriceList.ts`; přehled ho jen čte přes `hasCustomizedPriceList`, výchozí nezakládá).
 - **Počasí** (`utils/weather.ts`, `components/JobWeather.tsx`): u zakázky ve fázi Smlouva a Realizace se ukáže řádek jen
   tehdy, když předpověď pro obec stavby hlásí do tří dnů chladno, srážky nebo silný vítr. Obec se bere z adresy
   stavby (`getSiteAddress`) a dohledává u Open-Meteo; když se nenajde, nezobrazí se nic (nikdy nedosazovat jiné místo). Texty jsou

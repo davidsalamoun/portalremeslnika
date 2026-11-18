@@ -4,6 +4,7 @@ import { getVatRegistration, getFlatTaxBand } from '../src/utils/taxLimits';
 import { getVatBreakdown, getVatRate } from '../src/utils/invoiceMath';
 import { getSiteAddress } from '../src/utils/siteAddress';
 import { getGettingStartedSteps } from '../src/utils/gettingStarted';
+import { DEFAULT_PRICE_LIST_ITEMS, isSamplePriceItem, isPriceListCustomized } from '../src/data/defaultPriceList';
 
 test('registrace k DPH podle obratu', () => {
   assert.equal(getVatRegistration(0), 'below');
@@ -44,9 +45,20 @@ test('adresa stavby: vlastní, jinak adresa klienta', () => {
 test('průvodce prvním spuštěním: kroky podle skutečných dat', () => {
   const done = (...args: Parameters<typeof getGettingStartedSteps>) => getGettingStartedSteps(...args).map((s) => s.done);
   const profile = { name: 'Jan Novák', ico: '12345678', address: 'Praha', bankAccount: '1/0100', phone: '', email: '', defaultPlace: '' };
-  assert.deepEqual(done(null, 0, []), [false, false, false, false]);
-  assert.deepEqual(done({ ...profile, bankAccount: '' }, 0, []), [false, false, false, false]);
-  assert.deepEqual(done(profile, 0, []), [true, false, false, false]);
-  assert.deepEqual(done({ ...profile, signature: 'data:image/png;base64,x' }, 1, []), [true, true, true, false]);
-  assert.deepEqual(done(profile, 0, [{ id: 'c1' }]), [true, false, true, true]);
+  assert.deepEqual(done(null, 0, []), [false, false, false, false, false]);
+  assert.deepEqual(done({ ...profile, bankAccount: '' }, 0, []), [false, false, false, false, false]);
+  assert.deepEqual(done(profile, 0, []), [true, false, false, false, false]);
+  assert.deepEqual(done({ ...profile, signature: 'data:image/png;base64,x' }, 1, []), [true, true, false, true, false]);
+  assert.deepEqual(done(profile, 0, [{ id: 'c1' }], true), [true, false, true, true, true]);
+});
+
+test('ceník: ukázkové ceny se poznají, upravený ceník ne', () => {
+  const sample = DEFAULT_PRICE_LIST_ITEMS.map((item, i) => ({ ...item, id: `pl_${i}` }));
+  assert.equal(isSamplePriceItem(sample[3]), true);
+  assert.equal(isPriceListCustomized(sample), false);
+  assert.equal(isPriceListCustomized([]), false);
+  assert.equal(isPriceListCustomized(sample.map((it, i) => (i === 3 ? { ...it, unitPrice: 900 } : it))), true);
+  const own = { id: 'x', type: 'prace' as const, category: 'Vlastní', title: 'Montáž kuchyně', unit: 'kpl', unitPrice: 8000 };
+  assert.equal(isPriceListCustomized([...sample, own]), true);
+  assert.equal(isPriceListCustomized(sample.slice(0, 5)), false);
 });
