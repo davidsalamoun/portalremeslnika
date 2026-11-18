@@ -10,7 +10,6 @@ import {
   Clock,
   Send,
   Calendar,
-  AlertTriangle,
 } from 'lucide-react';
 import { Contract, DepartureChecklist } from '../types/contract';
 import { formatDateCs } from '../utils/numberToWordsCs';
@@ -110,17 +109,12 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
 
         {/* Content Body */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
-            <div>
-              <span className="text-[13px] text-slate-400 block font-semibold">Klient</span>
-              <span className="text-sm font-semibold text-slate-900 dark:text-white">{contract.client.name}</span>
-            </div>
-            <span className="text-sm font-semibold px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-              {contract.contractNumber}
-            </span>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-[15px]">
+            <span className="font-semibold text-slate-900 dark:text-white">{contract.client.name}</span>
+            <span className="text-slate-600 dark:text-slate-400">{contract.contractNumber}</span>
           </div>
 
-          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+          <p className="text-slate-600 dark:text-slate-400">
             Před odjezdem si odškrtněte, že na stavbě nic nezůstalo otevřené, zapnuté ani nezamčené:
           </p>
 
@@ -130,15 +124,16 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
             <button
               type="button"
               onClick={() => handleToggle(setWaterClosed, waterClosed)}
-              className={`min-h-11 min-w-11 p-3.5 rounded-lg border-2 text-left transition-all flex items-center justify-between cursor-pointer active:scale-98 ${
+              aria-pressed={waterClosed}
+              className={`min-h-11 min-w-11 p-3.5 rounded-md border-[1.5px] text-left transition-colors flex items-center justify-between cursor-pointer ${
                 waterClosed
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-950 dark:text-emerald-100 shadow-xs'
-                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                  ? 'bg-white dark:bg-slate-900 border-slate-900 dark:border-slate-300'
+                  : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-slate-500'
               }`}
             >
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-semibold ${
-                  waterClosed ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                  waterClosed ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                 }`}>
                   <Droplets className="w-5 h-5" />
                 </div>
@@ -146,13 +141,13 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
                   <div className="font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                     Hlavní uzávěr vody uzavřen
                   </div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400">
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
                     Přívody a ventily zastaveny, potrubí bez úniku
                   </div>
                 </div>
               </div>
               <div className={`w-6 h-6 rounded flex items-center justify-center border font-semibold text-sm ${
-                waterClosed ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs' : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800'
+                waterClosed ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-slate-900' : 'border-slate-400 dark:border-slate-600 bg-white dark:bg-slate-900'
               }`}>
                 {waterClosed ? <CheckCircle2 className="w-4 h-4" /> : ''}
               </div>
@@ -162,15 +157,16 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
             <button
               type="button"
               onClick={() => handleToggle(setPowerTurnedOff, powerTurnedOff)}
-              className={`min-h-11 min-w-11 p-3.5 rounded-lg border-2 text-left transition-all flex items-center justify-between cursor-pointer active:scale-98 ${
+              aria-pressed={powerTurnedOff}
+              className={`min-h-11 min-w-11 p-3.5 rounded-md border-[1.5px] text-left transition-colors flex items-center justify-between cursor-pointer ${
                 powerTurnedOff
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-950 dark:text-emerald-100 shadow-xs'
-                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                  ? 'bg-white dark:bg-slate-900 border-slate-900 dark:border-slate-300'
+                  : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-slate-500'
               }`}
             >
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-semibold ${
-                  powerTurnedOff ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                  powerTurnedOff ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                 }`}>
                   <Zap className="w-5 h-5" />
                 </div>
@@ -178,13 +174,13 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
                   <div className="font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                     Spotřebiče a jističe vypnuty
                   </div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400">
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
                     Přímotopy, nabíječky baterek a stavební světla vypojeny
                   </div>
                 </div>
               </div>
               <div className={`w-6 h-6 rounded flex items-center justify-center border font-semibold text-sm ${
-                powerTurnedOff ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs' : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800'
+                powerTurnedOff ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-slate-900' : 'border-slate-400 dark:border-slate-600 bg-white dark:bg-slate-900'
               }`}>
                 {powerTurnedOff ? <CheckCircle2 className="w-4 h-4" /> : ''}
               </div>
@@ -194,15 +190,16 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
             <button
               type="button"
               onClick={() => handleToggle(setWindowsAndDoorsLocked, windowsAndDoorsLocked)}
-              className={`min-h-11 min-w-11 p-3.5 rounded-lg border-2 text-left transition-all flex items-center justify-between cursor-pointer active:scale-98 ${
+              aria-pressed={windowsAndDoorsLocked}
+              className={`min-h-11 min-w-11 p-3.5 rounded-md border-[1.5px] text-left transition-colors flex items-center justify-between cursor-pointer ${
                 windowsAndDoorsLocked
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-950 dark:text-emerald-100 shadow-xs'
-                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                  ? 'bg-white dark:bg-slate-900 border-slate-900 dark:border-slate-300'
+                  : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-slate-500'
               }`}
             >
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-semibold ${
-                  windowsAndDoorsLocked ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                  windowsAndDoorsLocked ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                 }`}>
                   <Lock className="w-5 h-5" />
                 </div>
@@ -210,13 +207,13 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
                   <div className="font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                     Okna zavřena, objekt uzamčen
                   </div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400">
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
                     Všechna okna zaklapnuta, klíč vrácen do schránky / trezorku
                   </div>
                 </div>
               </div>
               <div className={`w-6 h-6 rounded flex items-center justify-center border font-semibold text-sm ${
-                windowsAndDoorsLocked ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs' : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800'
+                windowsAndDoorsLocked ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-slate-900' : 'border-slate-400 dark:border-slate-600 bg-white dark:bg-slate-900'
               }`}>
                 {windowsAndDoorsLocked ? <CheckCircle2 className="w-4 h-4" /> : ''}
               </div>
@@ -226,15 +223,16 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
             <button
               type="button"
               onClick={() => handleToggle(setSiteCleaned, siteCleaned)}
-              className={`min-h-11 min-w-11 p-3.5 rounded-lg border-2 text-left transition-all flex items-center justify-between cursor-pointer active:scale-98 ${
+              aria-pressed={siteCleaned}
+              className={`min-h-11 min-w-11 p-3.5 rounded-md border-[1.5px] text-left transition-colors flex items-center justify-between cursor-pointer ${
                 siteCleaned
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-950 dark:text-emerald-100 shadow-xs'
-                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                  ? 'bg-white dark:bg-slate-900 border-slate-900 dark:border-slate-300'
+                  : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-slate-500'
               }`}
             >
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-semibold ${
-                  siteCleaned ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                  siteCleaned ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                 }`}>
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
@@ -242,13 +240,13 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
                   <div className="font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                     Nářadí sbaleno a hrubý úklid
                   </div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400">
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
                     Nářadí v autě, materiál zabezpečen proti dešti a větru
                   </div>
                 </div>
               </div>
               <div className={`w-6 h-6 rounded flex items-center justify-center border font-semibold text-sm ${
-                siteCleaned ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs' : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800'
+                siteCleaned ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-slate-900' : 'border-slate-400 dark:border-slate-600 bg-white dark:bg-slate-900'
               }`}>
                 {siteCleaned ? <CheckCircle2 className="w-4 h-4" /> : ''}
               </div>
@@ -257,30 +255,26 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
 
           {/* Stavový box */}
           {isAllChecked ? (
-            <div className="p-3 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-400 dark:border-emerald-700 flex items-center gap-3 text-emerald-950 dark:text-emerald-200">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-              <div className="text-sm font-semibold leading-tight">
-                VŠECHNY 4 BODY SPLNĚNY! Stavba je řádně zabezpečena pro odjezd.
-              </div>
-            </div>
+            <p role="status" className="flex items-center gap-2 font-semibold text-emerald-800 dark:text-emerald-300">
+              <CheckCircle2 className="w-5 h-5 shrink-0" />
+              Všechny 4 body jsou splněné, stavba je zabezpečená.
+            </p>
           ) : (
-            <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 flex items-center gap-2 text-sm text-amber-900 dark:text-amber-300 font-medium">
-              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>Klepnutím odškrtněte body před zamknutím objektu.</span>
-            </div>
+            <p className="text-slate-600 dark:text-slate-400">Klepnutím odškrtněte body před zamknutím objektu.</p>
           )}
 
           {/* Rychlá poznámka pro zákazníka */}
           <div>
-            <label className="text-[13px] font-semibold text-slate-500 block mb-1">
-              Poznámka / Vzkaz pro investora:
+            <label htmlFor="odjezd-vzkaz" className="font-semibold text-slate-900 dark:text-slate-100 block mb-1.5">
+              Vzkaz pro klienta <span className="font-normal text-slate-600 dark:text-slate-400">(nepovinné)</span>
             </label>
             <input
+              id="odjezd-vzkaz"
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Např. Zítra přijedeme v 7:30, materiál dorazí odpoledne"
-              className="min-h-11 w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+              className="min-h-11 w-full px-3 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
             />
           </div>
         </div>
@@ -290,7 +284,7 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
           <button
             type="button"
             onClick={handleSendWhatsApp}
-            className="min-h-11 px-4 py-2 rounded-lg border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+            className="min-h-11 inline-flex items-center justify-center gap-1.5 px-4 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold cursor-pointer transition-colors"
             title="Poslat zákazníkovi zprávu o stavu stavby na WhatsApp"
           >
             <Send className="w-4 h-4" />
@@ -301,14 +295,14 @@ export const DepartureChecklistModal: React.FC<DepartureChecklistModalProps> = (
             <button
               type="button"
               onClick={onClose}
-              className="min-h-11 inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+              className="min-h-11 inline-flex items-center justify-center gap-1.5 px-4 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold cursor-pointer transition-colors"
             >
               Zrušit
             </button>
             <button
               type="button"
               onClick={handleSaveChecklist}
-              className="min-h-11 inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-sm font-semibold cursor-pointer transition-colors shadow-xs"
+              className="min-h-11 inline-flex items-center justify-center px-5 rounded-md border-[1.5px] border-slate-900 bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold cursor-pointer transition-colors"
             >
               Uložit kontrolu k zakázce
             </button>

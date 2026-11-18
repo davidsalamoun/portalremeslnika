@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { getSiteAddress } from '../utils/siteAddress';
-import { Plus, ArrowRight, ArrowLeft, Phone, MessageSquare } from 'lucide-react';
+import { Plus, ArrowRight, ArrowLeft, Phone, MessageSquare, Search, X } from 'lucide-react';
+import { matchesSearch } from '../utils/search';
+import { getFinalInvoiceNumber, getAdvanceInvoiceNumber } from '../utils/invoiceNumbering';
 import { Contract, Client } from '../types/contract';
 import { formatCurrency, formatDateCs } from '../utils/numberToWordsCs';
 import { getWhatsAppShareUrl } from '../utils/shareUtils';
@@ -59,6 +61,7 @@ export const LeadsPipelinePage: React.FC<LeadsPipelinePageProps> = ({
   onSwitchView,
 }) => {
   const [filter, setFilter] = useState<StageFilter>('active');
+  const [searchTerm, setSearchTerm] = useState('');
   const [isQuickLeadModalOpen, setIsQuickLeadModalOpen] = useState(false);
 
   // Formulář pro rychlou poptávku
@@ -92,7 +95,27 @@ export const LeadsPipelinePage: React.FC<LeadsPipelinePageProps> = ({
     return map;
   }, [jobs]);
 
-  const shown = jobs.filter(({ stage }) => (filter === 'active' ? stage.key !== 'paid' : stage.key === filter));
+  // Hledá se ve všech fázích (i v zaplacených), výběr fáze se při hledání neuplatní
+  const query = searchTerm.trim();
+  const searching = query.length > 0;
+  const shown = searching
+    ? jobs.filter(({ contract }) =>
+        matchesSearch(
+          [
+            contract.client?.name,
+            contract.client?.phone,
+            contract.client?.ico,
+            getSiteAddress(contract),
+            contract.workDescription,
+            contract.contractNumber,
+            contract.quoteNumber,
+            getFinalInvoiceNumber(contract),
+            getAdvanceInvoiceNumber(contract),
+          ],
+          query
+        )
+      )
+    : jobs.filter(({ stage }) => (filter === 'active' ? stage.key !== 'paid' : stage.key === filter));
   const shownSum = shown.reduce((sum, { contract }) => sum + getContractTotal(contract), 0);
 
   const filters: { key: StageFilter; label: string }[] = [{ key: 'active', label: 'Rozpracované' }, ...JOB_STAGE_LABELS];
@@ -144,18 +167,49 @@ export const LeadsPipelinePage: React.FC<LeadsPipelinePageProps> = ({
         </div>
       </header>
 
+      {/* Hledání ve všech zakázkách */}
+      {jobs.length > 1 && (
+        <div className="relative w-full sm:max-w-sm">
+          <label htmlFor="zakazky-hledat" className="sr-only">
+            Hledat zakázku
+          </label>
+          <Search className="w-[18px] h-[18px] absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-600 dark:text-slate-400 pointer-events-none" />
+          <input
+            id="zakazky-hledat"
+            type="search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Hledat klienta, adresu, popis, číslo"
+            className="w-full min-h-11 pl-10 pr-11 rounded-md border-[1.5px] border-slate-900 dark:border-slate-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white [&::-webkit-search-cancel-button]:hidden"
+          />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm('')}
+              aria-label="Vymazat hledání"
+              className="absolute right-0 top-0 w-11 h-11 inline-flex items-center justify-center text-slate-900 dark:text-slate-100 cursor-pointer"
+            >
+              <X className="w-[18px] h-[18px]" />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Výběr fáze */}
       <div className="border-b border-slate-900 dark:border-slate-500 overflow-x-auto">
         <div role="tablist" aria-label="Fáze zakázek" className="flex gap-1 min-w-max">
           {filters.map((f) => {
-            const active = filter === f.key;
+            const active = !searching && filter === f.key;
             return (
               <button
                 key={f.key}
                 type="button"
                 role="tab"
                 aria-selected={active}
-                onClick={() => setFilter(f.key)}
+                onClick={() => {
+                  setFilter(f.key);
+                  setSearchTerm('');
+                }}
                 className={`min-h-11 px-3.5 inline-flex items-center gap-2 font-semibold cursor-pointer border-b-[3px] -mb-px transition-colors ${
                   active
                     ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
@@ -177,6 +231,7 @@ export const LeadsPipelinePage: React.FC<LeadsPipelinePageProps> = ({
               {formatCurrency(shownSum)}
             </span>{' '}
             v {shown.length} {shown.length === 1 ? 'zakázce' : 'zakázkách'}
+            {searching && <span>, hledáno ve všech fázích</span>}
           </div>
           {onSwitchView && (
             <button type="button" onClick={onSwitchView} className={textLink}>
@@ -189,12 +244,22 @@ export const LeadsPipelinePage: React.FC<LeadsPipelinePageProps> = ({
           {shown.length === 0 && (
             <div className="px-5 py-5 flex flex-wrap items-center justify-between gap-3">
               <span className="text-slate-600 dark:text-slate-300">
-                {filter === 'active' ? 'Zatím tu není žádná rozpracovaná zakázka.' : 'V této fázi není žádná zakázka.'}
+                {searching
+                  ? `Žádná zakázka neodpovídá „${query}“.`
+                  : filter === 'active'
+                    ? 'Zatím tu není žádná rozpracovaná zakázka.'
+                    : 'V této fázi není žádná zakázka.'}
               </span>
-              <button type="button" onClick={() => setIsQuickLeadModalOpen(true)} className={smallAction}>
-                <Plus className="w-4 h-4" />
-                <span>Nová poptávka</span>
-              </button>
+              {searching ? (
+                <button type="button" onClick={() => setSearchTerm('')} className={smallAction}>
+                  Zrušit hledání
+                </button>
+              ) : (
+                <button type="button" onClick={() => setIsQuickLeadModalOpen(true)} className={smallAction}>
+                  <Plus className="w-4 h-4" />
+                  <span>Nová poptávka</span>
+                </button>
+              )}
             </div>
           )}
           {shown.map(({ contract, stage }) => {

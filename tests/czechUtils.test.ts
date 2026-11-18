@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { matchesSearch } from '../src/utils/search';
 import {
   numberToWordsCs,
   amountInWordsCzk,
@@ -99,4 +100,14 @@ test('oslovení v 5. pádu', () => {
     ['', ''],
   ];
   for (const [name, voc] of cases) assert.equal(getVocative(name), voc, name);
+});
+
+test('hledání bez diakritiky a mezer v číslech', () => {
+  assert.equal(matchesSearch(['Marek Dvořák', 'Slunečná 45, Černošice'], 'dvorak'), true);
+  assert.equal(matchesSearch(['Marek Dvořák', 'Slunečná 45, Černošice'], 'DVOŘÁK černošice'), true);
+  assert.equal(matchesSearch(['Marek Dvořák'], 'dvorak brno'), false);
+  assert.equal(matchesSearch(['+420 602 111 222'], '602111222'), true);
+  assert.equal(matchesSearch(['SOD-2026-007'], '2026-007'), true);
+  assert.equal(matchesSearch(['SOD-2026-007'], '2026007'), true);
+  assert.equal(matchesSearch(['Nova Real s.r.o.', undefined], ''), true);
 });

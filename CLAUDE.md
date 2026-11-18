@@ -54,7 +54,7 @@ Proměnné (případně `STRIPE_SECRET_KEY`) se nastavují v projektu na Vercelu
 ## Vzhled
 
 Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2aA4MkA), zaveden po částech:
-část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; část 2 (hotovo) = přehled, zakázky, faktury, formulář smlouvy s rozpočtem; část 3 = klienti, kalendář, finance, archiv, nastavení a mobilní nabídka „Více“ (hotovo), lišta náhledu dokumentů a lišty jednotlivých dokladů (hotovo); rámy a hlavičky všech oken (hotovo); obsah oken podpis, odeslání, výběr z ceníku, nový dodatek a nový pokladní doklad (hotovo); okna Náklady a zisk, Podklady pro účetní, Kniha jízd, Stavební deník a Kalkulačka jsou přestavěná podle vzoru Přehledu (souhrn v jednom rámečku s velkým číslem, formulář s popisky nad poli, seznam řádků, smazání potvrzené oknem); u ostatních oken (parťáci, půjčené nářadí, nákupní seznam, harmonogram, účet, zkoušky a protokoly, fotodokumentace, podpis zákazníka na zařízení) jsou sjednocené písmo, řezy, barvy, tlačítka a výška ovládacích prvků, rozvržení zůstává původní. Beze změny je jen Složka zakázky (tisková sestava) a okna placení (vypnuté).
+část 1 (hotovo) = barvy, písmo, rohy, navigace, přihlášení; část 2 (hotovo) = přehled, zakázky, faktury, formulář smlouvy s rozpočtem; část 3 = klienti, kalendář, finance, archiv, nastavení a mobilní nabídka „Více“ (hotovo), lišta náhledu dokumentů a lišty jednotlivých dokladů (hotovo); rámy a hlavičky všech oken (hotovo); obsah oken podpis, odeslání, výběr z ceníku, nový dodatek a nový pokladní doklad (hotovo); okna Náklady a zisk, Podklady pro účetní, Kniha jízd, Stavební deník a Kalkulačka jsou přestavěná podle vzoru Přehledu (souhrn v jednom rámečku s velkým číslem, formulář s popisky nad poli, seznam řádků, smazání potvrzené oknem); okno Účet má souhrn v jednom rámečku a tlačítka s obrysem; u ostatních oken (parťáci, půjčené nářadí, nákupní seznam, harmonogram, zkoušky a protokoly, fotodokumentace, odjezd ze stavby, rychlé zprávy klientovi) jsou sjednocené písmo, řezy, barvy, tlačítka a výška ovládacích prvků, rozvržení zůstává původní. Podpis zákazníka na zařízení (kiosk) má záměrně vlastní tmavý vzhled. Beze změny je jen Složka zakázky (tisková sestava) a okna placení (vypnuté).
 
 - **Barvy** jsou v `src/index.css` v bloku `@theme` jako přemapované palety Tailwindu, takže stávající třídy platí dál:
   `slate-*` = grafit a papír (text `slate-900` #1A1D21, pozadí `slate-50` #F4F5F2), `blue-*` = razítková modrá
@@ -75,6 +75,8 @@ Směr „Výkres a metr“ (návrh: https://claude.ai/artifact/BY3gLubMb8bWCaC2a
   má dál jen pět původních hodnot – `completed` znamená předáno, zaplaceno se pozná podle `isContractPaid`.
 - **Zakázky** (`LeadsPipelinePage.tsx`): jeden seznam se záložkami fází (ne sloupce nástěnky), u každé zakázky metr,
   věta „co dál“ a tlačítko posunu pojmenované podle cílové fáze. Okno „Nová poptávka“ je vzor pro formuláře v oknech.
+  Hledání prohledává všechny fáze (záložka se při něm neuplatní). Hledání v Zakázkách, Klientech a Archivu jde přes
+  `matchesSearch` (`utils/search.ts`): bez ohledu na diakritiku a velikost písmen, čísla i bez mezer a pomlček.
 - **Nová zakázka podle jiné** („Nová zakázka podle této“ v nabídce Další možnosti náhledu): formulář převezme druh
   dokumentu, popis, rozpočet (nová id položek), cenu bez dodatků, zálohu a DPH; ne klienta (vybírá se, nic se
   nepředvybere), termín, adresu stavby, podpisy, čísla ani fotky. Nahoře je pruh, ze které zakázky vychází.
@@ -191,7 +193,8 @@ modál přidávat do `lazyLoaders`, ne statickým importem; `exportDocx`/`export
 buildu vytvoří `dist/sw.js` se seznamem všech souborů aplikace a verzí. `main.tsx` ho registruje jen v produkčním buildu.
 Soubory aplikace (včetně písem) se čtou z mezipaměti, stránka ze sítě (po 3 s bez odpovědi z mezipaměti); data (Supabase, `/api`) jdou vždy na síť. Nový soubor v `public/` se do seznamu dostane sám.
 Bez signálu `AuthGate` nečeká na obnovu vypršelého přístupového klíče a pustí uživatele s uloženým přihlášením
-(`getStoredSessionUser`) k datům v zařízení. Změny se zařadí do fronty a odešlou po návratu signálu; když první
+(`getStoredSessionUser`) k datům v zařízení. Odhlášení s neodeslanými změnami se potvrzuje oknem (`signOutAndClear`
+vrátí jejich počet, „Odhlásit a změny zahodit“ odhlásí i tak). Změny se zařadí do fronty a odešlou po návratu signálu; když první
 pokus selže (Supabase po neúspěšné obnově klíče minutu čeká), synchronizace se zkouší znovu po 15, 30 a 60 s.
 `vercel.json` posílá `sw.js`, `index.html` a manifest bez dlouhého ukládání v prohlížeči.
 

@@ -9,6 +9,8 @@ import { DocumentType } from './ContractPreview';
 import { getContractTotal, isContractPaid } from '../utils/invoiceMath';
 import { getJobStage, JOB_STAGE_LABELS, JobStageKey } from '../utils/jobStage';
 import { Dialog } from './Dialog';
+import { matchesSearch } from '../utils/search';
+import { getSiteAddress } from '../utils/siteAddress';
 
 interface HistoryPageProps {
   contracts: Contract[];
@@ -62,13 +64,14 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
     .filter((d) => !d.isQuote && isContractPaid(d.contract))
     .reduce((sum, d) => sum + getContractTotal(d.contract), 0);
 
-  const q = searchTerm.trim().toLowerCase();
+  const q = searchTerm.trim();
   const filtered = docs.filter(({ contract, stage, isQuote }) => {
     if (docFilter !== 'all' && (docFilter === 'quote') !== isQuote) return false;
     if (stageFilter !== 'all' && stage.key !== stageFilter) return false;
     if (!q) return true;
-    return [contract.client?.name, contract.workDescription, contract.contractNumber, contract.quoteNumber, contract.invoiceNumber].some(
-      (v) => (v || '').toLowerCase().includes(q),
+    return matchesSearch(
+      [contract.client?.name, contract.workDescription, contract.contractNumber, contract.quoteNumber, contract.invoiceNumber, getSiteAddress(contract)],
+      q,
     );
   });
 

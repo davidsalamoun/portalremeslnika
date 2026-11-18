@@ -362,19 +362,14 @@ export function startAutoSync(): () => void {
 
 /**
  * Odhlášení: nejprve se pokusí odeslat neuložené změny, pak smaže data účtu z tohoto prohlížeče
- * (zůstávají v účtu) a načte aplikaci znovu. Vrací false, pokud uživatel odhlášení zrušil.
+ * (zůstávají v účtu) a načte aplikaci znovu. Když se některé změny nepodařilo odeslat, neodhlásí
+ * a vrátí jejich počet – odhlásit i tak jde s `discardPending` (změny se ztratí).
  */
-export async function signOutAndClear(): Promise<boolean> {
+export async function signOutAndClear(discardPending = false): Promise<{ pending: number } | null> {
   window.clearTimeout(pushTimer);
   await syncNow();
   const pending = engine.pendingCount() + pendingUploadCount();
-  if (pending > 0) {
-    const ok = window.confirm(
-      `Některé změny (${pending}) se ještě nepodařilo uložit do účtu, nejspíš kvůli připojení k internetu. ` +
-        'Pokud se odhlásíte teď, tyto změny se ztratí. Opravdu se chcete odhlásit?'
-    );
-    if (!ok) return false;
-  }
+  if (pending > 0 && !discardPending) return { pending };
   await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
   engine.clearLocal();
   await clearAllBlobs();
@@ -382,7 +377,7 @@ export async function signOutAndClear(): Promise<boolean> {
   window.localStorage.removeItem(IMAGE_CLEANUP_KEY);
   clearContractFormDraft();
   window.location.reload();
-  return true;
+  return null;
 }
 
 export type DeleteAccountResult = 'deleted' | 'wrong_password' | 'failed';
